@@ -6,14 +6,14 @@
  * Princípio SRP: Apenas autenticação.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import type { User } from '@/types';
 
 export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     useEffect(() => {
         const getUser = async () => {
@@ -46,7 +46,7 @@ export function useAuth() {
         });
 
         return () => subscription.unsubscribe();
-    }, []);
+    }, [supabase]);
 
     return { user, loading };
 }

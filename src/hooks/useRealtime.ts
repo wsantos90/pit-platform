@@ -6,7 +6,7 @@
  * Princípio SRP: Apenas subscriptions de realtime.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 
 interface RealtimeOptions {
@@ -18,7 +18,7 @@ interface RealtimeOptions {
 
 export function useRealtime({ table, event = '*', filter, onPayload }: RealtimeOptions) {
     const [isConnected, setIsConnected] = useState(false);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     useEffect(() => {
         const channel = supabase
@@ -42,7 +42,7 @@ export function useRealtime({ table, event = '*', filter, onPayload }: RealtimeO
         return () => {
             supabase.removeChannel(channel);
         };
-    }, [table, event, filter]);
+    }, [event, filter, onPayload, supabase, table]);
 
     return { isConnected };
 }

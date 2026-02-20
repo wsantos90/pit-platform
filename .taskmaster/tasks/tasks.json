@@ -30,9 +30,10 @@
               1
             ],
             "details": "Executar 'npm install lucide-react recharts'. Em seguida 'npx shadcn-ui@latest init' e confirmar configurações TypeScript e Tailwind. Testar adicionando um componente button.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar instalação com 'npx shadcn-ui@latest add button'. Importar e renderizar Button em app/page.tsx sem erros. Verificar ícones lucide-react e charts recharts.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-20T19:21:37.654Z"
           },
           {
             "id": 3,
@@ -51,7 +52,7 @@
         "complexity": 3,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Divida esta tarefa em subtarefas para: 1) Inicialização do projeto Next.js com TypeScript, Tailwind e App Router; 2) Instalação e configuração de shadcn/ui, lucide-react e recharts; 3) Configuração de estrutura de pastas, tsconfig paths, CSS variables dark mode e font Inter.",
-        "updatedAt": "2026-02-20T18:36:29.239Z"
+        "updatedAt": "2026-02-20T19:21:37.654Z"
       },
       {
         "id": "2",
@@ -1618,7 +1619,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-20T18:36:29.239Z",
+      "lastModified": "2026-02-20T19:21:37.654Z",
       "taskCount": 25,
       "completedCount": 0,
       "tags": [

@@ -6,7 +6,7 @@
  * Princípio SRP: Apenas dados do time.
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from './useAuth';
 import type { Club } from '@/types';
@@ -15,15 +15,9 @@ export function useTeam() {
     const { user } = useAuth();
     const [team, setTeam] = useState<Club | null>(null);
     const [loading, setLoading] = useState(true);
-    const supabase = createClient();
+    const supabase = useMemo(() => createClient(), []);
 
     useEffect(() => {
-        if (!user) {
-            setTeam(null);
-            setLoading(false);
-            return;
-        }
-
         const fetchTeam = async () => {
             const { data } = await supabase
                 .from('clubs')
@@ -36,8 +30,10 @@ export function useTeam() {
             setLoading(false);
         };
 
-        fetchTeam();
-    }, [user]);
+        if (user) {
+            fetchTeam();
+        }
+    }, [supabase, user]);
 
-    return { team, loading };
+    return { team: user ? team : null, loading: user ? loading : false };
 }
