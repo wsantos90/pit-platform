@@ -24,7 +24,7 @@ export function useRealtime({ table, event = '*', filter, onPayload }: RealtimeO
         const channel = supabase
             .channel(`realtime:${table}`)
             .on(
-                'postgres_changes' as any,
+                'postgres_changes' as const,
                 {
                     event,
                     schema: 'public',
