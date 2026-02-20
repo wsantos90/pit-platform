@@ -1,13 +1,16 @@
 # P.I.T — Product Requirements Document
 # Performance · Intelligence · Tracking
 # Plataforma de Gestão Competitiva para FIFA Pro Clubs 11v11
-# Versão 1.5 Final | Autor: Wander (ThePitbullOne)
+# Versão 1.5 Final | Autor: Wander (ThePitbullOne) | Data: 18/02/2026
 
 ---
 
 ## 1. VISÃO GERAL DO PRODUTO
 
-O P.I.T é uma plataforma web de gestão competitiva para FIFA Pro Clubs 11v11. Integra-se à API da EA Sports para capturar dados, oferecendo: Discovery automático de times, estatísticas detalhadas, matchmaking, sistema de rating (Pit Rating™), campeonatos com anti-W.O., e Hall of Fame.
+### 1.1 O que é o P.I.T?
+O P.I.T (Performance · Intelligence · Tracking) é uma plataforma web de gestão competitiva para a comunidade de FIFA Pro Clubs 11v11. Integra-se à API da EA Sports para capturar dados, oferecendo: Discovery automático de times, estatísticas detalhadas, matchmaking, sistema de rating (Pit Rating™), campeonatos com anti-W.O., e Hall of Fame.
+
+Atualmente o cenário brasileiro gerencia tudo de forma fragmentada: WhatsApp, planilhas, Discord. O P.I.T é a primeira plataforma profissional deste ecossistema.
 
 **Stack Técnico:**
 - Frontend: Next.js 14+ (App Router, TypeScript)
@@ -18,199 +21,387 @@ O P.I.T é uma plataforma web de gestão competitiva para FIFA Pro Clubs 11v11. 
 - Pagamento: Mercado Pago (PIX automático)
 - UI: Tailwind CSS + shadcn/ui + Lucide React
 
+### 1.2 Problemas Resolvidos
+- Stats se perdem (API retorna só últimos 10 jogos)
+- Escalações via WhatsApp sem histórico
+- Matchmaking manual e lento
+- Disputas de W.O. sem dados concretos
+- Sem classificação unificada entre comunidades
+- Managers não sabem o clubId do próprio time
+- Nomes de times com encoding quebrado na API (acentos)
+- Não há registro histórico de conquistas (Hall of Fame)
+
+### 1.3 Público-alvo
+- Jogador: Jogador ativo de Pro Clubs 11v11. Necessidade: stats, evolução, comparações, ser descoberto.
+- Manager: Gerencia um time competitivo (também é jogador). Necessidade: elenco, escalações, matchmaking, reivindicar time.
+- Admin PIT: Administrador da plataforma (Wander). Necessidade: painel admin, validar reivindicações, Discovery, campeonatos.
+
 ---
 
 ## 2. SISTEMA DE PAPÉIS (ROLES)
 
-Roles acumulativos: player → manager → moderator → admin
+O P.I.T usa um sistema de papéis acumulativos. Todo usuário é Jogador por padrão. Papéis adicionais são concedidos por ações específicas.
 
-- **Jogador** (default): Perfil pessoal, stats, histórico, escalações
-- **Manager**: + gestão de time, elenco, matchmaking, escalação (obtém ao reivindicar/criar time)
-- **Moderador**: + campeonatos, W.O., validar claims, excluir usuários (sem financeiro)
-- **Admin PIT**: Controle total incluindo financeiro, Discovery, configurações
+| Papel | Como Obtém | Acessa | Visão na Interface |
+|---|---|---|---|
+| Jogador | Automático ao cadastrar | Perfil pessoal, stats, histórico, escalações | "Meu Perfil" |
+| Manager | Reivindica ou cria um time | Tudo de Jogador + gestão de time, elenco, matchmaking, escalação | "Meu Time" |
+| Moderador | Designado pelo Admin PIT | Tudo de Manager + campeonatos, W.O., claims, excluir. SEM financeiro. | "Moderação" |
+| Admin PIT | Definido no banco (Wander) | Controle total: tudo + financeiro, config, assinaturas, Discovery | "Painel Admin" |
 
-Context Switcher na sidebar para alternar entre visões: Meu Perfil | Meu Time | Moderação | Admin.
+Alternador de contexto na sidebar: Manager vê (Meu Perfil | Meu Time). Moderador vê (+ Moderação). Admin vê (+ Painel Admin completo).
 
----
+### 2.1 Permissões Detalhadas
 
-## 3. API EA SPORTS
+| Ação | Jogador | Manager | Moderador | Admin |
+|---|---|---|---|---|
+| Ver próprias stats | ✅ | ✅ | ✅ | ✅ |
+| Gerenciar elenco/escalação | ❌ | ✅ | ✅ | ✅ |
+| Matchmaking | ❌ | ✅ | ✅ | ✅ |
+| Organizar campeonatos | ❌ | ❌ | ✅ | ✅ |
+| Julgar disputas W.O. | ❌ | ❌ | ✅ | ✅ |
+| Validar reivindicações de time | ❌ | ❌ | ✅ | ✅ |
+| Excluir times/jogadores | ❌ | ❌ | ✅ | ✅ |
+| Discovery / Inserir IDs | ❌ | ❌ | ❌ | ✅ |
+| Ver financeiro / receita | ❌ | ❌ | ❌ | ✅ |
+| Configurações da plataforma | ❌ | ❌ | ❌ | ✅ |
+| Gerenciar assinaturas Premium | ❌ | ❌ | ❌ | ✅ |
 
-- Endpoint: GET proclubs.ea.com/api/fc/clubs/matches?platform=common-gen5&clubIds={id}&maxResultCount=10&matchType=friendlyMatch
-- Retorna: matchId, timestamp, placar, clubIds, dados de jogadores (goals, assists, rating, pos, tackles, etc.)
-- Proteção Akamai: cookies ak_bmsc e bm_sv (renovados via Puppeteer na VPS a cada 15-30min)
-- Encoding corrompido: Latin-1 interpretado como UTF-8 → normalizar com pipeline: ea_name_raw + display_name
+### 2.2 Painel de Moderação
+Visão exclusiva para Moderadores e Admin. Foco operacional:
+- Campeonatos: Criar, gerenciar rodadas, encerrar campeonatos e corujões.
+- Fila de Reivindicações: Claims pendentes com foto de prova. Aprovar/rejeitar.
+- Disputas W.O.: Visualizar contestações, avaliar provas, emitir decisões.
+- Gestão de usuários: Excluir times/jogadores problemáticos.
+- Mensagens: Responder solicitações e dúvidas operacionais.
 
----
-
-## 4. DISCOVERY SYSTEM (SNOWBALL) — PRÉ-MVP
-
-Sistema de varredura exponencial. Cada consulta revela até 10 novos times.
-- Iteração 1: 1 seed → ~11 times
-- Iteração 2: 10 seeds → ~111 times
-- Iteração 3: 100 seeds → ~1.111 times
-
-Processamento paralelo (10-20 requests simultâneas). Log de runs em discovery_runs table.
-Meta: 500+ times antes do lançamento.
-
-**tabelas:** discovered_clubs (ea_club_id, ea_name_raw, display_name, status, discovered_at, discovered_via, last_scanned_at), discovered_players, discovery_runs
-
----
-
-## 5. FLUXO DE REIVINDICAÇÃO DE TIME
-
-1. Manager se cadastra (email + senha + gamertag EA)
-2. Busca time por nome (fuzzy search em display_name)
-3. Sistema exibe resultados → Manager seleciona
-4. Sistema puxa últimos 10 jogos em tempo real
-5. Manager confirma "esses são meus jogos?"
-6. Upload foto de prova (evidência de ser manager no jogo)
-7. Status muda para "pending" → nenhum outro pode reivindicar
-8. Admin recebe notificação → avalia foto na fila de claims
-9. Aprovado: time muda para "active", manager vinculado. Rejeitado: manager notificado.
+### 2.3 Painel Admin (exclusivo Admin PIT)
+O Admin PIT vê tudo da Moderação MAIS as áreas restritas:
+- Dashboard financeiro: Receita de assinaturas, inscrições em campeonatos, métricas de monetização.
+- Configurações: Parâmetros da plataforma, regras globais, limites.
+- Assinaturas: Gerenciar planos Premium, cancelamentos, upgrades.
+- Discovery: Disparar varreduras, inserir clubIds manualmente, monitorar base.
+- Inserir ID Manual: Campo para clubId não encontrado. Puxa 10 jogos e confirma.
 
 ---
 
-## 6. SISTEMA DE POSIÇÕES
+## 3. ESTRUTURA HIERÁRQUICA
 
-Formação base 3-5-2. 7 posições detalhadas:
-- GK (goalkeeper), ZAG (defender x3), VOL (midfielder x2), MC (midfielder x1), AE (midfielder x1), AD (midfielder x1), ATA (forward x2)
-
-Cada jogador define posição principal e secundária no cadastro. API retorna categorias genéricas (goalkeeper/defender/midfielder/forward). Sistema mapeia para posição específica baseado no cadastro do jogador.
-
----
-
-## 7. CLASSIFICAÇÃO DE PARTIDAS
-
-EA registra tudo como "friendlyMatch". O P.I.T classifica:
-- **Campeonato**: dois clubIds agendados na plataforma → Pit Rating Competitivo
-- **Amistoso PIT**: originado pelo matchmaking → Pit Rating Geral
-- **Amistoso Externo**: sem contexto interno → não conta
+| Nível | Entidade | Responsável | Funções |
+|---|---|---|---|
+| Nível 0 | Plataforma PIT | Admin PIT (Wander) | Controle total + financeiro + config |
+| Staff | Moderação | Moderador(es) | Campeonatos, W.O., claims, operação |
+| Nível 1 | Confederação | Admin PIT (futuro: admins próprios) | Organizar campeonatos, definir regras |
+| Nível 2 | Time (Club) | Manager | Elenco, escalações, matchmaking |
+| Nível 3 | Jogador | Próprio jogador | Gamertag, stats, posições |
 
 ---
 
-## 8. MVP — FEATURES OBRIGATÓRIAS
+## 4. FONTE DE DADOS — API EA SPORTS
 
-### F01 — Discovery (Snowball) [MUST / PRÉ-MVP]
-Varredura exponencial, normalização encoding, paralelo 10-20x, log de runs, painel admin para disparar.
+### 4.1 Endpoint
+GET proclubs.ea.com/api/fc/clubs/matches?platform=common-gen5&clubIds={id}&maxResultCount=10&matchType=friendlyMatch
 
-### F02 — Cadastro + Reivindicação [MUST / MVP]
-- Auth: email + senha + gamertag EA (validação única no banco)
-- Busca fuzzy de time (pg_trgm no display_name)
-- Confirmação visual (10 jogos da API em tempo real)
-- Upload foto prova (Supabase Storage)
-- Fila de claims no painel Admin (aprovar/rejeitar com foto)
-- Notificações ao manager
+### 4.2 Dados Retornados
+Jogo: matchId, timestamp, placar, clubIds e nomes de ambos os times.
+Jogador: playername (gamertag), goals, assists, passes, tackles (tacklesmade, tackleattempts), rating, pos (goalkeeper/defender/midfielder/forward), shots, cards, cleansheetsgk, saves, minutesplayed, man_of_the_match.
+Discovery: Cada resposta contém dados dos DOIS times + todos os jogadores. Uma consulta revela até 10 novos times.
 
-### F03 — Posições (Principal/Secundária) [MUST / MVP]
-- Jogador escolhe 2 posições no cadastro
-- Mapeamento automático API → posição específica
-- Manager pode corrigir na escalação
+### 4.3 Normalização de Nomes (Encoding Corrompido)
+A API retorna nomes de times com encoding corrompido (Latin-1 interpretado como UTF-8). Caracteres afetados:
 
-### F04 — Perfil do Jogador [MUST / MVP]
-- Dashboard: gols, assists, rating, passes, tackles
-- Evolução temporal (linha do tempo de partidas)
-- Stats por posição (filtro)
-- Histórico de partidas
+| API Retorna | Caractere Real | Exemplo API | Exemplo Correto |
+|---|---|---|---|
+| Ã¡ | á | CÃ¡ssia | Cássia |
+| Ã© | é | AthÃ©tica | Athética |
+| Ã­ | í | NiterÃ­i | Niterói |
+| Ã³ | ó | SÃ³Canelas | SóCanelas |
+| Ãº | ú | JÃºlio | Júlio |
+| Ã£ | ã | DragÃ£o | Dragão |
+| Ãµ | õ | LeÃµes | Leões |
+| Ãª | ê | RenÃª | Renê |
+| Ã§ | ç | CoraÃ§Ã£o | Coração |
 
-### F05 — Gestão de Time [MUST / MVP]
-- Manager vincula clubId via reivindicação aprovada
-- Gerenciar elenco (convidar jogadores por gamertag)
-- club_players com histórico (joined_at, left_at)
+Solução técnica: Pipeline de normalização no momento da ingestão. Decodificar string como Latin-1 e re-encodar como UTF-8. Armazenar DOIS campos: ea_name_raw (original da API, para match exato) e display_name (normalizado, para exibição e busca fuzzy).
 
-### F06 — Coleta de Dados [MUST / MVP]
-- Cron via n8n (seg/ter/qui às 04:00)
-- Coleta manual pelo Manager (1x/30min por time)
-- Puppeteer renova cookies antes da coleta
-- Deduplicação por ea_match_id
-- Timestamp unix → UTC-3 (Brasília)
-- Classificação automática de partidas
+### 4.4 Proteção Anti-Bot (Cookie Akamai)
+A API usa proteção Akamai Bot Manager (cookies ak_bmsc e bm_sv). Estratégia:
+- Recomendada (MVP): Puppeteer na VPS — headless browser acessa o site EA, obtém cookies, passa para as requisições da API.
+- Fallback: Browserless.io ou ScrapingBee (serviços externos que lidam com Akamai).
+- Fallback 2: Proxy residencial rotativo.
+- Renovação: Microserviço na VPS que renova cookies a cada 15-30 min e disponibiliza via endpoint interno.
 
-### F07 — Histórico + Dashboard Time [MUST / MVP]
-- Lista partidas com drill-down
-- Dashboard: W/D/L, gols marcados/sofridos, top scorers, etc.
-- Ranking interno dos jogadores do time
-
-### F08 — Escalação Visual [SHOULD / MVP]
-- Grid 3-5-2 com campo visual (gradiente verde)
-- Drag & drop de jogadores do elenco para posições
-- Posições: GK, ZAG x3, VOL x2, MC, AE, AD, ATA x2
-
-### F09 — Matchmaking Amistosos [SHOULD / MVP]
-- Slots fixos (21:10, 21:40, 22:10, 22:40, 23:10, 23:40) + custom
-- Manager entra na fila → sistema faz match automático
-- Chat de Confronto (Supabase Realtime)
-- Expira em 5 min sem confirmação
-
-### F10 — Painel Admin [MUST / MVP]
-- Dashboard geral (times, jogadores, partidas, receita - admin only)
-- Fila de reivindicações com foto (aprovar/rejeitar)
-- Painel Discovery (disparar scan, inserir ID manual)
-- Gestão de usuários (excluir, suspender)
-- Dashboard financeiro (admin only)
-
-### F11 — Corujões Diários [SHOULD / MVP]
-- Torneios mata-mata noturnos (22h, duração ~2h)
-- 8-32 times, capacidade definida por admin/moderador
-- Fase de grupos opcional (2-8 grupos)
-- Inscrição R$3,00/time via PIX (Mercado Pago)
-- Mínimo 8 times para confirmar (senão cancela e estorna)
-- Chaveamento automático (sorteio ou seed por Pit Rating)
-- Resultados via API EA após cada rodada
-- Hall of Fame automático ao final
-
-### F12 — Pagamento (Gateway) [SHOULD / MVP]
-- Mercado Pago: PIX automático QR code
-- Webhook para confirmar pagamento
-- Sistema de confiança: 24h para pagar
-- 1ª inadimplência: alerta
-- 2ª inadimplência: suspensão 1 mês
-- 3ª inadimplência: ban até próximo FIFA
-- Estorno automático em corujões cancelados
-- trust_scores table: strikes, suspended_until, banned
+### 4.5 Coleta Periódica
+- Cron: Seg/ter/qui às 04:00 AM (n8n). Puppeteer renova cookies antes.
+- Manual: Botão no painel Manager (rate limit: 1x/30min por time).
+- Deduplicação: matchId como chave única (ea_match_id UNIQUE).
+- Timestamp: Convertido de Unix epoch para UTC-3 (Brasília).
 
 ---
 
-## 9. HALL OF FAME
+## 5. SISTEMA DE DISCOVERY (SNOWBALL) — PRÉ-MVP
 
-Premiações automáticas por corujão (MVP - dados da API):
-- Campeão (time vencedor)
-- MVP da Final (maior rating na final)
-- Artilheiro (mais gols acumulados)
-- Garçom (mais assistências acumuladas)
-- Pitbull 🐕 (melhor marcação: tackles + rating defensivo)
-- Muralha (goleiro com mais defesas/clean sheets)
-- Melhor Rating Médio (mínimo X jogos)
+O Discovery é a funcionalidade mais estratégica do P.I.T. Constrói a base de times exponencialmente.
 
-Persistência permanente, cada torneio tem própria página HoF.
+### 5.1 Crescimento Exponencial
+
+| Iteração | Consultados | Novos Descobertos | Total Base |
+|---|---|---|---|
+| 1ª | 1 (seed) | Até 10 | ~11 |
+| 2ª | 10 | Até 100 | ~111 |
+| 3ª | 100 | Até 1.000 | ~1.111 |
+| 4ª+ | 1.000+ | Desacelera (repetições) | ~2.000+ |
+
+Processamento em paralelo (10-20 reqs simultâneas) com delay entre batches. Meta: 500+ times antes do lançamento.
+
+### 5.2 Dados Armazenados por Time Descoberto
+ea_club_id, ea_name_raw (nome original API), display_name (nome normalizado), discovered_at, discovered_via (clubId que levou à descoberta), last_scanned_at, claimed_by, status (unclaimed/pending/active).
+
+### 5.3 Time Não Encontrado na Base (Fluxo de Inserção Manual)
+Se um manager busca seu time e não encontra:
+1. Sistema exibe mensagem: "Time não encontrado. Sua solicitação foi enviada ao admin."
+2. Notificação é enviada ao Admin PIT com o nome buscado.
+3. Admin acessa o Painel Admin e busca o clubId em ferramenta externa.
+4. Admin insere o clubId no campo "Inserir ID Manual" do painel.
+5. Sistema puxa últimos 10 jogos, admin confirma, time é adicionado à base.
+6. Manager é notificado e pode prosseguir com a reivindicação.
 
 ---
 
-## 10. BANCO DE DADOS — SCHEMA COMPLETO
+## 6. FLUXO DE REIVINDICAÇÃO DE TIME
 
-### Tabelas principais (17 migrations):
-- users: id (UUID=auth.users), email, display_name, roles (user_role[]), is_active
-- players: id, user_id, ea_gamertag (unique), primary_position, secondary_position
-- clubs: id, ea_club_id, ea_name_raw, display_name, manager_id, status, subscription_plan
-- club_players: id, club_id, player_id, joined_at, left_at, is_active, role_in_club
-- discovered_clubs: id, ea_club_id, ea_name_raw, display_name, status, discovered_via, claimed_by
-- discovered_players: id, ea_gamertag, last_seen_club, linked_player_id
-- discovery_runs: id, started_at, finished_at, clubs_scanned, clubs_new, status
-- claims: id, user_id, discovered_club_id, photo_url, status, reviewed_by, rejection_reason
-- matches: id, ea_match_id (unique), match_timestamp, home/away_club_id, home/away_score, match_type, tournament_id
-- match_players: id, match_id, player_id, ea_gamertag, goals, assists, rating, passes, tackles, shots, cards, saves, minutes_played, man_of_match
-- lineups: id, club_id, match_id, name, formation, is_default
-- lineup_players: id, lineup_id, player_id, position, is_starter
-- matchmaking_queue: id, club_id, slot_time, status, matched_with, expires_at
-- confrontation_chats: id, queue_entry_a/b, club_a/b_id, confirmed_by_a/b, match_id, expires_at
-- confrontation_messages: id, chat_id, sender_id, message
-- tournaments: id, name, type (corujao/league), format, status, capacity_min/max, scheduled_date, start_time, entry_fee
-- tournament_entries: id, tournament_id, club_id, payment_status, trust_score_info
-- payments: id, gateway_id, amount, status (paid/pending/refunded/overdue), club_id, tournament_id
-- trust_scores: id, club_id, strikes (0-3), suspended_until, is_banned
-- hall_of_fame: id, tournament_id, award_type, player_id, club_id, value
-- notifications: id, user_id, type, title, body, is_read, data (JSONB)
+### 6.1 Fluxo Completo
+1. Manager se cadastra (e-mail + senha + gamertag EA)
+2. Acessa "Vincular meu Time" e digita o nome do time
+3. Sistema faz busca fuzzy na tabela discovered_clubs (usando pg_trgm no display_name)
+4. Exibe resultados. Manager seleciona o time.
+5. Sistema puxa últimos 10 jogos da API em tempo real e exibe (placares + adversários)
+6. Manager confirma: "Esses são meus jogos?"
+7. Se confirmar: sistema solicita FOTO DE PROVA mostrando que é manager do time dentro do jogo
+8. Manager faz upload da foto. Status do time muda para "pending"
+9. Admin PIT recebe notificação e acessa fila de reivindicações no Painel Admin
+10. Admin avalia a foto e aprova ou rejeita
+11. Aprovado: time muda para "active", manager é vinculado. Rejeitado: manager é notificado.
 
-### Enums:
+Proteção anti-fraude: Enquanto "pending", nenhum outro pode reivindicar. Se "active" (outro manager), aparece "Time já reivindicado" + opção de abrir disputa.
+
+---
+
+## 7. SISTEMA DE POSIÇÕES
+
+### 7.1 Formação Base: 3-5-2
+
+| Posição Detalhada | Sigla | API Retorna | Quantidade na 3-5-2 |
+|---|---|---|---|
+| Goleiro | GK | goalkeeper | 1 |
+| Zagueiro | ZAG | defender | 3 |
+| Volante | VOL | midfielder | 2 |
+| Meia Central | MC | midfielder | 1 |
+| Ala Esquerdo | AE | midfielder | 1 |
+| Ala Direito | AD | midfielder | 1 |
+| Atacante | ATA | forward | 2 |
+
+### 7.2 Lógica de Mapeamento
+Quando a API retorna categoria genérica, o sistema verifica posições cadastradas do jogador:
+- Exemplo: Jogador cadastrou Principal: VOL, Secundária: ZAG. Se API retornar "defender", jogou como ZAG. Se "midfielder", jogou como VOL.
+- Ambiguidade: Se API retornar "midfielder" para jogador com Principal: MC e Secundária: AE, sistema registra como posição principal (MC) por padrão. Manager pode corrigir na escalação.
+
+---
+
+## 8. CLASSIFICAÇÃO DE PARTIDAS
+
+A EA registra todos os jogos como "friendlyMatch". O P.I.T classifica com base no contexto interno:
+
+| Tipo | Critério | Pit Rating |
+|---|---|---|
+| Campeonato | Dois clubIds com confronto agendado na plataforma para aquele dia/horário | Pit Rating Competitivo |
+| Amistoso PIT | Partida originada pelo Matchmaking da plataforma | Pit Rating Geral |
+| Amistoso Externo | Jogo coletado que não corresponde a nenhum confronto/matchmaking | Não conta |
+
+---
+
+## 9. DEFINIÇÃO DO MVP
+
+Foco: Discovery pré-lançamento + cadastro com validação/reivindicação + coleta + stats + matchmaking + painel admin.
+
+| # | Feature | Descrição | Prioridade | Fase |
+|---|---|---|---|---|
+| F01 | Discovery (Snowball) | Varredura exponencial. Pré-popula base. Normalização encoding. Paralelo 10-20x. | MUST | PRÉ-MVP |
+| F02 | Cadastro + Reivindicação | E-mail + gamertag. Busca fuzzy. Confirmação visual (10 jogos). Upload foto. Aprovação admin. | MUST | MVP |
+| F03 | Posições (Principal/Sec.) | Jogador escolhe 2 posições (GK/ZAG/VOL/MC/AE/AD/ATA). Mapeamento automático API. | MUST | MVP |
+| F04 | Perfil do Jogador | Dashboard: gols, assists, rating, passes, tackles, evolução. Stats por posição. | MUST | MVP |
+| F05 | Gestão de Time | Manager vincula clubId (via reivindicação). Convida jogadores para elenco. | MUST | MVP |
+| F06 | Coleta de Dados | Cron (seg/ter/qui) + manual. Puppeteer/cookie. Timestamp → Brasília. Classificação auto. | MUST | MVP |
+| F07 | Histórico + Dashboard Time | Lista de partidas, drill-down, dashboard com ranking interno. | MUST | MVP |
+| F08 | Escalação Visual | Grid 3-5-2 com campo visual. Drag & drop. Posições detalhadas. | SHOULD | MVP |
+| F09 | Matchmaking Amistosos | Slots fixos (21:10-23:40) + custom. Match automático. Chat Confronto. Expira 5 min. | SHOULD | MVP |
+| F10 | Painel Admin | Dashboard geral, fila claims, Discovery, inserir ID manual, gestão usuários. | MUST | MVP |
+| F11 | Corujões Diários | Torneios mata-mata (8-32 times). Inscrição PIX. Chaveamento auto. Hall of Fame por corujão. | SHOULD | MVP |
+| F12 | Pagamento (Gateway) | Mercado Pago PIX. Webhook confirmação. Sistema de confiança 24h + suspensão progressiva. | SHOULD | MVP |
+
+### 9.1 Fora do MVP (Fase 2+)
+
+| # | Feature | Descrição | Fase |
+|---|---|---|---|
+| F13 | Anti-W.O. | Validação horário/gamertag, contestação, chat travado | Fase 2 |
+| F14 | Campeonatos (Liga) | Ligas com rodadas, pontos corridos ou mata-mata longo | Fase 2 |
+| F15 | Pit Rating™ | ELO adaptado. Só jogos pela plataforma. Filtros: Competitivo e Geral. Ligas automáticas. | Fase 2 |
+| F16 | Mercado de Jogadores | Vitrine pública de jogadores livres com stats | Fase 2 |
+| F17 | WhatsApp Bot | Escalações, notificações, comandos (n8n + Evolution API) | Fase 2 |
+| F18 | Comparação + Rankings | Radar chart, rankings por posição e confederação | Fase 3 |
+| F19 | App Mobile | React Native/Flutter + push notifications | Fase 3 |
+| F20 | Multi-Confederação | Terceiros criam e administram próprias confederações | Futuro |
+
+---
+
+## 10. CORUJÕES DIÁRIOS (MVP)
+
+Corujões são torneios relâmpago mata-mata realizados todas as noites. São o principal motor de engajamento e receita recorrente.
+
+### 10.1 Especificação
+
+| Parâmetro | Valor |
+|---|---|
+| Formato | Mata-mata (eliminação simples) |
+| Capacidade | 8 a 32 times (variável, definido pelo admin/moderador) |
+| Fase de grupos | Opcional: 2 a 8 grupos (ex: 16 times = 4 grupos de 4, top 2 avançam) |
+| Frequência | Diário (todos os dias da semana) |
+| Horário | Início às 22:00. Duração até ~00:00-01:00 |
+| Mínimo para acontecer | 8 times inscritos e confirmados |
+| Inscrição | R$ 3,00 por time (via gateway de pagamento) |
+| Chaveamento | Automático (sorteio ou seed por Pit Rating quando disponível) |
+| Resultados | Coletados automaticamente via API EA após cada rodada |
+| Premiação | Banner digital com MVPs, artilheiro, Pitbull etc. (Hall of Fame automático) |
+
+### 10.2 Fluxo de Inscrição
+1. Admin/Moderador cria o corujão do dia (define capacidade, horário, formato)
+2. Corujão aparece na página "Corujões" com vagas disponíveis
+3. Manager clica em "Inscrever meu time"
+4. Sistema gera cobrança via gateway (Mercado Pago) — PIX automático de R$ 3,00
+5. Se pagamento confirmado: time inscrito. Se sistema de confiança ativo: time inscrito com 24h para pagar.
+6. Quando mínimo de 8 times é atingido: corujão é confirmado e todos são notificados
+7. Se não atingir mínimo até o horário: corujão cancelado, pagamentos estornados automaticamente
+8. Chaveamento gerado automaticamente. Confrontos publicados.
+
+### 10.3 Sistema de Confiança para Pagamento
+Para não travar a operação com pagamentos instantâneos, o sistema permite inscrição por confiança com prazo de 24 horas:
+
+| Status | Regra | Ação |
+|---|---|---|
+| Confiável | Time sem pendências. Pode se inscrever com 24h após o corujão para pagar. | Joga normalmente |
+| 1ª Inadimplência | Não pagou dentro de 24h. | Alerta |
+| 2ª Inadimplência | Reincidiu no não-pagamento. | Suspensão 1 mês |
+| 3ª Inadimplência | Terceira vez sem pagar. | Banido até próximo FIFA |
+
+Regra de desbloqueio: Para sair de suspensão, o time precisa quitar TODAS as pendências + cumprir o período. O ban por 3ª inadimplência só é resetado com o lançamento do próximo FIFA.
+Alternativa: Time pode optar por sempre pagar adiantado (PIX instantâneo) e nunca usar o sistema de confiança.
+
+---
+
+## 11. SISTEMA DE PAGAMENTO
+
+### 11.1 Gateway
+
+| Aspecto | Detalhe | Fase |
+|---|---|---|
+| Gateway | Mercado Pago (preferência BR, PIX nativo) | MVP |
+| Método | PIX automático (gera QR code na hora da inscrição) | MVP |
+| Corujões | R$ 3,00 por time por corujão | MVP |
+| Assinaturas Premium | R$ 9,90/mês (jogador) ou R$ 29,90/mês (time) — recorrente | Fase 2 |
+| Campeonatos (Liga) | R$ 50-100 por time (valor definido por campeonato) | Fase 2 |
+
+### 11.2 Dados Financeiros (Admin Only)
+Dashboard financeiro exclusivo do Admin PIT — Moderadores NÃO têm acesso:
+- Receita total por período (diário, semanal, mensal)
+- Receita por fonte: corujões, assinaturas, campeonatos
+- Times inadimplentes e pendências em aberto
+- Estornos realizados (corujões cancelados)
+- Projeção de receita baseada em tendência
+
+---
+
+## 12. HALL OF FAME
+
+Registro permanente de destaque por corujão e campeonato. Dados extraídos automaticamente da API. No MVP funciona para Corujões. Na Fase 2 expande para Campeonatos de Liga.
+
+| Premiação | Critério | Campos da API |
+|---|---|---|
+| Campeão | Time vencedor do campeonato/corujão | Resultado final |
+| MVP da Final | Maior rating na partida final | rating |
+| Artilheiro | Mais gols no campeonato (todas as fases) | goals (acumulado) |
+| Garçom (Assistente) | Mais assistências no campeonato | assists (acumulado) |
+| Pitbull 🐕 | Melhor marcação: tackles completados + tentados + rating defensivo | tacklesmade, tackleattempts, rating |
+| Muralha | Goleiro com mais defesas e/ou clean sheets | saves, cleansheetsgk |
+| Melhor Rating Médio | Maior rating médio do campeonato (mínimo X jogos) | rating (média) |
+
+Persistência: Hall of Fame é permanente. Cada campeonato/corujão tem sua própria página de Hall of Fame.
+
+---
+
+## 13. PIT RATING™ (FASE 2)
+
+REGRA FUNDAMENTAL: Só conta jogos que acontecem PELA plataforma (campeonatos ou matchmaking). Jogos externos não afetam rating.
+
+- Rating inicial: 1500 pontos.
+- Calibração: Primeiros 15 jogos com multiplicador 2x.
+- Filtros: Competitivo (só campeonatos, padrão) e Geral (+amistosos PIT).
+- Ligas automáticas:
+  - Elite: 2200+ pontos
+  - Ouro: 2000-2199
+  - Prata: 1800-1999
+  - Bronze: 1600-1799
+  - Acesso: abaixo de 1600
+- Soft reset: 10-15% compressão por temporada EA FC.
+
+---
+
+## 14. ARQUITETURA TÉCNICA
+
+| Camada | Tecnologia | Justificativa |
+|---|---|---|
+| Frontend | Next.js 14+ (React, App Router, TypeScript) | SSR, dev solo |
+| Backend | Supabase | PostgreSQL, Auth, Edge Functions, Realtime (chat), Storage (fotos claims) |
+| Cron/Automação | n8n (VPS) | Discovery, coleta, limpeza storage |
+| Cookie | Puppeteer (VPS) | Renovar cookies Akamai antes de cada coleta |
+| Hosting | Vercel + VPS | Vercel (free) para Next.js. VPS para n8n/Puppeteer |
+| Pagamento | Mercado Pago | PIX automático para corujões. Recorrente para assinaturas (Fase 2) |
+
+---
+
+## 15. MODELO DE DADOS (SCHEMA COMPLETO)
+
+### 15.1 Tabelas Principais
+
+| Tabela | Descrição | Chave |
+|---|---|---|
+| users | Usuários: email, senha, roles (player/manager/moderator/admin), is_active | id (UUID = auth.users) |
+| players | Perfil jogador: ea_gamertag (unique), primary_position, secondary_position, status | id, ea_gamertag |
+| clubs | Times ativos: ea_club_id, ea_name_raw, display_name, manager_id, status, subscription_plan | id, ea_club_id |
+| club_players | Relação jogador-time (N:N): joined_at, left_at, is_active, role_in_club | club_id + player_id |
+| discovered_clubs | Discovery: ea_club_id, ea_name_raw, display_name, status, discovered_via, claimed_by, last_scanned_at | ea_club_id |
+| discovered_players | Players descobertos: ea_gamertag, last_seen_club, linked_player_id, discovered_at | ea_gamertag |
+| discovery_runs | Log de varreduras: started_at, finished_at, clubs_scanned, clubs_new, status | id |
+| claims | Reivindicações: user_id, discovered_club_id, photo_url, status (pending/approved/rejected), reviewed_by, rejection_reason | id |
+| matches | Partidas: ea_match_id (unique), match_timestamp, home_club_id, away_club_id, home_score, away_score, match_type, tournament_id | ea_match_id |
+| match_players | Stats individuais: player_id, ea_gamertag, goals, assists, rating, passes, tacklesmade, tackleattempts, shots, cards, saves, cleansheetsgk, minutes_played, man_of_match, position_resolved | match_id + player_id |
+| lineups | Escalações: club_id, match_id, name, formation, is_default | id |
+| lineup_players | Jogadores na escalação: lineup_id, player_id, position, is_starter | id |
+| matchmaking_queue | Fila: club_id, slot_time, status (waiting/matched/confirmed/expired/cancelled), matched_with, expires_at | id |
+| confrontation_chats | Chat de confronto: queue_entry_a, queue_entry_b, club_a_id, club_b_id, confirmed_by_a, confirmed_by_b, match_id, expires_at | id |
+| confrontation_messages | Mensagens do chat: chat_id, sender_id, message, created_at | id |
+| confederations | Confederações/Ligas (estrutura futura) | id |
+| tournaments | Corujões e Campeonatos: name, type (corujao/league), format, status, capacity_min, capacity_max, scheduled_date, start_time, entry_fee | id |
+| tournament_entries | Inscrições: tournament_id, club_id, payment_status (paid/pending/overdue/cancelled), payment_id, trust_score_info | tournament_id + club_id |
+| payments | Transações: gateway_id, amount, status (pending/paid/refunded/overdue/cancelled), club_id, tournament_id | id, gateway_id |
+| trust_scores | Confiança por time: club_id, strikes (0-3), suspended_until, is_banned | club_id |
+| hall_of_fame | Premiações: tournament_id, award_type (champion/mvp_final/top_scorer/top_assister/pitbull/muralha/best_avg_rating), player_id, club_id, value | tournament_id + award |
+| notifications | Notificações: user_id, type, title, body, is_read, data (JSONB) | id |
+| disputes | Contestações W.O. (Fase 2) | id |
+| pit_ratings | Rating por time e temporada (Fase 2): club_id, season, rating_competitive, rating_general | club_id + season |
+| subscriptions | Assinaturas Premium (Fase 2): user_id, plan, status, started_at, expires_at | id |
+
+### 15.2 Enums
+
 - user_role: player, manager, moderator, admin
 - club_status: unclaimed, pending, active, suspended, banned
 - player_position: GK, ZAG, VOL, MC, AE, AD, ATA
@@ -222,22 +413,22 @@ Persistência permanente, cada torneio tem própria página HoF.
 - payment_status: pending, paid, refunded, overdue, cancelled
 - hall_of_fame_award: champion, mvp_final, top_scorer, top_assister, pitbull, muralha, best_avg_rating
 
-### RLS Policies:
-- Todos com RLS habilitado
-- Jogadores: ver próprias stats, não ver dados de outros usuários sem permissão
+### 15.3 RLS Policies (Row Level Security)
+- Todas as tabelas com RLS habilitado
+- Jogadores: ver próprias stats, não ver dados de outros sem permissão
 - Manager: acessar dados do próprio time
-- Moderador: acessar dados operacionais
-- Admin: acesso irrestrito via service_role
+- Moderador: acessar dados operacionais (claims, tournaments, disputes)
+- Admin: acesso irrestrito via service_role key
 
-### Views Materializadas:
-- v_player_stats: agregado de stats do jogador (gols, assists, rating médio, partidas)
+### 15.4 Views Materializadas
+- v_player_stats: agregado de stats do jogador (gols, assists, rating médio, partidas por temporada)
 - v_club_stats: agregado do time (W/D/L, gols, players top)
-- v_financial_dashboard: receita, inadimplências, projeções (admin only)
-- v_club_rankings: ranking de times por performance
+- v_financial_dashboard: receita, inadimplências, projeções (admin only via service_role)
+- v_club_rankings: ranking de times por performance e Pit Rating
 
 ---
 
-## 11. ESTRUTURA DE PASTAS (Next.js App Router)
+## 16. ESTRUTURA DE PASTAS (Next.js App Router)
 
 ```
 src/
@@ -299,7 +490,7 @@ src/
 
 ---
 
-## 12. DESIGN SYSTEM
+## 17. DESIGN SYSTEM
 
 - Dark mode first (#0A0A0B base, #141417 cards, #1C1C21 elevated)
 - Primary: Laranja #F97316 (--primary HSL 25 95% 53%)
@@ -311,51 +502,41 @@ src/
 
 ---
 
-## 13. PRIORIDADES E FASES
+## 18. MONETIZAÇÃO
 
-### PRÉ-MVP (Agora):
-1. Setup projeto (Next.js + Supabase + Tailwind + shadcn)
-2. Schema DB + migrations (17 arquivos)
-3. Discovery System (snowball + encoding normalization)
-4. Cookie service (VPS Puppeteer)
+| Plano | Inclui | Preço |
+|---|---|---|
+| Free | Cadastro, Discovery, stats básicas (30 dias), 1 time, escalações, matchmaking | R$ 0 |
+| Corujões | Inscrição por time em torneios diários. Hall of Fame + banner digital. | R$ 3,00 / time / corujão (MVP) |
+| Premium Jogador | Histórico completo, stats avançadas, evolução, comparações | R$ 9,90/mês |
+| Premium Time | Múltiplos times, Pit Rating detalhado, analytics | R$ 29,90/mês |
+| Campeonatos Liga | Inscrição em campeonatos de liga (rodadas longas) | R$ 50-100 / time |
 
-### MVP:
-5. Auth (cadastro + login + papéis)
-6. Fluxo de reivindicação de time
-7. Coleta de dados da API EA
-8. Perfil do jogador (stats + histórico)
-9. Dashboard do time
-10. Escalação visual (3-5-2)
-11. Matchmaking + Chat (Realtime)
-12. Corujões Diários + Pagamento PIX
-13. Hall of Fame automático
-14. Painel Admin completo
-
-### Fase 2 (Pós-MVP):
-- Anti-W.O.
-- Campeonatos Liga
-- Pit Rating™ (ELO adaptado)
-- Mercado de Jogadores
-- WhatsApp Bot
-- Assinaturas Premium
+Lançamento: Tudo gratuito nos primeiros meses. Monetização após 20+ times ativos.
 
 ---
 
-## 14. MONETIZAÇÃO
+## 19. RISCOS E MITIGAÇÕES
 
-- Free: acesso básico
-- Corujões: R$3,00/time/torneio
-- Premium Jogador: R$9,90/mês (histórico completo, stats avançadas)
-- Premium Time: R$29,90/mês
-- Campeonatos Liga: R$50-100/time
-
-Lançamento com tudo gratuito → monetização após 20+ times ativos.
+| Risco | Impacto | Probabilidade | Mitigação |
+|---|---|---|---|
+| EA alterar/desativar API | ALTO | Média | Dados armazenados localmente. Scraping fallback. |
+| Akamai bloquear coleta | ALTO | Média | Puppeteer → Browserless → proxy residencial. |
+| Encoding de nomes mudar | BAIXO | Baixa | Pipeline de normalização robusto com fallback. |
+| Reivindicações fraudulentas | MÉDIO | Média | Foto obrigatória + validação manual pelo admin. |
+| Dev solo lento | MÉDIO | Alta | MVP enxuto. AI tools (Trae, Claude, Codex). |
 
 ---
 
-## 15. RISCOS
+## 20. ROADMAP
 
-- EA API desativada: dados armazenados localmente, fallback scraping
-- Akamai bloqueio: Puppeteer → Browserless → proxy residencial
-- Reivindicações fraudulentas: foto obrigatória + validação manual
-- Dev solo: MVP enxuto, AI tools (Antigravity, Claude, Codex)
+| Fase | Escopo | Entregáveis |
+|---|---|---|
+| Pré-MVP | Discovery (Snowball) + validação cookie Akamai + normalização encoding | Base com 500+ times. Pipeline de coleta funcionando. |
+| MVP | Auth + Reivindicação + Posições + Perfil + Time + Coleta + Histórico + Escalação + Matchmaking + Chat + Corujões + Pagamento + Hall of Fame + Painel Admin | Plataforma completa com stats, matchmaking, torneios e receita. |
+| Fase 2 | Anti-W.O. + Campeonatos Liga + Pit Rating™ + Mercado + WhatsApp + Assinaturas Premium | Ecossistema competitivo com classificação e ligas. |
+| Fase 3 | Rankings + App Mobile + Analytics + Expansão + Multi-Confederação | Plataforma madura e escalável. |
+
+---
+
+P.I.T © 2026 — Wander (ThePitbullOne) — Confidencial

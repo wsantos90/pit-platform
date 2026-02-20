@@ -1,0 +1,213 @@
+{
+	"meta": {
+		"generatedAt": "2026-02-20T18:19:04.424Z",
+		"tasksAnalyzed": 25,
+		"totalTasks": 25,
+		"analysisCount": 25,
+		"thresholdScore": 5,
+		"projectName": "P.I.T Platform",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Configurar projeto Next.js 14 com App Router e TypeScript",
+			"complexityScore": 3,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Divida esta tarefa em subtarefas para: 1) Inicialização do projeto Next.js com TypeScript, Tailwind e App Router; 2) Instalação e configuração de shadcn/ui, lucide-react e recharts; 3) Configuração de estrutura de pastas, tsconfig paths, CSS variables dark mode e font Inter.",
+			"reasoning": "Tarefa de setup inicial padrão seguindo documentação oficial Next.js 14. Passos bem definidos e automatizados (create-next-app), baixa complexidade técnica apesar de múltiplas configurações."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Configurar Supabase (PostgreSQL, Auth, RLS, Storage)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Crie subtarefas separadas para: 1) Criação do projeto Supabase e configuração PostgreSQL; 2) Configuração de autenticação email/password; 3) Setup de Storage bucket e políticas; 4) Criação dos clients Supabase (client.ts, server.ts, admin.ts) e variáveis de ambiente.",
+			"reasoning": "Configuração padrão Supabase com múltiplos componentes (DB, Auth, Storage, RLS). Dependências externas e necessidade de entender arquitetura client/server/admin."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Criar schema PostgreSQL (tabelas principais)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divida por grupos de tabelas: 1) Tabelas de usuários e perfis (users, players); 2) Tabelas de times (clubs, club_players, discovered_clubs); 3) Tabelas de partidas (matches, match_players); 4) Tabelas de torneios e pagamentos; 5) Enums, índices, triggers e RLS inicial.",
+			"reasoning": "20+ tabelas complexas com relacionamentos, enums, índices únicos, constraints, triggers e RLS. Alto volume de SQL com risco de erros de modelagem."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Implementar RLS policies (Row Level Security)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Crie uma subtarefa por grupo de tabelas principais: 1) Policies para players; 2) Policies para clubs; 3) Policies para claims; 4) Policies para matches; 5) Policies para payments/financeiro; 6) Testes integrados com diferentes roles.",
+			"reasoning": "Políticas complexas por role (4 níveis) em múltiplas tabelas. Requer profundo entendimento de auth.uid(), custom claims e testes granulares por role."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Implementar autenticação (login, registro, middleware)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Separe em: 1) Páginas de register/login/forgot-password; 2) Integração Supabase Auth (signup/signin); 3) Middleware de proteção de rotas; 4) Hook useAuth() e componente logout.",
+			"reasoning": "Fluxo completo auth com Supabase + middleware Next.js. Complexidade média devido a integração com DB (criação player no register)."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Criar sistema de roles e context switcher",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Divida em: 1) Schema roles array na tabela users; 2) Hooks useRole() e useContext(); 3) Componente ContextSwitcher com localStorage; 4) RoleGuard e middleware de rotas protegidas.",
+			"reasoning": "Sistema de roles acumulativos + context switcher (perfil/time) com storage sincronizado. Complexo pela lógica de alternância e guards granulares."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Implementar normalização de encoding de nomes de times",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Subtarefas: 1) Implementar função normalizeClubName() com mapa/regexp/iconv-lite; 2) Atualizar schema discovered_clubs (ea_name_raw + display_name) e testes com exemplos PRD.",
+			"reasoning": "Solução técnica específica (Latin-1→UTF-8) bem delimitada. Baixa complexidade mas requer testes precisos com casos reais."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Implementar integração com API EA Sports (fetch matches)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Separe: 1) Cliente HTTP com cookies Akamai, headers e retry logic; 2) Parser de response EA (matchId, stats, timestamp UTC-3); 3) Integração com normalização de nomes.",
+			"reasoning": "Integração API externa não documentada + cookies + parsing complexo + retry + conversão timezone. Alto risco de breaking changes."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Implementar renovação de cookies Akamai (Puppeteer)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Divida em: 1) Script Puppeteer para extração cookies; 2) Cron job (15-30min); 3) Armazenamento cookies (Supabase/file); 4) Endpoint /api/cookies + fallback Browserless; 5) Deploy VPS (PM2, logging).",
+			"reasoning": "Microserviço headless browser + infra VPS + fallback serviços pagos + cron. Muito complexo pela natureza anti-bot da EA."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Implementar Discovery (Snowball) - varredura exponencial",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Subtarefas: 1) Engine discoverClubs() com lógica snowball; 2) Deduplicação e delays rate-limit; 3) Logging em discovery_runs; 4) Workflow n8n/API endpoint cron.",
+			"reasoning": "Algoritmo recursivo exponencial + rate limiting + deduplicação + orquestração cron. Complexo pela escalabilidade e consumo API."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Implementar busca fuzzy de times (pg_trgm)",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1) Configuração pg_trgm extension + índice GIN; 2) Função searchClubs() + integração UI com debounce realtime.",
+			"reasoning": "PostgreSQL nativo bem documentado. Complexidade baixa com solução padrão pg_trgm."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Criar página de reivindicação de time (claim flow)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Fluxo: 1) Componente SearchClubs; 2) MatchPreview (10 jogos API); 3) PhotoUpload + Storage; 4) API /api/claim/submit + proteção concorrência.",
+			"reasoning": "Fluxo multi-step complexo integrando busca, API EA, Storage e estado pending. UX crítica para produto."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Criar painel de moderação (claims, tournaments, users)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Por aba: 1) Claims queue (aprovar/rejeitar); 2) Tournament manager (corujão); 3) Disputes (Fase 2); 4) User management; 5) RLS + componentes reutilizáveis.",
+			"reasoning": "Painel multi-aba com ações críticas (aprovar claims) + RLS granular. Alto impacto no negócio."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Criar painel admin (financeiro, discovery, config, assinaturas)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Por aba: 1) Dashboard métricas; 2) Discovery control; 3) Manual ID insertion; 4) Settings globais; 5) Subscriptions; 6) Financial (views materializadas).",
+			"reasoning": "Painel admin completo com dados sensíveis financeiros + service_role + views complexas. Muito abrangente."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Implementar sistema de posições (GK/ZAG/VOL/MC/AE/AD/ATA)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1) Enum + lógica mapPosition() com fallbacks; 2) UI settings page + storage em players table.",
+			"reasoning": "Lógica de mapeamento com regras de negócio específicas. Moderada complexidade."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Implementar coleta periódica de dados (cron + manual)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "1) API /api/collect/run (cookies + fetchMatches batch); 2) Deduplicação + classificação match_type; 3) n8n cron workflow; 4) Botão manual rate-limit.",
+			"reasoning": "Orquestração batch + cron + rate limiting + dependências externas (cookies). Complexo pela coordenação."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Implementar classificação automática de partidas (match_type)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1) Lógica classifyMatch() com regras tournament/matchmaking; 2) Integração pipeline collect/run + testes edge cases.",
+			"reasoning": "Regras de negócio complexas com joins múltiplas tabelas + timestamp matching."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Criar perfil do jogador (stats dashboard)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Componentes: 1) PlayerHeader; 2) StatsOverview + view materializada; 3) MatchHistory + filtros; 4) Charts Recharts + PositionStats.",
+			"reasoning": "Dashboard data-heavy com agregações, filtros, gráficos e views otimizadas."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Implementar gestão de time (roster, elenco, convites)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Por aba: 1) Elenco table + convites; 2) Histórico matches; 3) Matchmaking queue; 4) Workflow aceitação/rejeição convites.",
+			"reasoning": "CRUD completo roster + workflow convites assíncronos + notificações."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "Implementar escalação visual (grid 3-5-2 com drag & drop)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "1) Componente LineupVisual SVG/Canvas 3-5-2; 2) Drag&drop (dnd-kit) + validação posições; 3) CRUD lineups + escalações padrão.",
+			"reasoning": "UI custom complexa (campo futebol) + drag&drop + regras validação posições."
+		},
+		{
+			"taskId": 21,
+			"taskTitle": "Implementar matchmaking (fila, matching automático, chat de confronto)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "1) Tabelas matchmaking/confrontation; 2) Slots fixos + fila; 3) Matching algoritmo rating; 4) ConfrontationChat realtime; 5) Confirmação/expiração; 6) Integração collect results.",
+			"reasoning": "Sistema realtime complexo: fila, matching, chat, expiração, estado workflow. Core feature."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Implementar corujões diários (torneios mata-mata, inscrição, chaveamento, Hall of Fame)",
+			"complexityScore": 10,
+			"recommendedSubtasks": 7,
+			"expansionPrompt": "Fluxo completo: 1) CRUD tournaments; 2) Inscrições + pagamentos; 3) Chaveamento automático; 4) Coleta resultados rodadas; 5) Avanço winners; 6) Hall of Fame awards; 7) Bracket UI.",
+			"reasoning": "Sistema torneios completo end-to-end. Muito complexo: pagamentos, bracket, automação resultados, awards."
+		},
+		{
+			"taskId": 23,
+			"taskTitle": "Implementar gateway de pagamento (Mercado Pago PIX)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "1) SDK Mercado Pago + /api/payment/create; 2) Webhook /api/payment/webhook; 3) Sistema trust_scores; 4) Strikes/ban mechanism.",
+			"reasoning": "Integração pagamento externa + webhook + sistema confiança complexo. Alto risco financeiro."
+		},
+		{
+			"taskId": 24,
+			"taskTitle": "Implementar notificações (in-app, email, realtime)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "1) Tabela notifications + createNotification(); 2) Supabase Realtime subscribe; 3) NotificationBell UI + contador; 4) Navegação onClick + preferências.",
+			"reasoning": "Sistema notificações multi-canal (in-app, realtime, email Fase2). Complexo pela UX realtime."
+		},
+		{
+			"taskId": 25,
+			"taskTitle": "Implementar inserção manual de clubId (fluxo admin)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1) Formulário admin + validação clubId + fetchMatches; 2) Preview + confirmação + discovered_clubs insert.",
+			"reasoning": "Fluxo admin pontual bem delimitado. Moderada complexidade."
+		}
+	]
+}
