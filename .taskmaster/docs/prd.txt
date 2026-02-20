@@ -1,0 +1,361 @@
+# P.I.T — Product Requirements Document
+# Performance · Intelligence · Tracking
+# Plataforma de Gestão Competitiva para FIFA Pro Clubs 11v11
+# Versão 1.5 Final | Autor: Wander (ThePitbullOne)
+
+---
+
+## 1. VISÃO GERAL DO PRODUTO
+
+O P.I.T é uma plataforma web de gestão competitiva para FIFA Pro Clubs 11v11. Integra-se à API da EA Sports para capturar dados, oferecendo: Discovery automático de times, estatísticas detalhadas, matchmaking, sistema de rating (Pit Rating™), campeonatos com anti-W.O., e Hall of Fame.
+
+**Stack Técnico:**
+- Frontend: Next.js 14+ (App Router, TypeScript)
+- Backend: Supabase (PostgreSQL 15+, Auth, RLS, Edge Functions, Realtime, Storage)
+- Cron/Automação: n8n (VPS)
+- Cookie Renewal: Puppeteer (VPS)
+- Hosting: Vercel + VPS (Contabo/Hetzner)
+- Pagamento: Mercado Pago (PIX automático)
+- UI: Tailwind CSS + shadcn/ui + Lucide React
+
+---
+
+## 2. SISTEMA DE PAPÉIS (ROLES)
+
+Roles acumulativos: player → manager → moderator → admin
+
+- **Jogador** (default): Perfil pessoal, stats, histórico, escalações
+- **Manager**: + gestão de time, elenco, matchmaking, escalação (obtém ao reivindicar/criar time)
+- **Moderador**: + campeonatos, W.O., validar claims, excluir usuários (sem financeiro)
+- **Admin PIT**: Controle total incluindo financeiro, Discovery, configurações
+
+Context Switcher na sidebar para alternar entre visões: Meu Perfil | Meu Time | Moderação | Admin.
+
+---
+
+## 3. API EA SPORTS
+
+- Endpoint: GET proclubs.ea.com/api/fc/clubs/matches?platform=common-gen5&clubIds={id}&maxResultCount=10&matchType=friendlyMatch
+- Retorna: matchId, timestamp, placar, clubIds, dados de jogadores (goals, assists, rating, pos, tackles, etc.)
+- Proteção Akamai: cookies ak_bmsc e bm_sv (renovados via Puppeteer na VPS a cada 15-30min)
+- Encoding corrompido: Latin-1 interpretado como UTF-8 → normalizar com pipeline: ea_name_raw + display_name
+
+---
+
+## 4. DISCOVERY SYSTEM (SNOWBALL) — PRÉ-MVP
+
+Sistema de varredura exponencial. Cada consulta revela até 10 novos times.
+- Iteração 1: 1 seed → ~11 times
+- Iteração 2: 10 seeds → ~111 times
+- Iteração 3: 100 seeds → ~1.111 times
+
+Processamento paralelo (10-20 requests simultâneas). Log de runs em discovery_runs table.
+Meta: 500+ times antes do lançamento.
+
+**tabelas:** discovered_clubs (ea_club_id, ea_name_raw, display_name, status, discovered_at, discovered_via, last_scanned_at), discovered_players, discovery_runs
+
+---
+
+## 5. FLUXO DE REIVINDICAÇÃO DE TIME
+
+1. Manager se cadastra (email + senha + gamertag EA)
+2. Busca time por nome (fuzzy search em display_name)
+3. Sistema exibe resultados → Manager seleciona
+4. Sistema puxa últimos 10 jogos em tempo real
+5. Manager confirma "esses são meus jogos?"
+6. Upload foto de prova (evidência de ser manager no jogo)
+7. Status muda para "pending" → nenhum outro pode reivindicar
+8. Admin recebe notificação → avalia foto na fila de claims
+9. Aprovado: time muda para "active", manager vinculado. Rejeitado: manager notificado.
+
+---
+
+## 6. SISTEMA DE POSIÇÕES
+
+Formação base 3-5-2. 7 posições detalhadas:
+- GK (goalkeeper), ZAG (defender x3), VOL (midfielder x2), MC (midfielder x1), AE (midfielder x1), AD (midfielder x1), ATA (forward x2)
+
+Cada jogador define posição principal e secundária no cadastro. API retorna categorias genéricas (goalkeeper/defender/midfielder/forward). Sistema mapeia para posição específica baseado no cadastro do jogador.
+
+---
+
+## 7. CLASSIFICAÇÃO DE PARTIDAS
+
+EA registra tudo como "friendlyMatch". O P.I.T classifica:
+- **Campeonato**: dois clubIds agendados na plataforma → Pit Rating Competitivo
+- **Amistoso PIT**: originado pelo matchmaking → Pit Rating Geral
+- **Amistoso Externo**: sem contexto interno → não conta
+
+---
+
+## 8. MVP — FEATURES OBRIGATÓRIAS
+
+### F01 — Discovery (Snowball) [MUST / PRÉ-MVP]
+Varredura exponencial, normalização encoding, paralelo 10-20x, log de runs, painel admin para disparar.
+
+### F02 — Cadastro + Reivindicação [MUST / MVP]
+- Auth: email + senha + gamertag EA (validação única no banco)
+- Busca fuzzy de time (pg_trgm no display_name)
+- Confirmação visual (10 jogos da API em tempo real)
+- Upload foto prova (Supabase Storage)
+- Fila de claims no painel Admin (aprovar/rejeitar com foto)
+- Notificações ao manager
+
+### F03 — Posições (Principal/Secundária) [MUST / MVP]
+- Jogador escolhe 2 posições no cadastro
+- Mapeamento automático API → posição específica
+- Manager pode corrigir na escalação
+
+### F04 — Perfil do Jogador [MUST / MVP]
+- Dashboard: gols, assists, rating, passes, tackles
+- Evolução temporal (linha do tempo de partidas)
+- Stats por posição (filtro)
+- Histórico de partidas
+
+### F05 — Gestão de Time [MUST / MVP]
+- Manager vincula clubId via reivindicação aprovada
+- Gerenciar elenco (convidar jogadores por gamertag)
+- club_players com histórico (joined_at, left_at)
+
+### F06 — Coleta de Dados [MUST / MVP]
+- Cron via n8n (seg/ter/qui às 04:00)
+- Coleta manual pelo Manager (1x/30min por time)
+- Puppeteer renova cookies antes da coleta
+- Deduplicação por ea_match_id
+- Timestamp unix → UTC-3 (Brasília)
+- Classificação automática de partidas
+
+### F07 — Histórico + Dashboard Time [MUST / MVP]
+- Lista partidas com drill-down
+- Dashboard: W/D/L, gols marcados/sofridos, top scorers, etc.
+- Ranking interno dos jogadores do time
+
+### F08 — Escalação Visual [SHOULD / MVP]
+- Grid 3-5-2 com campo visual (gradiente verde)
+- Drag & drop de jogadores do elenco para posições
+- Posições: GK, ZAG x3, VOL x2, MC, AE, AD, ATA x2
+
+### F09 — Matchmaking Amistosos [SHOULD / MVP]
+- Slots fixos (21:10, 21:40, 22:10, 22:40, 23:10, 23:40) + custom
+- Manager entra na fila → sistema faz match automático
+- Chat de Confronto (Supabase Realtime)
+- Expira em 5 min sem confirmação
+
+### F10 — Painel Admin [MUST / MVP]
+- Dashboard geral (times, jogadores, partidas, receita - admin only)
+- Fila de reivindicações com foto (aprovar/rejeitar)
+- Painel Discovery (disparar scan, inserir ID manual)
+- Gestão de usuários (excluir, suspender)
+- Dashboard financeiro (admin only)
+
+### F11 — Corujões Diários [SHOULD / MVP]
+- Torneios mata-mata noturnos (22h, duração ~2h)
+- 8-32 times, capacidade definida por admin/moderador
+- Fase de grupos opcional (2-8 grupos)
+- Inscrição R$3,00/time via PIX (Mercado Pago)
+- Mínimo 8 times para confirmar (senão cancela e estorna)
+- Chaveamento automático (sorteio ou seed por Pit Rating)
+- Resultados via API EA após cada rodada
+- Hall of Fame automático ao final
+
+### F12 — Pagamento (Gateway) [SHOULD / MVP]
+- Mercado Pago: PIX automático QR code
+- Webhook para confirmar pagamento
+- Sistema de confiança: 24h para pagar
+- 1ª inadimplência: alerta
+- 2ª inadimplência: suspensão 1 mês
+- 3ª inadimplência: ban até próximo FIFA
+- Estorno automático em corujões cancelados
+- trust_scores table: strikes, suspended_until, banned
+
+---
+
+## 9. HALL OF FAME
+
+Premiações automáticas por corujão (MVP - dados da API):
+- Campeão (time vencedor)
+- MVP da Final (maior rating na final)
+- Artilheiro (mais gols acumulados)
+- Garçom (mais assistências acumuladas)
+- Pitbull 🐕 (melhor marcação: tackles + rating defensivo)
+- Muralha (goleiro com mais defesas/clean sheets)
+- Melhor Rating Médio (mínimo X jogos)
+
+Persistência permanente, cada torneio tem própria página HoF.
+
+---
+
+## 10. BANCO DE DADOS — SCHEMA COMPLETO
+
+### Tabelas principais (17 migrations):
+- users: id (UUID=auth.users), email, display_name, roles (user_role[]), is_active
+- players: id, user_id, ea_gamertag (unique), primary_position, secondary_position
+- clubs: id, ea_club_id, ea_name_raw, display_name, manager_id, status, subscription_plan
+- club_players: id, club_id, player_id, joined_at, left_at, is_active, role_in_club
+- discovered_clubs: id, ea_club_id, ea_name_raw, display_name, status, discovered_via, claimed_by
+- discovered_players: id, ea_gamertag, last_seen_club, linked_player_id
+- discovery_runs: id, started_at, finished_at, clubs_scanned, clubs_new, status
+- claims: id, user_id, discovered_club_id, photo_url, status, reviewed_by, rejection_reason
+- matches: id, ea_match_id (unique), match_timestamp, home/away_club_id, home/away_score, match_type, tournament_id
+- match_players: id, match_id, player_id, ea_gamertag, goals, assists, rating, passes, tackles, shots, cards, saves, minutes_played, man_of_match
+- lineups: id, club_id, match_id, name, formation, is_default
+- lineup_players: id, lineup_id, player_id, position, is_starter
+- matchmaking_queue: id, club_id, slot_time, status, matched_with, expires_at
+- confrontation_chats: id, queue_entry_a/b, club_a/b_id, confirmed_by_a/b, match_id, expires_at
+- confrontation_messages: id, chat_id, sender_id, message
+- tournaments: id, name, type (corujao/league), format, status, capacity_min/max, scheduled_date, start_time, entry_fee
+- tournament_entries: id, tournament_id, club_id, payment_status, trust_score_info
+- payments: id, gateway_id, amount, status (paid/pending/refunded/overdue), club_id, tournament_id
+- trust_scores: id, club_id, strikes (0-3), suspended_until, is_banned
+- hall_of_fame: id, tournament_id, award_type, player_id, club_id, value
+- notifications: id, user_id, type, title, body, is_read, data (JSONB)
+
+### Enums:
+- user_role: player, manager, moderator, admin
+- club_status: unclaimed, pending, active, suspended, banned
+- player_position: GK, ZAG, VOL, MC, AE, AD, ATA
+- ea_position_category: goalkeeper, defender, midfielder, forward
+- match_type: championship, friendly_pit, friendly_external
+- matchmaking_status: waiting, matched, confirmed, expired, cancelled
+- tournament_type: corujao, league
+- tournament_status: draft, open, confirmed, in_progress, finished, cancelled
+- payment_status: pending, paid, refunded, overdue, cancelled
+- hall_of_fame_award: champion, mvp_final, top_scorer, top_assister, pitbull, muralha, best_avg_rating
+
+### RLS Policies:
+- Todos com RLS habilitado
+- Jogadores: ver próprias stats, não ver dados de outros usuários sem permissão
+- Manager: acessar dados do próprio time
+- Moderador: acessar dados operacionais
+- Admin: acesso irrestrito via service_role
+
+### Views Materializadas:
+- v_player_stats: agregado de stats do jogador (gols, assists, rating médio, partidas)
+- v_club_stats: agregado do time (W/D/L, gols, players top)
+- v_financial_dashboard: receita, inadimplências, projeções (admin only)
+- v_club_rankings: ranking de times por performance
+
+---
+
+## 11. ESTRUTURA DE PASTAS (Next.js App Router)
+
+```
+src/
+  app/
+    layout.tsx (root layout)
+    page.tsx (landing pública)
+    globals.css
+    (auth)/
+      login/page.tsx
+      register/page.tsx
+      forgot-password/page.tsx
+    (dashboard)/
+      layout.tsx (sidebar + context switcher)
+      profile/ (Meu Perfil - jogador)
+        page.tsx, matches/, settings/
+      team/ (Meu Time - manager)
+        page.tsx, roster/, lineup/, matches/, matchmaking/, claim/
+      tournaments/
+        page.tsx, [id]/, hall-of-fame/[id]/
+      matchmaking/page.tsx
+      moderation/ (moderador)
+        page.tsx, claims/, disputes/, tournaments/, users/
+      admin/ (admin only)
+        page.tsx, discovery/, subscriptions/, settings/, financial/
+    (public)/
+      clubs/[id]/, players/[id]/, rankings/, hall-of-fame/
+    api/
+      ea/fetch-matches/, ea/cookie/
+      discovery/scan/, discovery/insert-manual/
+      collect/run/
+      matchmaking/queue/, matchmaking/match/, matchmaking/expire/
+      tournament/create/, enroll/, bracket/, advance/, finalize/
+      payment/create/, payment/webhook/, payment/refund/
+      claim/submit/, claim/review/
+      cron/collect/
+  lib/
+    supabase/ (client.ts, server.ts, admin.ts, middleware.ts)
+    ea/ (api.ts, normalize.ts, parser.ts)
+    matchmaking/engine.ts
+    tournament/ (bracket.ts, scoring.ts)
+    payment/mercadopago.ts
+    positions.ts (mapeamento GK/ZAG/etc)
+    match-classifier.ts
+    utils.ts
+  components/
+    ui/ (shadcn base)
+    layout/ (Sidebar, ContextSwitcher, Navbar)
+    player/ (StatsCard, MatchHistory, PositionBadge)
+    team/ (RosterTable, LineupVisual, TeamDashboard)
+    tournament/ (BracketView, HallOfFameCard, EnrollButton)
+    matchmaking/ (QueuePanel, ConfrontationChat)
+    admin/ (ClaimQueue, DiscoveryPanel, FinancialDashboard)
+  hooks/
+    useAuth.ts, useRole.ts, useRealtime.ts, useTeam.ts
+  types/
+    database.ts, ea-api.ts, index.ts
+  middleware.ts
+```
+
+---
+
+## 12. DESIGN SYSTEM
+
+- Dark mode first (#0A0A0B base, #141417 cards, #1C1C21 elevated)
+- Primary: Laranja #F97316 (--primary HSL 25 95% 53%)
+- Tipografia: Inter (Google Fonts)
+- Componentes: shadcn/ui base + componentes PIT em src/components/pit/
+- Ícones: Lucide React (20px default, stroke 2)
+- Gráficos: Recharts (radar chart para stats jogador)
+- Sem hardcode de hex → usar CSS variables HSL → Tailwind extend
+
+---
+
+## 13. PRIORIDADES E FASES
+
+### PRÉ-MVP (Agora):
+1. Setup projeto (Next.js + Supabase + Tailwind + shadcn)
+2. Schema DB + migrations (17 arquivos)
+3. Discovery System (snowball + encoding normalization)
+4. Cookie service (VPS Puppeteer)
+
+### MVP:
+5. Auth (cadastro + login + papéis)
+6. Fluxo de reivindicação de time
+7. Coleta de dados da API EA
+8. Perfil do jogador (stats + histórico)
+9. Dashboard do time
+10. Escalação visual (3-5-2)
+11. Matchmaking + Chat (Realtime)
+12. Corujões Diários + Pagamento PIX
+13. Hall of Fame automático
+14. Painel Admin completo
+
+### Fase 2 (Pós-MVP):
+- Anti-W.O.
+- Campeonatos Liga
+- Pit Rating™ (ELO adaptado)
+- Mercado de Jogadores
+- WhatsApp Bot
+- Assinaturas Premium
+
+---
+
+## 14. MONETIZAÇÃO
+
+- Free: acesso básico
+- Corujões: R$3,00/time/torneio
+- Premium Jogador: R$9,90/mês (histórico completo, stats avançadas)
+- Premium Time: R$29,90/mês
+- Campeonatos Liga: R$50-100/time
+
+Lançamento com tudo gratuito → monetização após 20+ times ativos.
+
+---
+
+## 15. RISCOS
+
+- EA API desativada: dados armazenados localmente, fallback scraping
+- Akamai bloqueio: Puppeteer → Browserless → proxy residencial
+- Reivindicações fraudulentas: foto obrigatória + validação manual
+- Dev solo: MVP enxuto, AI tools (Antigravity, Claude, Codex)

@@ -1,0 +1,1501 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Configurar projeto Next.js 14+ com TypeScript e App Router",
+        "description": "Inicializar estrutura base do projeto conforme stack técnico especificado.",
+        "details": "Executar `npx create-next-app@latest pit --typescript --tailwind --eslint --app --src-dir`; Configurar Tailwind CSS com tema dark mode first (base #0A0A0B, primary #F97316 HSL); Instalar shadcn/ui (`npx shadcn-ui@latest init`), Lucide React, Recharts; Configurar Google Fonts Inter; Estruturar pastas src/app, lib, components conforme PRD.",
+        "testStrategy": "Verificar build (`npm run build`), dev server sem erros, Tailwind classes aplicadas corretamente, dark mode toggle funcionando.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Executar create-next-app com configurações TypeScript e App Router",
+            "description": "Inicializar novo projeto Next.js 14+ com TypeScript, Tailwind CSS, ESLint e App Router usando o comando CLI especificado.",
+            "dependencies": [],
+            "details": "Executar comando `npx create-next-app@latest pit --typescript --tailwind --eslint --app --src-dir` no terminal. Este comando criará a estrutura base do projeto com todas as dependências necessárias instaladas automaticamente, incluindo Next.js com suporte TypeScript nativo[1], configuração do App Router[2], e Tailwind CSS integrado. Verificar que o projeto foi criado com sucesso na pasta 'pit' e que todos os arquivos de configuração foram gerados corretamente.",
+            "status": "pending",
+            "testStrategy": "Executar `npm run dev` e verificar se o servidor inicia sem erros em localhost:3000. Confirmar que a página inicial carrega corretamente e que não há avisos de TypeScript no console.",
+            "parentId": "1"
+          },
+          {
+            "id": 2,
+            "title": "Configurar Tailwind CSS com tema dark mode first e cores customizadas",
+            "description": "Personalizar configuração Tailwind com tema dark mode como padrão e definir paleta de cores conforme especificação (base #0A0A0B, primary #F97316).",
+            "dependencies": [
+              1
+            ],
+            "details": "Editar arquivo `tailwind.config.ts` para adicionar `darkMode: 'class'` e estender a paleta de cores com base #0A0A0B e primary #F97316 em formato HSL. Configurar o tema dark como padrão no arquivo `globals.css` adicionando classe 'dark' ao elemento raiz. Testar aplicação de classes Tailwind com prefixo 'dark:' para garantir que o modo escuro funciona corretamente em todos os componentes.",
+            "status": "pending",
+            "testStrategy": "Verificar que classes Tailwind são aplicadas corretamente inspecionando elementos no navegador. Testar toggle entre light e dark mode (quando implementado) e confirmar que as cores customizadas (#0A0A0B e #F97316) são renderizadas corretamente em ambos os modos.",
+            "parentId": "1"
+          },
+          {
+            "id": 3,
+            "title": "Instalar e configurar shadcn/ui, Lucide React e Recharts",
+            "description": "Adicionar bibliotecas de componentes UI, ícones e gráficos ao projeto.",
+            "dependencies": [
+              1
+            ],
+            "details": "Executar `npx shadcn-ui@latest init` para inicializar shadcn/ui com as configurações padrão. Instalar Lucide React (`npm install lucide-react`) para ícones vetoriais. Instalar Recharts (`npm install recharts`) para visualização de dados e gráficos. Verificar que os arquivos de configuração foram criados em `components/ui` e que as dependências estão listadas em `package.json`. Testar importação de um componente shadcn/ui simples para confirmar que tudo está funcionando.",
+            "status": "pending",
+            "testStrategy": "Importar e renderizar um componente shadcn/ui (ex: Button), um ícone Lucide (ex: Home) e um gráfico Recharts simples em uma página de teste. Verificar que todos os componentes renderizam sem erros e que os estilos são aplicados corretamente.",
+            "parentId": "1"
+          },
+          {
+            "id": 4,
+            "title": "Configurar Google Fonts Inter e estruturar pastas do projeto",
+            "description": "Integrar fonte Inter do Google Fonts e organizar estrutura de diretórios conforme PRD.",
+            "dependencies": [
+              1
+            ],
+            "details": "Adicionar Google Fonts Inter ao arquivo `app/layout.tsx` ou `globals.css` usando `@import` ou `next/font`. Criar estrutura de pastas em `src/`: diretório `app` (já existe com App Router), `lib` para utilitários e funções auxiliares, `components` para componentes React reutilizáveis. Organizar subpastas dentro de `components` por funcionalidade (ex: `ui`, `dashboard`, `auth`). Criar arquivo `src/lib/utils.ts` para funções utilitárias comuns.",
+            "status": "pending",
+            "testStrategy": "Verificar que a fonte Inter está sendo carregada inspecionando a aba Network do DevTools e confirmando que o texto usa a fonte correta. Confirmar que a estrutura de pastas foi criada corretamente e que imports de componentes funcionam sem erros de caminho.",
+            "parentId": "1"
+          },
+          {
+            "id": 5,
+            "title": "Verificar build e validar configuração inicial do projeto",
+            "description": "Executar build de produção e validar que todas as configurações iniciais estão funcionando corretamente.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Executar `npm run build` para criar build de produção e verificar que não há erros de compilação ou avisos críticos. Executar `npm run dev` novamente para confirmar que o servidor de desenvolvimento inicia sem problemas. Validar que Tailwind CSS está aplicando estilos corretamente, que dark mode está configurado como padrão, que componentes shadcn/ui podem ser importados, e que a estrutura de pastas está pronta para desenvolvimento. Documentar qualquer configuração adicional necessária.",
+            "status": "pending",
+            "testStrategy": "Executar `npm run build` e confirmar que o build completa com sucesso sem erros. Verificar que `npm run dev` inicia o servidor sem erros. Inspecionar página inicial no navegador para confirmar que Tailwind, Google Fonts Inter e dark mode estão funcionando. Testar importação de um componente shadcn/ui para validar que a biblioteca está corretamente integrada.",
+            "parentId": "1"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Configurar cliente Supabase e middleware de autenticação",
+        "description": "Integrar Supabase Auth, RLS e client para server/client.",
+        "details": "Criar `src/lib/supabase/client.ts` e `server.ts` com variáveis de ambiente; Configurar `middleware.ts` para proteger rotas dashboard; Instalar `@supabase/supabase-js`, `@supabase/ssr`; Configurar RLS policies iniciais para users table.",
+        "testStrategy": "Testar login/logout, middleware redireciona não-autenticados, client retorna dados corretos.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Instalar pacotes Supabase necessários",
+            "description": "Executar instalação dos pacotes @supabase/supabase-js e @supabase/ssr via npm ou yarn.",
+            "dependencies": [],
+            "details": "Rodar 'npm install @supabase/supabase-js @supabase/ssr' no terminal do projeto. Verificar package.json para confirmar instalação sem erros de dependências conflitantes.",
+            "status": "pending",
+            "testStrategy": "Verificar se os pacotes aparecem em node_modules e podem ser importados sem erros no TypeScript.",
+            "parentId": "2"
+          },
+          {
+            "id": 2,
+            "title": "Criar clientes Supabase server e client",
+            "description": "Implementar src/lib/supabase/server.ts e src/lib/supabase/client.ts usando variáveis de ambiente.",
+            "dependencies": [
+              1
+            ],
+            "details": "Criar server.ts com createServerClient usando SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY; client.ts com createBrowserClient usando SUPABASE_URL e SUPABASE_ANON_KEY. Exportar funções createClient() e createServerClient().",
+            "status": "pending",
+            "testStrategy": "Testar importação dos clientes em uma página de teste e verificar se inicializam sem erros de configuração.",
+            "parentId": "2"
+          },
+          {
+            "id": 3,
+            "title": "Configurar middleware.ts para proteção de rotas",
+            "description": "Implementar middleware.ts que protege rotas do dashboard verificando autenticação Supabase.",
+            "dependencies": [
+              2
+            ],
+            "details": "Usar createServerClient no middleware para verificar session. Redirecionar não-autenticados para /login. Proteger matcher '/dashboard/*'. Implementar lógica de refresh token automática.",
+            "status": "pending",
+            "testStrategy": "Acessar /dashboard sem login (deve redirecionar), com login válido (deve permitir acesso).",
+            "parentId": "2"
+          },
+          {
+            "id": 4,
+            "title": "Habilitar RLS nas tabelas do schema",
+            "description": "Executar SQL para habilitar Row Level Security em todas as tabelas do schema public.",
+            "dependencies": [
+              2
+            ],
+            "details": "No Supabase Dashboard SQL Editor, rodar script DO $$ para ALTER TABLE ENABLE ROW LEVEL SECURITY em todas tabelas base do schema public. Verificar no Table Editor que RLS está ativo.",
+            "status": "pending",
+            "testStrategy": "Executar SELECT * em tabela com RLS ativo sem policies (deve retornar vazio para authenticated user).",
+            "parentId": "2"
+          },
+          {
+            "id": 5,
+            "title": "Criar políticas RLS iniciais para tabela users",
+            "description": "Implementar políticas básicas de RLS na tabela users para operações SELECT, INSERT, UPDATE, DELETE.",
+            "dependencies": [
+              4
+            ],
+            "details": "Criar policies PERMISSIVE: 'Users view own profile' SELECT USING(user_id = auth.uid()), 'Users insert own profile' INSERT WITH CHECK(user_id = auth.uid()), similares para UPDATE/DELETE. Executar antes de habilitar RLS se necessário.",
+            "status": "pending",
+            "testStrategy": "Como user autenticado, SELECT own user (sucesso), SELECT other user (falha), INSERT sem user_id match (falha).",
+            "parentId": "2"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Criar todas as 17 migrations do schema do banco",
+        "description": "Implementar schema completo com todas tabelas, enums e RLS conforme especificado.",
+        "details": "Usar Supabase Studio ou CLI para criar migrations: users, players, clubs, club_players, discovered_clubs, discovered_players, discovery_runs, claims, matches, match_players, lineups, lineup_players, matchmaking_queue, confrontation_chats, confrontation_messages, tournaments, tournament_entries, payments, trust_scores, hall_of_fame, notifications; Definir todos enums (user_role, club_status, etc.); Habilitar RLS em todas tabelas.",
+        "testStrategy": "Verificar schema no Supabase Dashboard, todos enums criados, RLS policies ativas, inserts de teste respeitam policies.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar migration para enums e tabelas básicas (users, players, clubs)",
+            "description": "Definir todos os enums necessários (user_role, club_status, etc.) e criar as tabelas users, players e clubs com suas colunas e relacionamentos iniciais.",
+            "dependencies": [],
+            "details": "Usar Supabase CLI: supabase migration new enums_users_players_clubs; Definir enums com CREATE TYPE; Criar tabelas com PKs, FKs e defaults; Aplicar com supabase db reset.",
+            "status": "pending",
+            "testStrategy": "Verificar enums listados no Supabase Dashboard; Confirmar tabelas criadas com colunas corretas.",
+            "parentId": "3"
+          },
+          {
+            "id": 2,
+            "title": "Criar migrations para tabelas de relacionamentos de clubes e jogadores",
+            "description": "Implementar tabelas club_players, discovered_clubs, discovered_players com chaves estrangeiras para clubs e players.",
+            "dependencies": [
+              1
+            ],
+            "details": "Criar migration: supabase migration new club_relationships; Definir FKs com REFERENCES e ON DELETE CASCADE onde aplicável; Incluir indexes em campos de busca.",
+            "status": "pending",
+            "testStrategy": "Testar inserts com dados relacionados; Verificar constraints de integridade referencial.",
+            "parentId": "3"
+          },
+          {
+            "id": 3,
+            "title": "Criar migrations para sistema de discovery e claims",
+            "description": "Criar tabelas discovery_runs, claims com campos de status, timestamps e relacionamentos com discovered entities.",
+            "dependencies": [
+              2
+            ],
+            "details": "Migration: supabase migration new discovery_claims; Definir enums para claim_status; Indexes em user_id e club_id para performance.",
+            "status": "pending",
+            "testStrategy": "Verificar estrutura no dashboard; Testar insert de claim com enum válido.",
+            "parentId": "3"
+          },
+          {
+            "id": 4,
+            "title": "Criar migrations para matches, lineups e torneios",
+            "description": "Implementar tabelas matches, match_players, lineups, lineup_players, tournaments, tournament_entries com relacionamentos complexos.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Migrations separadas ou única: supabase migration new matches_lineups_tournaments; Definir JSONB para lineups se necessário; FKs para players e clubs.",
+            "status": "pending",
+            "testStrategy": "Confirmar relacionamentos many-to-many; Testar inserts hierárquicos (match → match_players).",
+            "parentId": "3"
+          },
+          {
+            "id": 5,
+            "title": "Finalizar migrations auxiliares e habilitar RLS em todas tabelas",
+            "description": "Criar tabelas restantes (matchmaking_queue, confrontation_chats, confrontation_messages, payments, trust_scores, hall_of_fame, notifications) e ativar RLS com policies básicas em todas as 17 tabelas.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Migration final: supabase migration new aux_tables_rls; Para cada tabela: ALTER TABLE enable_row_level_security(); Criar policies iniciais como 'Users can view own data'. Push com supabase db push.",
+            "status": "pending",
+            "testStrategy": "Verificar todas 17 tabelas no dashboard; Confirmar RLS ativa (ALTER TABLE info); Testar inserts autenticados vs anônimos.",
+            "parentId": "3"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implementar sistema de autenticação (login/register)",
+        "description": "Páginas de auth com email+senha+gamertag EA único.",
+        "details": "Criar `app/(auth)/login/page.tsx`, `register/page.tsx` com shadcn forms; Integrar Supabase Auth.signUp/signInWithPassword; Validação gamertag único em players table; Redirect para dashboard pós-login; Adicionar forgot-password básica.",
+        "testStrategy": "Testar cadastro com gamertag duplicado (erro), login válido/inválido, redirect automático.",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar página de login com shadcn form",
+            "description": "Implementar formulário de login com campos email e senha usando componentes shadcn/ui Form, FormField e Input.",
+            "dependencies": [],
+            "details": "Criar app/(auth)/login/page.tsx com useForm, zodResolver e schema zod para email/senha. Integrar Supabase auth.signInWithPassword no onSubmit com loading state.",
+            "status": "pending",
+            "testStrategy": "Testar login com credenciais válidas/inválidas, validar erros de formatação email e exibição de loading.",
+            "parentId": "4"
+          },
+          {
+            "id": 2,
+            "title": "Criar página de registro com gamertag único",
+            "description": "Implementar formulário de registro com email, senha, confirmação senha e gamertag com validação de unicidade.",
+            "dependencies": [],
+            "details": "Criar app/(auth)/register/page.tsx com shadcn form. Schema zod com refine() para checar gamertag único via Supabase query na tabela players. Usar auth.signUp no submit.",
+            "status": "pending",
+            "testStrategy": "Testar registro com gamertag duplicado (erro), senhas não coincidentes, email inválido e sucesso completo.",
+            "parentId": "4"
+          },
+          {
+            "id": 3,
+            "title": "Implementar redirects pós-autenticação",
+            "description": "Configurar redirecionamento automático para dashboard após login/registro bem-sucedidos.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Usar useSession ou middleware para detectar auth state. Implementar useRouter para redirect('/dashboard') após signInWithPassword/signUp sucesso. Proteger rotas auth.",
+            "status": "pending",
+            "testStrategy": "Verificar redirect automático após login/registro, bloqueio de acesso a auth quando logado.",
+            "parentId": "4"
+          },
+          {
+            "id": 4,
+            "title": "Adicionar funcionalidade forgot password",
+            "description": "Implementar link e modal básico para reset de senha via Supabase.",
+            "dependencies": [
+              1
+            ],
+            "details": "Adicionar botão/link 'Esqueci senha' no login que abre Dialog com form email. Chamar supabase.auth.resetPasswordForEmail(email). Mostrar toast de sucesso.",
+            "status": "pending",
+            "testStrategy": "Testar envio email reset com email válido/inválido, confirmação toast e fechamento modal.",
+            "parentId": "4"
+          },
+          {
+            "id": 5,
+            "title": "Implementar proteções e validações finais",
+            "description": "Adicionar loading states, error handling, proteções CSRF e middlewares de auth.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Configurar middleware.ts para proteger dashboard e redirecionar não-autenticados para /login. Tratar erros Supabase (network, invalid creds). Adicionar debounce em gamertag check.",
+            "status": "pending",
+            "testStrategy": "Testar fluxo completo: register→login→redirect→logout. Verificar erros de rede, gamertag realtime validation.",
+            "parentId": "4"
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Criar layout dashboard com sidebar e context switcher",
+        "description": "Layout protegido com alternância de roles (Meu Perfil/Meu Time/Moderação/Admin).",
+        "details": "Criar `app/(dashboard)/layout.tsx` com Sidebar (shadcn), ContextSwitcher baseado em user roles; Hook `useRole.ts` para verificar permissões; Renderizar páginas condicionalmente por role.",
+        "testStrategy": "Testar switch entre views por role diferente, acesso negado para roles insuficientes.",
+        "priority": "high",
+        "dependencies": [
+          1,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar componente AppSidebar com shadcn/ui",
+            "description": "Implementar o componente de sidebar usando SidebarProvider, Sidebar, SidebarContent, SidebarGroup e SidebarMenu para navegação básica.",
+            "dependencies": [],
+            "details": "Criar arquivo components/app-sidebar.tsx seguindo documentação shadcn[1][4]. Incluir grupos para 'Meu Perfil', 'Meu Time', 'Moderação', 'Admin' com ícones do lucide-react. Adicionar SidebarTrigger no layout.",
+            "status": "pending",
+            "testStrategy": "Verificar se sidebar renderiza corretamente, colapsa/expande e itens de menu são clicáveis.",
+            "parentId": "5"
+          },
+          {
+            "id": 2,
+            "title": "Implementar ContextSwitcher para alternância de roles",
+            "description": "Criar componente ContextSwitcher que permite alternar entre views baseado nas roles do usuário autenticado.",
+            "dependencies": [
+              1
+            ],
+            "details": "Criar components/context-switcher.tsx com DropdownMenu. Usar cookies ou session para detectar roles disponíveis (Meu Perfil/Meu Time/Moderação/Admin). Definir estado atual da view.",
+            "status": "pending",
+            "testStrategy": "Testar dropdown mostra apenas roles permitidas, switch altera view corretamente.",
+            "parentId": "5"
+          },
+          {
+            "id": 3,
+            "title": "Criar hook useRole para verificação de permissões",
+            "description": "Desenvolver hook personalizado que retorna roles do usuário e funções de verificação de permissões.",
+            "dependencies": [],
+            "details": "Criar hooks/useRole.ts. Usar next-auth session ou Supabase auth. Retornar objeto com { roles: string[], hasRole(role: string): boolean, currentView: string }.",
+            "status": "pending",
+            "testStrategy": "Testar hook retorna roles corretas e funções de permissão funcionam para diferentes cenários.",
+            "parentId": "5"
+          },
+          {
+            "id": 4,
+            "title": "Implementar layout.tsx do dashboard protegido",
+            "description": "Criar app/(dashboard)/layout.tsx integrando Sidebar, ContextSwitcher e proteção de autenticação.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Usar middleware ou getServerSession para proteção. Integrar SidebarProvider com defaultOpen de cookies[1]. Renderizar ContextSwitcher no header. Passar children condicionalmente.",
+            "status": "pending",
+            "testStrategy": "Verificar redirect não-autenticados, layout renderiza apenas para usuários logados.",
+            "parentId": "5"
+          },
+          {
+            "id": 5,
+            "title": "Implementar renderização condicional de páginas por role",
+            "description": "Configurar roteamento condicional baseado na role atual e view selecionada no ContextSwitcher.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "No layout.tsx, usar useRole() + currentView para renderizar páginas específicas: profile/team/moderation/admin. Usar dynamic imports ou Suspense para lazy loading.",
+            "status": "pending",
+            "testStrategy": "Testar switch entre views por diferentes roles, acesso negado exibe mensagem para roles insuficientes.",
+            "parentId": "5"
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implementar API EA client com normalização de encoding",
+        "description": "Cliente para endpoint EA Sports com proteção Akamai e parsing Latin-1→UTF-8.",
+        "details": "Criar `src/lib/ea/api.ts` com fetch usando cookies ak_bmsc/bm_sv; `normalize.ts` para ea_name_raw + display_name; `parser.ts` para mapear dados jogadores (goals, assists, rating, pos); Tipos em `types/ea-api.ts`.",
+        "testStrategy": "Mock response EA, verificar normalização nomes corrompidos, parsing retorna dados estruturados corretos.",
+        "priority": "high",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar tipos TypeScript para API EA",
+            "description": "Definir interfaces completas para respostas da API EA Sports incluindo dados de jogadores, clubes e campos específicos como ea_name_raw e display_name.",
+            "dependencies": [],
+            "details": "Criar arquivo src/types/ea-api.ts com interfaces PlayerResponse, ClubResponse, PlayerStats (goals, assists, rating, pos). Usar tipos genéricos para paginacao e erros. Exportar todos os tipos para uso em api.ts, normalize.ts e parser.ts.",
+            "status": "pending",
+            "testStrategy": "Verificar autocompletar no VSCode e compilar sem erros de tipo com tsc --noEmit",
+            "parentId": "6"
+          },
+          {
+            "id": 2,
+            "title": "Implementar cliente HTTP com proteção Akamai",
+            "description": "Criar função fetch personalizada em api.ts que inclua cookies ak_bmsc e bm_sv obrigatórios para bypass da proteção Akamai.",
+            "dependencies": [
+              1
+            ],
+            "details": "Em src/lib/ea/api.ts: Criar fetchEA(url: string, options?: RequestInit) que adiciona headers com cookies Akamai do ambiente. Incluir user-agent realista e retry logic (3 tentativas). Exportar baseURL da EA Sports e função getPlayerData(playerId: string): Promise<PlayerResponse>.",
+            "status": "pending",
+            "testStrategy": "Mock fetch com MSW, verificar cookies incluídos no header e retry automático em 429",
+            "parentId": "6"
+          },
+          {
+            "id": 3,
+            "title": "Implementar normalização Latin-1 para UTF-8",
+            "description": "Criar utilitário normalize.ts para converter nomes corrompidos ea_name_raw e display_name de Latin-1 para UTF-8 válido.",
+            "dependencies": [
+              1
+            ],
+            "details": "Em src/lib/ea/normalize.ts: Função normalizeName(raw: string): string usando TextDecoder('latin1').decode(new Uint8Array(raw.split('').map(c => c.charCodeAt(0)))). Tratar caracteres especiais brasileiros/portugueses. Função normalizePlayerName(player: PlayerResponse): PlayerResponse normalizado.",
+            "status": "pending",
+            "testStrategy": "Testes unitários com nomes corrompidos conhecidos (ex: 'Júlio' → 'JÃºlio'), verificar output UTF-8 correto",
+            "parentId": "6"
+          },
+          {
+            "id": 4,
+            "title": "Implementar parser de dados de jogadores",
+            "description": "Criar parser.ts para mapear resposta EA em estrutura limpa com stats essenciais (goals, assists, rating, position).",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Em src/lib/ea/parser.ts: Função parsePlayerData(rawResponse: PlayerResponse): ParsedPlayer com campos: id, name (normalizado), displayName (normalizado), goals, assists, rating, position, clubId. Função parsePlayersList(response: any): ParsedPlayer[]. Tratar campos opcionais e defaults.",
+            "status": "pending",
+            "testStrategy": "Mock resposta EA real, verificar parsing retorna estrutura esperada sem perda de dados",
+            "parentId": "6"
+          },
+          {
+            "id": 5,
+            "title": "Integrar API completa com testes de normalização",
+            "description": "Conectar api.ts → normalize.ts → parser.ts criando cliente completo com testes end-to-end.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Em api.ts: Criar clienteEA com métodos getPlayer(id), getClubPlayers(clubId), getLeaderboard(). Integrar normalização e parsing automaticamente. Criar testes em api.test.ts com MSW mockando respostas EA corrompidas. Verificar chain: fetch → normalize → parse funciona.",
+            "status": "pending",
+            "testStrategy": "Teste E2E: Mock resposta EA com nomes corrompidos → verificar dados finais normalizados e parseados corretamente. Testar falhas Akamai (sem cookies → 403).",
+            "parentId": "6"
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Implementar Discovery System Snowball (pré-MVP)",
+        "description": "Varredura exponencial paralela com log de runs.",
+        "details": "API `app/api/discovery/scan/route.ts` com queue paralela (10-20 requests); Inserir discovered_clubs/players; Log em discovery_runs; Painel admin para disparar/monitorar; Endpoint manual insert.",
+        "testStrategy": "Executar scan com seed mock, verificar crescimento exponencial, logs corretos, sem duplicatas.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implementar API de scan com queue paralela",
+            "description": "Criar endpoint POST em app/api/discovery/scan/route.ts para iniciar varredura exponencial usando EA client com 10-20 requests paralelos.",
+            "dependencies": [],
+            "details": "Usar BullMQ ou p-limit para controlar concorrência; seed inicial de clubs/players; chamadas recursivas para descobrir novos itens via EA API; evitar duplicatas com verificação em banco.",
+            "status": "pending",
+            "testStrategy": "Testar com seed mock: verificar 10-20 requests simultâneos, crescimento exponencial sem crash.",
+            "parentId": "7"
+          },
+          {
+            "id": 2,
+            "title": "Implementar inserção em discovered_clubs e discovered_players",
+            "description": "Criar lógica para inserir dados descobertos nas tabelas discovered_clubs e discovered_players com deduplicação.",
+            "dependencies": [
+              1
+            ],
+            "details": "Usar upsert (ON CONFLICT) com chaves únicas (ea_id, display_name); normalizar encoding com normalize.ts; mapear campos EA para schema local.",
+            "status": "pending",
+            "testStrategy": "Inserir dados mock duplicados: verificar upsert correto, sem duplicatas, encoding normalizado.",
+            "parentId": "7"
+          },
+          {
+            "id": 3,
+            "title": "Implementar logging em discovery_runs",
+            "description": "Criar tabela discovery_runs e logar cada run com métricas (start_time, end_time, seeds, discovered_count, status).",
+            "dependencies": [
+              1
+            ],
+            "details": "API scan insere run no início e atualiza no fim; incluir erros e stats de performance; RLS para admin access.",
+            "status": "pending",
+            "testStrategy": "Executar scan completo: verificar log criado/atualizado com métricas precisas.",
+            "parentId": "7"
+          },
+          {
+            "id": 4,
+            "title": "Criar painel admin para disparar e monitorar scans",
+            "description": "Desenvolver página admin em app/(admin)/discovery/page.tsx com botões trigger, lista runs e realtime status.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Usar Supabase realtime subscriptions para updates; tabela com filtros (status, data); botão 'New Scan' chama API scan.",
+            "status": "pending",
+            "testStrategy": "Disparar scan via UI: verificar realtime updates, lista populada corretamente.",
+            "parentId": "7"
+          },
+          {
+            "id": 5,
+            "title": "Implementar endpoint manual insert discovered",
+            "description": "Criar API POST app/api/discovery/manual-insert/route.ts para inserir club/player manualmente em discovered tables.",
+            "dependencies": [
+              2
+            ],
+            "details": "Validação input (ea_id único, display_name); upsert similar ao scan; log em discovery_runs como 'manual'; auth admin only.",
+            "status": "pending",
+            "testStrategy": "Testar insert manual duplicado/novo: verificar upsert, log criado, auth bloqueia non-admin.",
+            "parentId": "7"
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Implementar fluxo de reivindicação de time (F02)",
+        "description": "Busca fuzzy + confirmação jogos + upload foto + fila admin.",
+        "details": "Página `app/(dashboard)/team/claim/page.tsx`; Fuzzy search com pg_trgm em display_name; Fetch 10 jogos EA; Upload foto Supabase Storage; Claims table; Notificações realtime; API claim/submit/review.",
+        "testStrategy": "Testar fluxo completo: busca→seleção→confirmação→upload→fila admin→aprovar/rejeitar.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          4,
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implementar busca fuzzy na página de reivindicação",
+            "description": "Criar interface de busca fuzzy para times usando pg_trgm no campo display_name na página app/(dashboard)/team/claim/page.tsx.",
+            "dependencies": [],
+            "details": "Integrar consulta SQL com extensão pg_trgm no Supabase; exibir resultados em lista com debounce no input; limitar a 10 resultados iniciais.",
+            "status": "pending",
+            "testStrategy": "Testar busca com nomes aproximados (ex: 'Real Madridd'), verificar ordenação por similaridade e performance.",
+            "parentId": "8"
+          },
+          {
+            "id": 2,
+            "title": "Implementar confirmação e fetch de jogos EA",
+            "description": "Adicionar seleção de time e fetch de 10 jogos EA para confirmação do usuário após busca fuzzy.",
+            "dependencies": [
+              1
+            ],
+            "details": "Usar EA client de task 6 para buscar jogos do time selecionado; exibir cards com jogos para confirmação manual; botão 'Confirmar Time'.",
+            "status": "pending",
+            "testStrategy": "Verificar fetch correto de jogos para time válido; mock EA API para times sem dados.",
+            "parentId": "8"
+          },
+          {
+            "id": 3,
+            "title": "Implementar upload de foto para Supabase Storage",
+            "description": "Criar funcionalidade de upload de foto do time após confirmação de jogos.",
+            "dependencies": [
+              2
+            ],
+            "details": "Usar Supabase Storage com bucket 'team-claims'; preview da imagem; validar formato (jpg/png) e tamanho (<5MB); salvar URL na claim.",
+            "status": "pending",
+            "testStrategy": "Testar upload com arquivo válido/inválido; verificar URL salva e acesso público da imagem.",
+            "parentId": "8"
+          },
+          {
+            "id": 4,
+            "title": "Criar API de submissão e tabela de claims",
+            "description": "Desenvolver endpoints API claim/submit e review; criar tabela claims no banco.",
+            "dependencies": [
+              3
+            ],
+            "details": "Migration para tabela claims (user_id, club_id, photo_url, status, created_at); POST /api/claim/submit; GET/PUT /api/claim/review/[id].",
+            "status": "pending",
+            "testStrategy": "Testar submissão completa; verificar inserção na tabela e status 'pending'.",
+            "parentId": "8"
+          },
+          {
+            "id": 5,
+            "title": "Implementar fila admin e notificações realtime",
+            "description": "Criar painel admin para fila de claims e notificações realtime via Supabase Realtime.",
+            "dependencies": [
+              4
+            ],
+            "details": "Página admin/team/claims com lista paginada; ações aprovar/rejeitar; subscriptions realtime para updates em claims e notificações.",
+            "status": "pending",
+            "testStrategy": "Testar fluxo completo: submit→fila admin→aprovar→notificação realtime ao user.",
+            "parentId": "8"
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Sistema de posições com mapeamento automático (F03)",
+        "description": "Escolha principal/secundária + mapping EA categories.",
+        "details": "Campo positions em players table (enum); `lib/positions.ts` mapping ea_position_category→player_position; Correção manual por manager; Badge componente.",
+        "testStrategy": "Testar mapeamento GK→GK, defender→ZAG, etc.; Correção manual salva corretamente.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar enum positions na tabela players",
+            "description": "Adicionar campo positions como enum na tabela players via migration no Supabase, incluindo valores como GK, ZAG, LAT, VOL, MEI, ATA.",
+            "dependencies": [],
+            "details": "Usar Supabase CLI ou Studio para migration: ALTER TABLE players ADD COLUMN positions player_position[] DEFAULT ARRAY[]::player_position[]; Criar enum player_position com posições padrão do jogo.",
+            "status": "pending",
+            "testStrategy": "Verificar no dashboard Supabase se enum e coluna foram criados corretamente; tentar insert com posição inválida para validar enum.",
+            "parentId": "9"
+          },
+          {
+            "id": 2,
+            "title": "Implementar mapeamento em lib/positions.ts",
+            "description": "Criar arquivo lib/positions.ts com função de mapping de ea_position_category para player_position, suportando principal/secundária.",
+            "dependencies": [
+              1
+            ],
+            "details": "Definir objeto ou Map: { 'GK': 'GK', 'CB': 'ZAG', 'LB': 'LAT_ESQ' }; Função mapEaToPosition(eaCategory: string): player_position[] que retorna array para múltiplas posições.",
+            "status": "pending",
+            "testStrategy": "Testar mapeamento: GK→GK, defender→ZAG, midfielder→MEI/VOL; console.log para validar saídas.",
+            "parentId": "9"
+          },
+          {
+            "id": 3,
+            "title": "Adicionar escolha manual de posições por manager",
+            "description": "Criar UI para manager selecionar/corrigir posições principal e secundária de um player, salvando no banco.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Usar shadcn select/multi-select em página de player detail; On submit: update players SET positions = $1; Integrar auto-mapping como default com override manual.",
+            "status": "pending",
+            "testStrategy": "Criar player com auto-map ZAG, alterar manual para LAT, verificar save e reload no banco.",
+            "parentId": "9"
+          },
+          {
+            "id": 4,
+            "title": "Desenvolver componente Badge para posições",
+            "description": "Criar componente Badge que exibe posições do player com cores por tipo (GK verde, ZAG azul, etc.).",
+            "dependencies": [
+              2
+            ],
+            "details": "BadgePosition.tsx: props { positions: player_position[] }; Renderizar badges sequenciais com ícones/labels; Estilo com shadcn badge variants por posição.",
+            "status": "pending",
+            "testStrategy": "Renderizar com positions=['GK','ZAG'], verificar cores e labels corretos em diferentes temas.",
+            "parentId": "9"
+          },
+          {
+            "id": 5,
+            "title": "Integrar sistema completo e testes end-to-end",
+            "description": "Integrar mapeamento automático, correção manual e badges em fluxos de player/club; Executar testes completos.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Chamar mapEaToPosition no player create/update; Usar Badge em listas de players; Adicionar RLS policy para update positions apenas por owner/manager.",
+            "status": "pending",
+            "testStrategy": "Fluxo completo: Import player EA → auto-map → manager corrige → badge mostra correto; Testar GK→GK, defender→ZAG salva corretamente.",
+            "parentId": "9"
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Perfil do jogador com stats e histórico (F04)",
+        "description": "Dashboard stats agregadas, evolução temporal, histórico partidas.",
+        "details": "Página `app/(dashboard)/profile/page.tsx`; View materializada v_player_stats; Recharts linha temporal, radar chart; Filtro por posição; Match history table.",
+        "testStrategy": "Inserir dados mock matches, verificar agregações corretas, gráficos renderizam.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          5,
+          9
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configurar página profile e conectar view v_player_stats",
+            "description": "Criar estrutura básica da página app/(dashboard)/profile/page.tsx e implementar query para buscar dados da view materializada v_player_stats do jogador logado.",
+            "dependencies": [],
+            "details": "Usar Tanstack Query ou SWR para fetch dos dados agregados de stats do jogador. Incluir loader e tratamento de erro. Garantir autenticação via NextAuth.",
+            "status": "pending",
+            "testStrategy": "Inserir dados mock na view e verificar se stats carregam corretamente na página.",
+            "parentId": "10"
+          },
+          {
+            "id": 2,
+            "title": "Implementar dashboard de stats agregadas com cards principais",
+            "description": "Criar seção superior com cards destacando KPIs principais como Pit Rating, vitórias/derrotas, taxa de aproveitamento, usando dados de v_player_stats.",
+            "dependencies": [
+              1
+            ],
+            "details": "Usar shadcn cards com números bold em destaque. Aplicar hierarquia visual com F/Z pattern: rating no topo, seguido de winrate e total matches.",
+            "status": "pending",
+            "testStrategy": "Verificar renderização responsiva dos cards e valores corretos com dados mock variados.",
+            "parentId": "10"
+          },
+          {
+            "id": 3,
+            "title": "Desenvolver gráficos temporal e radar com Recharts",
+            "description": "Implementar gráfico de linha para evolução temporal de stats e radar chart para comparação por posição, com filtro interativo por posição.",
+            "dependencies": [
+              1
+            ],
+            "details": "Recharts LineChart para evolução (ex: rating ao longo do tempo), RadarChart para stats por posição (gols, assistências, etc.). Filtro dropdown shadcn.",
+            "status": "pending",
+            "testStrategy": "Testar interatividade do filtro: gráficos atualizam corretamente; zoom e tooltips funcionam.",
+            "parentId": "10"
+          },
+          {
+            "id": 4,
+            "title": "Criar tabela de histórico de partidas (match history)",
+            "description": "Implementar tabela paginada com histórico completo das partidas do jogador, incluindo adversário, resultado, data e link para detalhes.",
+            "dependencies": [
+              1
+            ],
+            "details": "Usar shadcn DataTable com colunas: data, oponente, placar, posição jogada, rating ganho. Paginação server-side via query otimizada.",
+            "status": "pending",
+            "testStrategy": "Verificar paginação, ordenação por data e filtros; dados mock de 50+ matches.",
+            "parentId": "10"
+          },
+          {
+            "id": 5,
+            "title": "Aplicar layout dashboard, responsividade e testes finais",
+            "description": "Integrar com layout do dashboard (Task 5), otimizar responsividade mobile e executar testes completos de agregações e renderização.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Garantir compatibilidade com sidebar e context switcher. Usar Tailwind para breakpoints. Adicionar loading skeletons e empty states.",
+            "status": "pending",
+            "testStrategy": "Inserir dados mock matches, verificar agregações corretas em v_player_stats, gráficos renderizam em desktop/mobile, switch role não quebra.",
+            "parentId": "10"
+          }
+        ]
+      },
+      {
+        "id": 11,
+        "title": "Gestão de time e elenco (F05)",
+        "description": "Dashboard time, convidar jogadores por gamertag.",
+        "details": "Página `app/(dashboard)/team/page.tsx`, `roster/page.tsx`; RosterTable shadcn; Convite por ea_gamertag → discovered_players; club_players tracking joined/left.",
+        "testStrategy": "Manager convida jogador, aceita, verifica is_active em club_players.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          5,
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar página principal do dashboard de time",
+            "description": "Implementar a página `app/(dashboard)/team/page.tsx` com layout básico usando shadcn e integração com layout do dashboard.",
+            "dependencies": [],
+            "details": "Usar Sidebar e ContextSwitcher do Task 5; incluir navegação para roster; proteger com middleware de autenticação do Task 2.",
+            "status": "pending",
+            "testStrategy": "Verificar renderização da página para usuário logado com role manager; teste de redirecionamento para não-autenticados.",
+            "parentId": "11"
+          },
+          {
+            "id": 2,
+            "title": "Implementar RosterTable com shadcn",
+            "description": "Criar componente RosterTable em `roster/page.tsx` para exibir lista de jogadores do clube com status joined/left.",
+            "dependencies": [
+              1
+            ],
+            "details": "Query Supabase em club_players com filtros is_active; colunas: gamertag, posição, status, data joined/left; usar DataTable shadcn.",
+            "status": "pending",
+            "testStrategy": "Inserir dados mock em club_players; verificar tabela renderiza corretamente com paginação e filtros.",
+            "parentId": "11"
+          },
+          {
+            "id": 3,
+            "title": "Desenvolver busca e convite por ea_gamertag",
+            "description": "Adicionar formulário de busca por gamertag na página team com botão para enviar convite para discovered_players.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Input com debounce para query Supabase em players por ea_gamertag; botão 'Convidar' insere em discovered_players com status 'pending'; toast de feedback.",
+            "status": "pending",
+            "testStrategy": "Testar busca retorna jogador existente; inserir em discovered_players; verificar não duplica convites.",
+            "parentId": "11"
+          },
+          {
+            "id": 4,
+            "title": "Implementar tracking de joined/left em club_players",
+            "description": "Criar lógica para atualizar club_players quando jogador aceita/recusa convite ou deixa o time.",
+            "dependencies": [
+              3
+            ],
+            "details": "Trigger Supabase ou server action: ao aceitar, set is_active=true, joined_at=now(); ao sair, is_active=false, left_at=now(); atualizar RosterTable realtime com Supabase subscriptions.",
+            "status": "pending",
+            "testStrategy": "Simular aceitação/recusa via RPC Supabase; verificar atualização em club_players e refresh na tabela.",
+            "parentId": "11"
+          },
+          {
+            "id": 5,
+            "title": "Adicionar testes end-to-end e role-based access",
+            "description": "Implementar testes completos de fluxo manager convida → aceita → verifica roster atualizado.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Usar roles do Task 5; testes com Playwright ou Cypress: login manager, convidar, simular aceitação, verificar is_active=true em club_players e visível no roster.",
+            "status": "pending",
+            "testStrategy": "Cobertura 100% do fluxo principal; teste acesso negado para non-managers; validar realtime updates.",
+            "parentId": "11"
+          }
+        ]
+      },
+      {
+        "id": 12,
+        "title": "Classificador automático de partidas e collector (F06+F07)",
+        "description": "Coleta dados EA + classificação match_type + dashboard time.",
+        "details": "`lib/match-classifier.ts`; Cron endpoint `api/collect/run/`; Dedup ea_match_id; Timestamp UTC-3; View v_club_stats; TeamDashboard com W/D/L, top scorers.",
+        "testStrategy": "Inserir matches mock, classificar corretamente, dashboard atualiza stats.",
+        "priority": "high",
+        "dependencies": [
+          3,
+          6,
+          10
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implementar lógica de classificação em lib/match-classifier.ts",
+            "description": "Desenvolver o classificador automático de match_type baseado em dados EA, incluindo deduplicação por ea_match_id e ajuste de timestamp para UTC-3.",
+            "dependencies": [],
+            "details": "Criar funções para analisar dados de partidas EA, classificar tipos de match (ex: amistoso, oficial), aplicar dedup usando ea_match_id único e converter timestamps para UTC-3. Integrar com view v_club_stats.",
+            "status": "pending",
+            "testStrategy": "Inserir matches mock com ea_match_id duplicados, verificar classificação correta de match_type e timestamps ajustados.",
+            "parentId": "12"
+          },
+          {
+            "id": 2,
+            "title": "Criar endpoint cron api/collect/run/ para coleta de dados EA",
+            "description": "Implementar endpoint que executa coleta automática de dados EA e classificação de partidas via match-classifier.",
+            "dependencies": [
+              1
+            ],
+            "details": "Desenvolver API endpoint POST/GET em api/collect/run/ que chama collector EA, aplica classificador, salva em banco com dedup e atualiza views materializadas como v_club_stats.",
+            "status": "pending",
+            "testStrategy": "Chamar endpoint manualmente com dados mock EA, verificar inserção sem duplicatas e logs de execução cron.",
+            "parentId": "12"
+          },
+          {
+            "id": 3,
+            "title": "Configurar view materializada v_club_stats com stats W/D/L",
+            "description": "Criar view no banco para agregar estatísticas de clubes: vitórias, derrotas, empates e top scorers por time.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Definir SQL para view v_club_stats somando W/D/L por club_id, ranking top scorers (gols), atualizando após cada coleta. Otimizar para refresh automático pós-collect.",
+            "status": "pending",
+            "testStrategy": "Inserir dados mock de matches classificados, query view e validar agregações W/D/L e top 5 scorers por clube.",
+            "parentId": "12"
+          },
+          {
+            "id": 4,
+            "title": "Desenvolver TeamDashboard com stats e top scorers",
+            "description": "Implementar página de dashboard do time exibindo W/D/L, top scorers e gráficos temporais usando dados de v_club_stats.",
+            "dependencies": [
+              3
+            ],
+            "details": "Em app/(dashboard)/team/page.tsx, usar Recharts para gráficos W/D/L timeline, tabela shadcn para top scorers. Fetch de v_club_stats com filtros por período.",
+            "status": "pending",
+            "testStrategy": "Carregar dashboard com dados mock, verificar render de gráficos e tabela atualizando após nova coleta.",
+            "parentId": "12"
+          },
+          {
+            "id": 5,
+            "title": "Integrar e testar fluxo completo collector + classificador + dashboard",
+            "description": "Testar end-to-end: execução cron, coleta, classificação, update view e refresh dashboard.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Configurar script de teste integrando api/collect/run/, verificando dedup, UTC-3, v_club_stats e TeamDashboard. Adicionar logs e error handling.",
+            "status": "pending",
+            "testStrategy": "Executar fluxo completo com mocks: inserir matches, rodar cron, validar dashboard reflete stats corretas (W/D/L, scorers).",
+            "parentId": "12"
+          }
+        ]
+      },
+      {
+        "id": 13,
+        "title": "Escalação visual 3-5-2 drag & drop (F08)",
+        "description": "Grid campo visual com drag jogadores para posições.",
+        "details": "`app/(dashboard)/team/lineup/page.tsx`; LineupVisual componente com react-dnd; Salvar lineups table; Formação default.",
+        "testStrategy": "Drag jogador ZAG para posição, salva lineup, carrega correto.",
+        "priority": "medium",
+        "dependencies": [
+          9,
+          11
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar componente LineupVisual com DndProvider",
+            "description": "Implementar estrutura base do componente visual de escalação no arquivo page.tsx com react-dnd configurado.",
+            "dependencies": [],
+            "details": "Criar LineupVisual.tsx com DndProvider (HTML5Backend), importar useDrag/useDrop hooks, definir estrutura inicial do campo 3-5-2 com grid CSS responsivo usando Tailwind.",
+            "status": "pending",
+            "testStrategy": "Verificar se DndProvider renderiza sem erros e grid campo aparece corretamente no layout.",
+            "parentId": "13"
+          },
+          {
+            "id": 2,
+            "title": "Implementar jogadores dragáveis da lista reserva",
+            "description": "Criar componentes DraggablePlayer para jogadores disponíveis com useDrag hook.",
+            "dependencies": [
+              1
+            ],
+            "details": "Buscar jogadores do time via Supabase (dependendo tasks 9/11), usar useDrag com type: 'PLAYER', item: {id, position, name}, adicionar visual cues (drop-shadow, tilt) durante drag.",
+            "status": "pending",
+            "testStrategy": "Testar drag de jogador ZAG da lista reserva, verificar isDragging state muda visualmente.",
+            "parentId": "13"
+          },
+          {
+            "id": 3,
+            "title": "Implementar drop zones das 11 posições do campo 3-5-2",
+            "description": "Criar DropZone componentes para cada posição com useDrop hook e validação.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Definir 11 DropZone (3 ZAG, 5 MEI, 2 ALA, 1 ATA), useDrop com accept: 'PLAYER', hover para preview, drop handler valida posição (ex: ZAG só em ZAG), highlight visual em hover.",
+            "status": "pending",
+            "testStrategy": "Arrastar ZAG para posição ZAG (aceita), tentar MEI em ZAG (rejeita com feedback visual).",
+            "parentId": "13"
+          },
+          {
+            "id": 4,
+            "title": "Gerenciar estado lineup e formação default 3-5-2",
+            "description": "Implementar estado local/Zustand para lineup atual com formação padrão carregada.",
+            "dependencies": [
+              3
+            ],
+            "details": "useState para lineup: {positions: Array(11)}, carregar formação default 3-5-2 do lib/positions.ts, onDrop atualiza estado imediatamente com animações suaves, swap se posição ocupada.",
+            "status": "pending",
+            "testStrategy": "Carregar página mostra formação 3-5-2 default, drag altera posições corretamente.",
+            "parentId": "13"
+          },
+          {
+            "id": 5,
+            "title": "Implementar salvamento e carregamento de lineups",
+            "description": "Integrar Supabase para salvar/carregar lineups na tabela lineups.",
+            "dependencies": [
+              4
+            ],
+            "details": "Criar botão 'Salvar Escalação', supabase.from('lineups').upsert({team_id, formation: '3-5-2', positions: lineupState}), carregar lineup mais recente no mount, RLS policy por manager.",
+            "status": "pending",
+            "testStrategy": "Drag ZAG para posição, salvar, recarregar página, lineup persiste corretamente.",
+            "parentId": "13"
+          }
+        ]
+      },
+      {
+        "id": 14,
+        "title": "Painel Admin completo (F10)",
+        "description": "Dashboard geral, fila claims, discovery, users, financeiro.",
+        "details": "`app/(dashboard)/admin/page.tsx` e subpáginas; ClaimQueue com fotos; DiscoveryPanel trigger scan; FinancialDashboard view materializada; Gestão users.",
+        "testStrategy": "Admin aprova claim, trigger discovery, vê dashboard financeiro mock.",
+        "priority": "high",
+        "dependencies": [
+          5,
+          7,
+          8
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar página principal do Painel Admin",
+            "description": "Implementar o dashboard geral em app/(dashboard)/admin/page.tsx com layout shadcn-admin incluindo sidebar de navegação para as seções: fila claims, discovery, users e financeiro.",
+            "dependencies": [],
+            "details": "Usar shadcn/ui components (Sidebar, NavigationMenu); Incluir métricas principais como total claims pendentes, clubs discovered, users ativos; Layout responsivo com tema claro/escuro.",
+            "status": "pending",
+            "testStrategy": "Verificar renderização completa da página, navegação entre tabs, responsividade em mobile/desktop.",
+            "parentId": "14"
+          },
+          {
+            "id": 2,
+            "title": "Implementar Fila de Claims com fotos",
+            "description": "Criar subpágina app/(dashboard)/admin/claims/page.tsx com ClaimQueue table mostrando claims pendentes incluindo preview de fotos enviadas pelos usuários.",
+            "dependencies": [
+              1
+            ],
+            "details": "DataTable shadcn com colunas: user, gamertag, status, foto thumbnail, data; Ações aprovar/rejeitar; Integração com Supabase claims table; Paginação e filtros por status.",
+            "status": "pending",
+            "testStrategy": "Inserir claims mock com fotos, testar aprovação (update status), rejeição, filtros e paginação.",
+            "parentId": "14"
+          },
+          {
+            "id": 3,
+            "title": "Implementar Painel Discovery com trigger scan",
+            "description": "Criar subpágina app/(dashboard)/admin/discovery/page.tsx com histórico de runs e botão para disparar scan manual do Discovery System.",
+            "dependencies": [
+              1
+            ],
+            "details": "Table com discovery_runs (id, seed, clubs_found, players_found, duration, status); Button trigger POST /api/discovery/scan; Real-time updates com useSWR; Cards métricas totais.",
+            "status": "pending",
+            "testStrategy": "Disparar scan com seed mock, verificar log inserido, contadores atualizados, sem duplicatas em discovered_clubs/players.",
+            "parentId": "14"
+          },
+          {
+            "id": 4,
+            "title": "Implementar Dashboard Financeiro materializado",
+            "description": "Criar subpágina app/(dashboard)/admin/financeiro/page.tsx com view materializada mostrando KPIs financeiros e gráficos de receita/evolução.",
+            "dependencies": [
+              1
+            ],
+            "details": "Recharts (LineChart receita mensal, BarChart por origem); Cards KPIs (MRR, ARR, churn); Query Supabase view v_financial_metrics; Filtros período/método pagamento.",
+            "status": "pending",
+            "testStrategy": "Inserir dados mock transações, verificar agregações corretas, gráficos renderizam com filtros aplicados.",
+            "parentId": "14"
+          },
+          {
+            "id": 5,
+            "title": "Implementar Gestão de Users com roles",
+            "description": "Criar subpágina app/(dashboard)/admin/users/page.tsx com tabela de todos users, filtros por role (admin/manager/player) e ações de edição.",
+            "dependencies": [
+              1
+            ],
+            "details": "DataTable users (email, gamertag, role, club_id, status, created_at); Dropdown actions (edit role, ban/unban, view profile); Search e filtros avançados; Modal edição inline.",
+            "status": "pending",
+            "testStrategy": "Listar users mock, alterar role (admin→manager), verificar update em Supabase, filtros por role/status funcionam.",
+            "parentId": "14"
+          }
+        ]
+      },
+      {
+        "id": 15,
+        "title": "Matchmaking amistosos com chat realtime (F09)",
+        "description": "Fila slots fixos, match auto, chat confronto Supabase Realtime.",
+        "details": "`app/(dashboard)/matchmaking/page.tsx`; API queue/match/expire; QueuePanel, ConfrontationChat; Expire 5min sem confirmação.",
+        "testStrategy": "2 managers entram fila mesmo slot, match criado, chat mensagens realtime.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          11,
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implementar API para fila de matchmaking",
+            "description": "Criar endpoints POST /api/queue/join, POST /api/queue/leave e GET /api/queue/status para gerenciar entrada/saída da fila com slots fixos.",
+            "dependencies": [],
+            "details": "Usar tabelas matchmaking_queue e match_players do Supabase. Implementar lógica FIFO com slots fixos (ex: 2v2). Inserir user_id, slot_number, timestamp_entered e status. Retornar posição na fila.",
+            "status": "pending",
+            "testStrategy": "Testar join com 1-4 managers no mesmo slot, verificar posições FIFO, leave remove corretamente da fila.",
+            "parentId": "15"
+          },
+          {
+            "id": 2,
+            "title": "Desenvolver lógica automática de matching",
+            "description": "Criar API POST /api/match/create que verifica fila e gera match automático quando slots preenchidos.",
+            "dependencies": [
+              1
+            ],
+            "details": "Verificar matchmaking_queue a cada 10s via cron ou trigger. Quando slot cheio (ex: 4 players), criar registro em matches e match_players, remover da fila. Usar transações Supabase.",
+            "status": "pending",
+            "testStrategy": "2 managers entram mesmo slot → match criado automaticamente, 4 players → 2v2 match, verificar transação atômica.",
+            "parentId": "15"
+          },
+          {
+            "id": 3,
+            "title": "Implementar sistema de expiração de matches",
+            "description": "Criar API POST /api/match/expire que cancela matches não confirmados após 5 minutos.",
+            "dependencies": [
+              2
+            ],
+            "details": "Adicionar timestamp_confirmed em matches. Cron job verifica matches com age > 5min sem confirmação, seta status='expired', notifica players. Remover de match_players.",
+            "status": "pending",
+            "testStrategy": "Criar match, aguardar 5min sem confirmação → status muda para expired, players notificados.",
+            "parentId": "15"
+          },
+          {
+            "id": 4,
+            "title": "Criar componente QueuePanel para dashboard",
+            "description": "Desenvolver interface em app/(dashboard)/matchmaking/page.tsx para mostrar status da fila e controles.",
+            "dependencies": [
+              1
+            ],
+            "details": "Mostrar: posição na fila, tempo esperando, slot selecionado, botões 'Entrar Fila'/'Sair Fila'. Polling ou realtime updates do status via Supabase subscriptions.",
+            "status": "pending",
+            "testStrategy": "Entrar/sair fila reflete em UI realtime, posição atualiza conforme outros entram.",
+            "parentId": "15"
+          },
+          {
+            "id": 5,
+            "title": "Implementar ConfrontationChat com Supabase Realtime",
+            "description": "Criar componente chat realtime para confrontos usando subscriptions Supabase em confrontation_chats e confrontation_messages.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Configurar channel por match_id. Subscriptions para INSERT em confrontation_messages. Enviar mensagens via supabase.from('confrontation_messages').insert(). UI com lista mensagens + input. RLS por match_players.",
+            "status": "pending",
+            "testStrategy": "2 players em match → mensagens aparecem realtime para ambos, mensagens persistem no DB.",
+            "parentId": "15"
+          }
+        ]
+      },
+      {
+        "id": 16,
+        "title": "Corujões diários com bracket automático (F11)",
+        "description": "Torneios mata-mata, inscrição, chaveamento, resultados EA.",
+        "details": "`app/(dashboard)/tournaments/page.tsx`; `lib/tournament/bracket.ts`; Criação/inscrição; Sorteio por Pit Rating; BracketView componente.",
+        "testStrategy": "Criar corujão, 8 times inscrevem, gera bracket correto.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          14
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implementar criação e inscrição em corujões diários",
+            "description": "Criar funcionalidade para admins criarem torneios corujão diários e times se inscreverem via dashboard.",
+            "dependencies": [],
+            "details": "Em app/(dashboard)/tournaments/page.tsx, adicionar formulário de criação com data/hora F11, lista de inscritos e botão de inscrição para times autenticados. Integrar com Supabase table tournaments e tournament_teams.",
+            "status": "pending",
+            "testStrategy": "Criar corujão via UI, inscrever 3 times diferentes, verificar persistência no banco.",
+            "parentId": "16"
+          },
+          {
+            "id": 2,
+            "title": "Desenvolver lógica de sorteio por Pit Rating",
+            "description": "Implementar algoritmo de seed por Pit Rating dos times para geração justa do bracket.",
+            "dependencies": [
+              1
+            ],
+            "details": "Em lib/tournament/bracket.ts, criar função sortTeamsByPitRating() que busca pit_ratings de tournament_teams, ordena descending e retorna seeded list. Usar para primeira rodada.",
+            "status": "pending",
+            "testStrategy": "Mock 8 times com ratings variados, verificar ordem seeded correta (ex: 1800, 1750, ...).",
+            "parentId": "16"
+          },
+          {
+            "id": 3,
+            "title": "Implementar geração automática de bracket mata-mata",
+            "description": "Gerar bracket eliminatória simples (single elimination) com 8 times, calculando byes se necessário.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Em lib/tournament/bracket.ts, função generateBracket(teams: Team[]) que cria estrutura árvore com matches até final, usando seeded teams. Calcular byes: I = 2^p - n onde p=potência de 2 superior. Salvar em tournament_brackets table.",
+            "status": "pending",
+            "testStrategy": "8 times → 7 jogos sem byes; 6 times → 5 jogos + 2 byes; validar estrutura bracket.",
+            "parentId": "16"
+          },
+          {
+            "id": 4,
+            "title": "Criar componente BracketView interativo",
+            "description": "Desenvolver componente visual para exibir e editar bracket com resultados EA.",
+            "dependencies": [
+              3
+            ],
+            "details": "Criar components/tournaments/BracketView.tsx com shadcn/ui, renderizar rounds/matches recursivamente, inputs para gols EA, botão 'Salvar Resultados'. Fetch bracket de Supabase, optimistic updates.",
+            "status": "pending",
+            "testStrategy": "Carregar bracket mock, inserir resultados oitavas→final, verificar avanços automáticos.",
+            "parentId": "16"
+          },
+          {
+            "id": 5,
+            "title": "Integrar BracketView na página de torneios e ativar F11",
+            "description": "Conectar tudo na página principal e configurar hotkey F11 para abrir corujão atual.",
+            "dependencies": [
+              1,
+              4
+            ],
+            "details": "Em app/(dashboard)/tournaments/page.tsx, tabs: 'Ativos' com BracketView, 'Inscrições'. Adicionar useHotkeys('F11', openCurrentCorujao). Auto-gerar bracket quando 8 times inscritos. Notificações inscrições.",
+            "status": "pending",
+            "testStrategy": "Criar corujão, 8 inscrições → auto-bracket; F11 abre modal bracket; fluxo completo oitavas→final.",
+            "parentId": "16"
+          }
+        ]
+      },
+      {
+        "id": 17,
+        "title": "Integração Mercado Pago PIX + webhook (F12)",
+        "description": "PIX QR code, webhook confirmação, trust_scores strikes.",
+        "details": "`lib/payment/mercadopago.ts`; API create/webhook/refund; EnrollButton com QR; trust_scores tracking inadimplência.",
+        "testStrategy": "Sandbox MP: criar pagamento, webhook atualiza status, strike por overdue.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          16
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configurar credenciais e cliente Mercado Pago PIX",
+            "description": "Implementar cliente Mercado Pago em lib/payment/mercadopago.ts com credenciais sandbox e suporte a PIX.",
+            "dependencies": [],
+            "details": "Criar classe ou funções para inicializar SDK Mercado Pago com access_token de teste; Configurar paymentMethodId='pix'; Incluir variáveis de ambiente SUPABASE_MERCADOPAGO_ACCESS_TOKEN.",
+            "status": "pending",
+            "testStrategy": "Verificar inicialização do cliente sem erros; Testar chamada básica de autenticação com sandbox.",
+            "parentId": "17"
+          },
+          {
+            "id": 2,
+            "title": "Implementar API de criação de pagamento PIX",
+            "description": "Criar endpoint API para gerar QR Code PIX via Mercado Pago.",
+            "dependencies": [
+              1
+            ],
+            "details": "Adicionar função createPixPayment() em mercadopago.ts usando /v1/payments com body {transaction_amount, payment_method_id: 'pix', payer: {email, identification}}; Retornar QR code string e point_of_interaction.transaction_data.qr_code_base64.",
+            "status": "pending",
+            "testStrategy": "Testar criação de pagamento PIX no sandbox MP; Verificar retorno de QR code e dados de expiração.",
+            "parentId": "17"
+          },
+          {
+            "id": 3,
+            "title": "Integrar QR Code PIX no EnrollButton",
+            "description": "Atualizar componente EnrollButton para exibir QR Code PIX após chamada da API de criação.",
+            "dependencies": [
+              2
+            ],
+            "details": "Chamar API createPixPayment no onClick do EnrollButton; Renderizar QR code usando qrcode.react ou canvas; Mostrar timer de expiração (geralmente 5-10min); Incluir botão copiar chave PIX.",
+            "status": "pending",
+            "testStrategy": "Testar renderização do QR code no EnrollButton; Verificar timer countdown e copy-to-clipboard.",
+            "parentId": "17"
+          },
+          {
+            "id": 4,
+            "title": "Implementar webhook de confirmação Mercado Pago",
+            "description": "Criar endpoint webhook para processar notificações de pagamento PIX confirmado.",
+            "dependencies": [
+              1
+            ],
+            "details": "Criar API route /api/webhook/mercadopago com verificação de assinatura x-signature; Atualizar status pagamento no Supabase (pagamentos table); Chamar função updateTrustScore() em caso de sucesso.",
+            "status": "pending",
+            "testStrategy": "Simular webhook POST do Mercado Pago sandbox; Verificar update de status e log de processamento.",
+            "parentId": "17"
+          },
+          {
+            "id": 5,
+            "title": "Implementar trust_scores com strikes por inadimplência",
+            "description": "Integrar sistema de strikes no trust_score baseado em pagamentos PIX não confirmados.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Criar função applyStrike() que decrementa trust_score em pagamentos overdue (>10min sem confirmação); Cron job ou verificação no webhook; Atualizar users.trust_score via Supabase RPC; Definir regras: -5 pontos por PIX expirado.",
+            "status": "pending",
+            "testStrategy": "Testar strike automático em PIX expirado; Verificar decremento correto no trust_score do usuário.",
+            "parentId": "17"
+          }
+        ]
+      },
+      {
+        "id": 18,
+        "title": "Hall of Fame automático por premiações",
+        "description": "Cálculo awards por torneio finalizado (MVP, artilheiro, etc.).",
+        "details": "`lib/tournament/scoring.ts`; Awards enum; HallOfFameCard; Página pública `/hall-of-fame/[id]`; Persist hall_of_fame table.",
+        "testStrategy": "Finalizar torneio mock, calcular awards corretos, exibir HoF.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          16
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Definir enum Awards e lógica de cálculo em scoring.ts",
+            "description": "Criar ou expandir o enum Awards com premiações como MVP, artilheiro, etc., e implementar funções de cálculo automático baseadas em stats do torneio finalizado.",
+            "dependencies": [],
+            "details": "Em lib/tournament/scoring.ts, definir Awards enum (MVP, Artilheiro, Assistências, etc.) e funções como calculateAwards(tournamentId: string) que agregam gols, assists, vitórias por player/team.",
+            "status": "pending",
+            "testStrategy": "Testar calculateAwards com dados mock de torneio finalizado, verificar prêmios atribuídos corretamente.",
+            "parentId": "18"
+          },
+          {
+            "id": 2,
+            "title": "Criar e migrar tabela hall_of_fame no Supabase",
+            "description": "Definir schema da tabela hall_of_fame para persistir awards por torneio e criar migração no Supabase.",
+            "dependencies": [],
+            "details": "Tabela com colunas: id, tournament_id, player_id/team_id, award_type (enum), season/year. Executar migração via Supabase dashboard ou SQL.",
+            "status": "pending",
+            "testStrategy": "Inserir registro mock, query para validar estrutura e dados persistidos.",
+            "parentId": "18"
+          },
+          {
+            "id": 3,
+            "title": "Implementar trigger para calcular awards ao finalizar torneio",
+            "description": "Criar trigger ou hook no Supabase que chama calculateAwards quando status do torneio muda para 'finalizado'.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Usar Supabase Edge Function ou database trigger on update de tournaments table. Inserir resultados calculados em hall_of_fame.",
+            "status": "pending",
+            "testStrategy": "Atualizar torneio mock para finalizado, verificar se awards são calculados e inseridos automaticamente.",
+            "parentId": "18"
+          },
+          {
+            "id": 4,
+            "title": "Desenvolver componente HallOfFameCard",
+            "description": "Criar componente reutilizável HallOfFameCard para exibir premiações de um torneio específico.",
+            "dependencies": [
+              2
+            ],
+            "details": "Componente com props: tournamentId, awards[]. Usar shadcn/ui cards, badges para awards, fetch de hall_of_fame via Supabase query.",
+            "status": "pending",
+            "testStrategy": "Renderizar com dados mock, verificar layout e dados exibidos corretamente.",
+            "parentId": "18"
+          },
+          {
+            "id": 5,
+            "title": "Criar página pública /hall-of-fame/[id]",
+            "description": "Implementar página dinâmica pública para exibir Hall of Fame de um torneio específico usando HallOfFameCard.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Em app/hall-of-fame/[id]/page.tsx, fetch tournament e hall_of_fame data, renderizar HallOfFameCard. Público, sem auth.",
+            "status": "pending",
+            "testStrategy": "Acessar /hall-of-fame/{id} com torneio mock finalizado, verificar exibição completa de awards.",
+            "parentId": "18"
+          }
+        ]
+      },
+      {
+        "id": 19,
+        "title": "Views materializadas e rankings",
+        "description": "v_player_stats, v_club_stats, v_financial_dashboard, v_club_rankings.",
+        "details": "SQL views no Supabase; Refresh cron; Página pública `/rankings/` com v_club_rankings; Páginas públicas clubs/[id], players/[id].",
+        "testStrategy": "Inserir dados, refresh view, rankings ordenados corretamente.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Criar view v_club_rankings no Supabase",
+            "description": "Implementar materialized view para rankings de clubes com métricas agregadas de performance, vitórias, pontos e trust score.",
+            "dependencies": [],
+            "details": "Usar CREATE MATERIALIZED VIEW v_club_rankings AS SELECT club_id, SUM(points) as total_points, AVG(trust_score), COUNT(*) as matches FROM matches GROUP BY club_id ORDER BY total_points DESC; Habilitar RLS com security_invoker=true.",
+            "status": "pending",
+            "testStrategy": "Executar SELECT * FROM v_club_rankings e verificar ordenação correta por total_points DESC.",
+            "parentId": "19"
+          },
+          {
+            "id": 2,
+            "title": "Criar views v_player_stats e v_club_stats",
+            "description": "Implementar views materializadas para estatísticas detalhadas de jogadores e clubes com agregações de matches e lineups.",
+            "dependencies": [],
+            "details": "Criar v_player_stats com métricas por jogador (gols, assists, rating médio); v_club_stats com overview de clube (total jogadores, vitórias, derrotas); Usar JOINs com match_players, lineups.",
+            "status": "pending",
+            "testStrategy": "Verificar dados agregados corretos comparando com queries base nas tabelas originais.",
+            "parentId": "19"
+          },
+          {
+            "id": 3,
+            "title": "Implementar cron job para refresh das views",
+            "description": "Criar função PostgreSQL e pg_cron para atualizar materializadas views diariamente ou após discovery runs.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Criar função refresh_all_views() que executa REFRESH MATERIALIZED VIEW CONCURRENTLY v_club_rankings, v_player_stats, v_club_stats; Configurar pg_cron: SELECT cron.schedule('refresh-rankings', '0 2 * * *', 'SELECT refresh_all_views()');",
+            "status": "pending",
+            "testStrategy": "Executar REFRESH manualmente e verificar timestamp de atualização e dados consistentes.",
+            "parentId": "19"
+          },
+          {
+            "id": 4,
+            "title": "Desenvolver página pública /rankings/",
+            "description": "Criar página Next.js pública que exibe tabela de rankings usando v_club_rankings com paginação e filtros.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Implementar app/rankings/page.tsx com server component fetch(v_club_rankings); Usar shadcn Table, DataTable com sorting/pagination; Design responsivo com top 100 clubes.",
+            "status": "pending",
+            "testStrategy": "Verificar carregamento público sem auth, ordenação client-side, paginação funcional.",
+            "parentId": "19"
+          },
+          {
+            "id": 5,
+            "title": "Implementar páginas públicas clubs/[id] e players/[id]",
+            "description": "Criar páginas de detalhe público para clubes e jogadores usando views de stats com gráficos Recharts.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Implementar app/clubs/[id]/page.tsx e app/players/[id]/page.tsx; Fetch dados de v_club_stats/v_player_stats; Incluir gráficos de performance histórica, botões de claim para não-donos.",
+            "status": "pending",
+            "testStrategy": "Testar acesso público, dados corretos por ID, gráficos renderizam valores de views.",
+            "parentId": "19"
+          }
+        ]
+      },
+      {
+        "id": 20,
+        "title": "Configurar automações externas (n8n cron + Puppeteer cookies)",
+        "description": "Cron coleta dados + renovação cookies VPS.",
+        "details": "n8n workflow: seg/ter/qui 04:00 → api/collect/run; Puppeteer VPS endpoint `/api/ea/cookie/` renovar ak_bmsc/bm_sv 15-30min; Landing page `app/page.tsx`.",
+        "testStrategy": "Trigger cron manual, verificar coleta executa, cookies válidos para EA API.",
+        "priority": "high",
+        "dependencies": [
+          6,
+          7,
+          12
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Configurar workflow n8n com trigger Cron",
+            "description": "Criar workflow no n8n com Schedule Trigger configurado para seg/ter/qui às 04:00 que chama api/collect/run.",
+            "dependencies": [],
+            "details": "Adicionar Schedule Trigger node, configurar modo Cron com expressão '0 4 * * 1,2,4', conectar com HTTP Request node para POST em api/collect/run, ativar workflow.",
+            "status": "pending",
+            "testStrategy": "Executar manualmente o workflow e verificar se chama corretamente a API de coleta.",
+            "parentId": "20"
+          },
+          {
+            "id": 2,
+            "title": "Implementar endpoint Puppeteer /api/ea/cookie/ na VPS",
+            "description": "Criar endpoint na VPS que usa Puppeteer para renovar cookies ak_bmsc e bm_sv a cada 15-30 minutos.",
+            "dependencies": [],
+            "details": "Configurar servidor Node.js/Express na VPS, instalar Puppeteer, implementar rota GET/POST /api/ea/cookie/ que abre landing page app/page.tsx, captura e atualiza cookies ak_bmsc/bm_sv, retornar cookies renovados.",
+            "status": "pending",
+            "testStrategy": "Chamar endpoint via curl/POSTMAN e verificar se retorna cookies válidos e atualizados.",
+            "parentId": "20"
+          },
+          {
+            "id": 3,
+            "title": "Integrar renovação de cookies no workflow n8n",
+            "description": "Adicionar nó HTTP Request no workflow n8n para chamar endpoint Puppeteer antes da coleta de dados.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "No workflow n8n, após Cron trigger adicionar HTTP Request para VPS endpoint /api/ea/cookie/, extrair cookies da resposta, configurar headers com cookies renovados para chamada api/collect/run.",
+            "status": "pending",
+            "testStrategy": "Executar workflow manual, verificar logs se cookies são renovados antes da coleta.",
+            "parentId": "20"
+          },
+          {
+            "id": 4,
+            "title": "Configurar autenticação e variáveis de ambiente",
+            "description": "Definir variáveis de ambiente para URLs da API, VPS endpoint e credenciais no n8n e VPS.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "No n8n: variáveis N8N_URL_VPS, API_COLLECT_URL; Na VPS: variáveis PUPPETEER_ARGS, COOKIES_TARGET; Configurar autenticação básica ou token para endpoints se necessário.",
+            "status": "pending",
+            "testStrategy": "Verificar se workflows/endpoints funcionam com variáveis corretas sem hardcode.",
+            "parentId": "20"
+          },
+          {
+            "id": 5,
+            "title": "Testar automação completa e monitoramento",
+            "description": "Executar testes manuais, verificar execução cron e configurar monitoramento de falhas.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Trigger manual cron, verificar coleta executa com cookies válidos para EA API; Configurar error handling no n8n com email/slack notifications; Testar em seg/ter/qui 04:00 simulando horário.",
+            "status": "pending",
+            "testStrategy": "Simular cron em diferentes dias, verificar logs de coleta e validade cookies por 24h+.",
+            "parentId": "20"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-02-19T19:52:23.325Z",
+      "updated": "2026-02-19T19:52:23.325Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

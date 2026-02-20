@@ -1,0 +1,103 @@
+# P.I.T — Cursor Rules
+# Performance · Intelligence · Tracking
+# Plataforma de Gestão Competitiva para FIFA Pro Clubs 11v11
+
+## Projeto
+- **Nome:** P.I.T (Performance · Intelligence · Tracking)
+- **Stack:** Next.js 14 (App Router, TypeScript) + Supabase (PostgreSQL 15) + Tailwind CSS
+- **Deploy:** Vercel (frontend) + VPS (n8n, Puppeteer cookie service)
+- **Pagamento:** Mercado Pago (PIX)
+- **Linguagem:** Português (BR) para UI, inglês para código
+
+## Princípios de Arquitetura (OBRIGATÓRIOS)
+1. **SRP** — Cada módulo/função com um único motivo de mudança
+2. **DRY** — Zero repetição de lógica; extraia helpers/componentes
+3. **SSOT** — Dados vêm de uma única fonte oficial (DB → API → UI)
+4. **KISS** — A solução mais simples que atende ao requisito
+5. **YAGNI** — Implemente só o que é necessário agora
+6. **SOLID** — Respeite OCP/LSP/ISP/DIP quando relevante
+
+## Divisão de Lógica
+- **Supabase** cuida de: Auth, RLS, Database Functions/Triggers, Realtime, Storage, Views
+- **Next.js API Routes** cuidam de: Integração EA API, Discovery pipeline, Matchmaking engine, Pagamento, Classificação de partidas, Chaveamento, Normalização de encoding
+- **Princípio:** CRUD simples + segurança → Supabase. Lógica com dependências externas → API Routes.
+
+## Estrutura de Pastas
+```
+src/
+├── app/                    # Pages (App Router)
+│   ├── (auth)/             # Login, Register, Forgot Password
+│   ├── (dashboard)/        # Páginas autenticadas (com layout + sidebar)
+│   ├── (public)/           # Páginas públicas (rankings, perfis)
+│   └── api/                # Route Handlers
+├── components/
+│   ├── ui/                 # Componentes base (shadcn/ui style)
+│   ├── layout/             # Sidebar, Navbar, ContextSwitcher
+│   ├── player/             # StatsCard, MatchHistory, PositionBadge
+│   ├── team/               # RosterTable, LineupVisual, TeamDashboard
+│   ├── tournament/         # BracketView, HallOfFameCard
+│   ├── matchmaking/        # QueuePanel, ConfrontationChat
+│   └── admin/              # ClaimQueue, DiscoveryPanel, FinancialDashboard
+├── hooks/                  # useAuth, useRole, useRealtime, useTeam
+├── lib/
+│   ├── supabase/           # client.ts, server.ts, admin.ts, middleware.ts
+│   ├── ea/                 # api.ts, normalize.ts, parser.ts
+│   ├── matchmaking/        # engine.ts
+│   ├── tournament/         # bracket.ts, scoring.ts
+│   ├── payment/            # mercadopago.ts
+│   ├── rating/             # elo.ts
+│   ├── positions.ts        # Resolução de posição (FC10)
+│   ├── match-classifier.ts # Classificação de partidas (FC05)
+│   └── utils.ts            # Helpers compartilhados
+├── types/
+│   ├── database.ts         # Tipos espelhando o schema do banco
+│   ├── ea-api.ts           # Tipos da API EA
+│   └── index.ts            # Barrel export
+└── middleware.ts            # Supabase session refresh
+```
+
+## Convenções de Código
+- **Imports:** Use `@/` alias (ex: `@/lib/supabase/server`)
+- **Supabase Client Side:** `createClient()` de `@/lib/supabase/client`
+- **Supabase Server Side:** `createClient()` de `@/lib/supabase/server`
+- **Supabase Admin:** `createAdminClient()` de `@/lib/supabase/admin` — NUNCA no client
+- **Tipos:** Sempre importar de `@/types`
+- **Componentes:** PascalCase, um componente por arquivo
+- **Hooks:** camelCase, prefixo `use`
+- **API Routes:** Exportar funções nomeadas (GET, POST, PUT, DELETE)
+- **Validação:** Usar Zod em todas as API routes
+- **Erros:** Retornar `NextResponse.json({ error: 'mensagem' }, { status: 4xx })`
+
+## Sistema de Roles (FC11)
+- Roles são **acumulativos**: `['player']`, `['player', 'manager']`, etc.
+- Verificar roles via `useRole()` hook no client, `has_role()` no banco
+- Contextos de UI: `profile` (todos), `team` (manager), `moderation` (mod+admin), `admin` (admin)
+
+## Posições (FC10)
+- API EA retorna 4 categorias: `goalkeeper`, `defender`, `midfielder`, `forward`
+- PIT usa 7 posições: `GK`, `ZAG`, `VOL`, `MC`, `AE`, `AD`, `ATA`
+- Resolução: primária > secundária > fallback da categoria
+
+## Fluxos Críticos (Flowcharts)
+- FC01: Cadastro + Onboarding
+- FC02: Discovery Snowball (crescimento exponencial)
+- FC03: Reivindicação de Time (claims)
+- FC04: Coleta Periódica (cron + n8n)
+- FC05: Classificação de Partidas (championship/friendly_pit/external)
+- FC06: Matchmaking
+- FC07: Corujão (tournaments)
+- FC08: Pagamento + Trust Score
+- FC09: Renovação de Cookie Akamai
+- FC10: Resolução de Posição
+- FC11: Roles & Context System
+- FC12: Normalização de Encoding
+
+## Banco de Dados
+- 17 migrations em `supabase/migrations/`
+- RLS habilitado em TODAS as tabelas
+- Views pré-definidas: `v_player_stats`, `v_club_stats`, `v_financial_dashboard`, `v_club_rankings`
+- Triggers automáticos: `updated_at`, aprovação de claim, criação de trust score
+
+## Docs de Referência
+- `Imput Manual/Schema prisma_P.I.T.md` — Schema completo + arquitetura
+- `Imput Manual/FlowCharts_P.I.T.mermaid` — Flowcharts Mermaid
