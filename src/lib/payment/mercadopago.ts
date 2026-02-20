@@ -134,14 +134,14 @@ export async function createSubscriptionPreapproval(input: SubscriptionInput): P
         },
     });
 
-    return result as SubscriptionResult;
+    return result as unknown as SubscriptionResult;
 }
 
 export async function getSubscription(preapprovalId: string): Promise<SubscriptionResult> {
     const client = getClientByType('recurring');
     const preapproval = new PreApproval(client);
     const result = await preapproval.get({ id: preapprovalId });
-    return result as SubscriptionResult;
+    return result as unknown as SubscriptionResult;
 }
 
 export async function getPayment(paymentId: string, purchaseType: PurchaseType = 'one_time'): Promise<PaymentResult> {
