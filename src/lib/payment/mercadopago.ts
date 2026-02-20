@@ -125,7 +125,6 @@ export async function createSubscriptionPreapproval(input: SubscriptionInput): P
             external_reference: input.externalReference,
             payer_email: input.payerEmail,
             back_url: input.backUrl,
-            notification_url: input.notificationUrl,
             auto_recurring: {
                 frequency: input.frequency,
                 frequency_type: input.frequencyType,
