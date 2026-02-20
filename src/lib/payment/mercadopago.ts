@@ -88,6 +88,7 @@ export async function createPaymentPreference(input: PreferenceInput): Promise<P
         body: {
             items: [
                 {
+                    id: input.externalReference,
                     title: input.description,
                     quantity: 1,
                     unit_price: input.amount,
