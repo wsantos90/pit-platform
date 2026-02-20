@@ -19,6 +19,12 @@ export function useTeam() {
 
     useEffect(() => {
         const fetchTeam = async () => {
+            if (!user) {
+                setTeam(null);
+                setLoading(false);
+                return;
+            }
+
             const { data } = await supabase
                 .from('clubs')
                 .select('*')
@@ -30,9 +36,7 @@ export function useTeam() {
             setLoading(false);
         };
 
-        if (user) {
-            fetchTeam();
-        }
+        void fetchTeam();
     }, [supabase, user]);
 
     return { team: user ? team : null, loading: user ? loading : false };
