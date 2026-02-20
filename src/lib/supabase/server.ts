@@ -5,8 +5,8 @@ import { cookies } from 'next/headers';
  * Cliente Supabase para uso em SERVER Components e API Routes
  * Usa a anon key com cookies do request — segurança via RLS
  */
-export function createClient() {
-    const cookieStore = cookies();
+export async function createClient() {
+    const cookieStore = await cookies();
 
     return createServerClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
