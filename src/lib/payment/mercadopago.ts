@@ -148,7 +148,7 @@ export async function getPayment(paymentId: string, purchaseType: PurchaseType =
     const client = getClientByType(purchaseType);
     const payment = new MPPayment(client);
     const result = await payment.get({ id: paymentId });
-    return result as PaymentResult;
+    return result as unknown as PaymentResult;
 }
 
 export async function refundPayment(paymentId: string, amount?: number, purchaseType: PurchaseType = 'one_time'): Promise<unknown> {
