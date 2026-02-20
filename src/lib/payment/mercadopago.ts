@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { MercadoPagoConfig, Preference, Payment as MPPayment, PreApproval } from 'mercadopago';
+import { MercadoPagoConfig, Preference, Payment as MPPayment, PaymentRefund, PreApproval } from 'mercadopago';
 
 type PreferenceInput = {
     amount: number;
@@ -153,11 +153,12 @@ export async function getPayment(paymentId: string, purchaseType: PurchaseType =
 
 export async function refundPayment(paymentId: string, amount?: number, purchaseType: PurchaseType = 'one_time'): Promise<unknown> {
     const client = getClientByType(purchaseType);
-    const payment = new MPPayment(client);
+    const refund = new PaymentRefund(client);
+    const numericId = parseInt(paymentId, 10);
     if (amount) {
-        return payment.refund({ id: paymentId, body: { amount } });
+        return refund.create({ payment_id: numericId, body: { amount } });
     }
-    return payment.refund({ id: paymentId });
+    return refund.create({ payment_id: numericId });
 }
 
 type SignatureParts = { ts: string; v1: string };
