@@ -44,7 +44,7 @@
               2
             ],
             "details": "Criar pastas: src/app, src/lib, src/components, src/hooks, src/types. Configurar tsconfig.json com 'paths': {'@/*': ['./src/*']}. Adicionar CSS variables em globals.css: --background: #0A0A0B, --foreground: #141417, etc. Importar Inter em layout.tsx via next/font/google.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar paths absolutos com import '@/components/test'. Confirmar dark mode aplicando classes. Validar font Inter carregada no browser devtools.",
             "parentId": "undefined"
           }
@@ -213,7 +213,7 @@
         "dependencies": [
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -221,7 +221,7 @@
             "description": "Configurar políticas de SELECT, INSERT, UPDATE e DELETE para tabela 'players' usando auth.uid() e custom claims (role).",
             "dependencies": [],
             "details": "Player vê apenas próprio perfil (auth.uid() = id); Manager vê jogadores do seu time (club_id do manager); Moderator e Admin veem todos. Usar (auth.jwt() ->> 'role') = 'manager' etc.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com player: vê só si; manager: vê time; moderator/admin: vê todos.",
             "parentId": "undefined"
           },
@@ -231,7 +231,7 @@
             "description": "Configurar políticas de acesso para tabela 'clubs' baseado em roles de manager, moderator e admin.",
             "dependencies": [],
             "details": "Manager vê apenas próprio time (club_id = manager_club_id do auth.uid()); Moderator e Admin veem todos os clubs. Políticas para SELECT/INSERT/UPDATE/DELETE.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar manager: vê só seu club; moderator/admin: vê todos.",
             "parentId": "undefined"
           },
@@ -241,7 +241,7 @@
             "description": "Configurar políticas para tabela 'claims' onde player vê próprias, moderator e admin veem todas.",
             "dependencies": [],
             "details": "Player: auth.uid() = player_id; Moderator/Admin: role = 'moderator' ou 'admin'. Incluir políticas para todas operações CRUD.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar player: vê só suas claims; moderator: vê todas.",
             "parentId": "undefined"
           },
@@ -251,7 +251,7 @@
             "description": "Configurar acesso a matches: todos veem públicos, manager vê do seu time.",
             "dependencies": [],
             "details": "Todos (authenticated): is_public = true; Manager: matches com club_id do seu time; Moderator/Admin: todos. Usar auth.jwt() para role e club_id.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar player: só públicos; manager: seu time + públicos.",
             "parentId": "undefined"
           },
@@ -261,7 +261,7 @@
             "description": "Configurar acesso restrito a payments e financial apenas para admin via service_role.",
             "dependencies": [],
             "details": "Apenas service_role pode acessar (bypass RLS); Para usuários normais: DENY todas operações. Políticas: USING (false) exceto service_role.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que player/manager/moderator não acessam; service_role acessa.",
             "parentId": "undefined"
           },
@@ -277,7 +277,7 @@
               5
             ],
             "details": "Criar usuários test (player, manager, moderator, admin). Testar SELECT/INSERT/UPDATE/DELETE em cada tabela. Verificar violações de acesso. Testar service_role bypass.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Usar Supabase SQL editor ou client com diferentes JWTs. Confirmar: player não vê outros; manager limitado ao time; admin tudo.",
             "parentId": "undefined"
           }
@@ -305,7 +305,7 @@
             "description": "Implementar as três páginas de autenticação com formulários validados e integração visual com o design do projeto.",
             "dependencies": [],
             "details": "Criar app/(auth)/register/page.tsx com formulário contendo campos de email, senha, confirmação de senha e gamertag EA com validação em tempo real. Criar app/(auth)/login/page.tsx com campos de email e senha. Implementar app/(auth)/forgot-password/page.tsx com campo de email para recuperação. Adicionar feedback visual de erros e estados de carregamento. Usar componentes reutilizáveis para consistência de UI.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar que formulários aceitam entradas válidas e rejeitam inválidas. Testar navegação entre páginas. Verificar que campos obrigatórios são validados antes do envio.",
             "parentId": "undefined"
           },
@@ -317,7 +317,7 @@
               1
             ],
             "details": "Configurar cliente Supabase com URL e chave pública. Implementar função signUpWithEmail que chama supabase.auth.signUp() com email e senha. Após signup bem-sucedido, criar registro em tabela 'players' com ea_gamertag, role 'player' e user_id. Implementar função signInWithPassword que chama supabase.auth.signInWithPassword(). Adicionar tratamento de erros específicos (email já existe, senha fraca, etc). Usar async/await para operações assíncronas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar registro com email válido e verificar que registro é criado em players. Testar com email inválido e confirmar erro. Testar login com credenciais corretas e incorretas. Verificar que gamertag é salvo corretamente em players.",
             "parentId": "undefined"
           },
@@ -329,7 +329,7 @@
               2
             ],
             "details": "Criar arquivo middleware.ts na raiz do projeto. Implementar lógica que verifica se usuário está autenticado usando sessão Supabase. Redirecionar requisições para rotas protegidas (exceto /auth/*) para /login se não autenticado. Usar getSession() ou getClaims() do Supabase para validar token. Configurar matcher para aplicar middleware apenas a rotas necessárias. Adicionar logging de redirecionamentos para debug.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que usuário não autenticado é redirecionado para /login ao acessar rota protegida. Verificar que usuário autenticado consegue acessar rotas protegidas. Confirmar que rotas /auth/* são acessíveis sem autenticação.",
             "parentId": "undefined"
           },
@@ -342,7 +342,7 @@
               3
             ],
             "details": "Criar hooks/useAuth.ts que retorna objeto com user, loading e função signOut. Implementar listener de mudanças de autenticação usando supabase.auth.onAuthStateChange(). Armazenar estado em Context API ou estado local. Implementar função signOut que chama supabase.auth.signOut() e redireciona para /login. Adicionar botão de logout na navbar que chama signOut(). Garantir que hook funciona em componentes cliente (use 'use client').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que useAuth retorna user quando autenticado e null quando não. Verificar que loading é true durante autenticação. Testar que logout remove sessão e redireciona para /login. Confirmar que navbar exibe botão logout apenas para usuários autenticados.",
             "parentId": "undefined"
           }
@@ -369,7 +369,7 @@
             "description": "Adicionar coluna 'roles' como array de strings na tabela users do Supabase com valores ['player', 'manager', 'moderator', 'admin'].",
             "dependencies": [],
             "details": "Executar migração SQL: ALTER TABLE users ADD COLUMN roles text[] DEFAULT ARRAY['player']::text[]; Criar trigger para adicionar 'manager' ao reivindicar time. Definir políticas RLS para acesso por role.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que novos usuários têm ['player']. Confirmar que manager tem ['player','manager']. Testar query por role específica.",
             "parentId": "undefined"
           },
@@ -381,7 +381,7 @@
               1
             ],
             "details": "Implementar hooks/useRole.ts com Supabase query para user.roles. Criar RoleContext com useContext() gerenciando {context: 'profile'|'team_id', setContext}. Inicializar com localStorage.getItem('appContext').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar useRole() retorna array correto. Verificar useContext() persiste em localStorage após setContext(). Confirmar hydration inicial.",
             "parentId": "undefined"
           },
@@ -393,7 +393,7 @@
               2
             ],
             "details": "Usar useContext() para alternar contexto. Query Supabase para times onde user é manager. Dropdown com 'Meu Perfil' (profile) e lista de times. Sincronizar localStorage via useEffect no Context Provider.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar dropdown mostra perfil + times corretos. Testar switch persiste após refresh. Confirmar manager sem times mostra só 'Meu Perfil'.",
             "parentId": "undefined"
           },
@@ -406,7 +406,7 @@
               2
             ],
             "details": "Middleware: mapear rotas (/admin → ['admin'], /team → ['manager','moderator','admin']). Redirect não-autorizados para /unauthorized. RoleGuard: HOC que usa useRole() e renderiza loading/redirect. Função hasRole(roles: string[], required: string).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar /admin redireciona não-admin. Verificar RoleGuard bloqueia seções. Confirmar roles acumulativos funcionam (moderator acessa manager routes).",
             "parentId": "undefined"
           }
@@ -433,7 +433,7 @@
             "description": "Criar a função normalizeClubName(rawName: string): string que corrige encoding Latin-1 interpretado como UTF-8 usando mapa de substituições ou iconv-lite com exemplos como CÃ¡ssia → Cássia.",
             "dependencies": [],
             "details": "Implementar mapa {'Ã¡':'á', 'Ã©':'é', etc.} ou usar iconv-lite para decodificar rawName como latin1 e re-encodar utf8. Adicionar testes unitários com casos do PRD (CÃ¡ssia, AthÃ©tica). Exportar função para uso em pipeline.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com todos os exemplos PRD: CÃ¡ssia→Cássia, AthÃ©tica→Athética. Verificar 100% acurácia em normalização.",
             "parentId": "undefined"
           },
@@ -445,7 +445,7 @@
               1
             ],
             "details": "Alterar schema Supabase para incluir ea_name_raw:string e display_name:string. No insert/update de discovered_clubs, salvar raw e normalizado. Usar display_name em fuzzy search e UI. Preservar ea_name_raw para match exato API.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que discovered_clubs armazena ambos campos corretamente. Confirmar busca fuzzy usa display_name. Validar exibição UI com nomes normalizados.",
             "parentId": "undefined"
           }
@@ -472,7 +472,7 @@
             "description": "Criar função fetchMatchesRaw em lib/ea/api.ts que faz requisição GET para proclubs.ea.com/api/fc/clubs/matches com suporte a cookies Akamai (ak_bmsc, bm_sv), headers obrigatórios (User-Agent, Accept, Accept-Language) e retry logic (3 tentativas com backoff exponencial).",
             "dependencies": [],
             "details": "Usar fetch nativo ou axios. Parsear cookies string para Cookie header. Headers: User-Agent: 'Mozilla/5.0...', Accept: 'application/json', Accept-Language: 'pt-BR'. Backoff: 1s, 2s, 4s. Logar tentativas e erros. Retornar raw response JSON.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com clubId válido e cookies. Verificar 3 retries em falha de rede simulada. Confirmar headers e cookies no request. Validar backoff exponencial.",
             "parentId": "undefined"
           },
@@ -484,7 +484,7 @@
               1
             ],
             "details": "Definir interface Match e MatchPlayer. Converter timestamp: new Date(timestamp * 1000). Converter para UTC-3 usando toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}). Tratar arrays de times/jogadores. Validar dados obrigatórios.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com mock response real. Verificar conversão timestamp UTC-3. Validar extração de todos stats. Confirmar estrutura Match[]. Testar edge cases (sem jogadores, placar 0-0).",
             "parentId": "undefined"
           },
@@ -497,7 +497,7 @@
               2
             ],
             "details": "Chamar fetchMatchesRaw → parseMatches → normalizar displayName dos clubs. Integrar em discovered_clubs e discovery engine. Adicionar tipagem TypeScript completa. Documentar uso da função.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar fetchMatches end-to-end com clubId real. Verificar normalização de nomes. Confirmar que discovered_clubs recebe dados corretos. Validar performance (<2s com cache).",
             "parentId": "undefined"
           }
@@ -524,7 +524,7 @@
             "description": "Desenvolver script Node.js que acessa proclubs.ea.com, aguarda carregamento completo e extrai cookies ak_bmsc e bm_sv usando Puppeteer",
             "dependencies": [],
             "details": "Implementar função async que: 1) Lança browser com Puppeteer, 2) Navega para proclubs.ea.com, 3) Aguarda elemento específico carregar (waitForSelector), 4) Extrai cookies usando page.cookies() conforme documentação Puppeteer, 5) Retorna objeto com ak_bmsc e bm_sv. Adicionar tratamento de erros e timeout de 30 segundos. Usar page.setCookie() para validar cookies antes de retornar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar script manualmente e verificar que cookies ak_bmsc e bm_sv são extraídos com sucesso. Validar que cookies contêm valores válidos (não vazios). Testar timeout e tratamento de erro quando site não carrega.",
             "parentId": "undefined"
           },
@@ -536,7 +536,7 @@
               1
             ],
             "details": "Usar node-cron ou similar para agendar execução periódica. Configurar intervalo de 15 minutos como padrão (ajustável via variável de ambiente). Implementar fila de execução para evitar sobreposição de processos. Adicionar verificação: se execução anterior ainda está rodando, aguardar ou pular ciclo. Registrar timestamp de última execução bem-sucedida.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que cron executa em intervalos corretos (15 min). Confirmar que não há execuções sobrepostas. Validar que timestamp de última execução é atualizado. Testar que processo continua rodando após reinicialização.",
             "parentId": "undefined"
           },
@@ -548,7 +548,7 @@
               1
             ],
             "details": "Implementar função saveCookies(cookies, storage: 'supabase'|'file'). Para Supabase: criar tabela 'akamai_cookies' com colunas (id, ak_bmsc, bm_sv, extracted_at, expires_at). Para arquivo: salvar em JSON com estrutura {ak_bmsc, bm_sv, extracted_at}. Implementar função loadCookies() que retorna cookies mais recentes. Adicionar validação de expiração (cookies com mais de 30 min são considerados inválidos). Usar transações Supabase para garantir integridade.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar salvamento em Supabase e arquivo. Verificar que cookies são recuperados corretamente. Validar que cookies expirados não são retornados. Confirmar que estrutura de dados está correta em ambos os storages.",
             "parentId": "undefined"
           },
@@ -560,7 +560,7 @@
               3
             ],
             "details": "Implementar rota Express GET /api/cookies que: 1) Tenta carregar cookies do storage (Supabase/arquivo), 2) Se válidos e recentes (< 30 min), retorna imediatamente, 3) Se inválidos/expirados, tenta executar script Puppeteer, 4) Se Puppeteer falha, chama API Browserless.io com mesma lógica de extração, 5) Armazena resultado e retorna. Adicionar header de autenticação interna (token). Retornar JSON: {ak_bmsc, bm_sv, source: 'puppeteer'|'browserless', extracted_at, valid_until}.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar endpoint com cookies válidos em cache. Verificar que retorna imediatamente sem chamar Puppeteer. Simular falha de Puppeteer e confirmar fallback para Browserless. Validar autenticação do endpoint. Testar timeout e tratamento de erro.",
             "parentId": "undefined"
           },
@@ -573,7 +573,7 @@
               4
             ],
             "details": "Criar arquivo ecosystem.config.js para PM2 com: nome 'akamai-cookies', script principal, variáveis de ambiente (SUPABASE_URL, BROWSERLESS_TOKEN), restart automático, max_memory_restart. Implementar logging com Winston ou Pino: registrar sucesso/falha de cada execução, timestamp, cookies extraídos (sem valores sensíveis), erros com stack trace. Configurar rotação de logs (diário, máx 7 dias). Adicionar health check: endpoint GET /health que retorna {status, last_execution, next_execution}. Documentar processo de deploy e rollback.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que PM2 inicia processo automaticamente. Confirmar que logs são gerados e rotacionados. Testar health check endpoint. Validar que processo reinicia após crash. Simular falha de VPS e confirmar recuperação automática com PM2.",
             "parentId": "undefined"
           }
@@ -602,7 +602,7 @@
             "description": "Implementar a função principal em lib/discovery/engine.ts que executa o algoritmo snowball: inicia com seedClubIds, consulta API EA, extrai adversários e repete iterações até maxIterations ou desaceleração.",
             "dependencies": [],
             "details": "Usar Promise.all para parallelRequests=10. Implementar critério de parada por repetições (>80% clubs já descobertos). Retornar DiscoveryResult com discoveredClubs, iterations, newClubsCount.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com seed de 1 clubId. Verificar 1ª iteração descobre ~10 novos. 2ª iteração ~100. Confirmar parada em maxIterations=3.",
             "parentId": "undefined"
           },
@@ -614,7 +614,7 @@
               1
             ],
             "details": "Usar Set para rastrear discoveredClubIds global. Após cada batch, await new Promise(resolve => setTimeout(resolve, 1500)). Verificar se club já existe em discovered_clubs antes de inserir.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular API com adversários duplicados. Confirmar sem duplicatas em discovered_clubs. Medir tempo entre requests >1s.",
             "parentId": "undefined"
           },
@@ -626,7 +626,7 @@
               1
             ],
             "details": "Usar Supabase client. INSERT no start com status 'running'. UPDATE no final com métricas. Incluir erro se falhar. Armazenar seedClubIds e iterations usadas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar discovery e verificar registro em discovery_runs. Confirmar contadores clubs_scanned e clubs_new corretos. Testar status 'failed' em erro simulado.",
             "parentId": "undefined"
           },
@@ -640,7 +640,7 @@
               3
             ],
             "details": "Para n8n: HTTP Request POST para endpoint interno. Para API: Next.js API route com autenticação admin. Seed padrão: top clubs EA. Log response do discovery.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar manualmente endpoint/workflow. Verificar que chama discoverClubs e discovered_clubs é populado. Confirmar cron schedule correto.",
             "parentId": "undefined"
           }
@@ -668,7 +668,7 @@
             "description": "Executar comandos SQL para ativar a extensão pg_trgm no banco Supabase e criar índice GIN otimizado na coluna display_name da tabela discovered_clubs.",
             "dependencies": [],
             "details": "Executar: CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE INDEX CONCURRENTLY idx_clubs_display_name_trgm ON discovered_clubs USING gin(display_name gin_trgm_ops);. Verificar criação com \\dx e \\di+. Testar índice com EXPLAIN ANALYZE.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirmar extensão ativa com \\dx pg_trgm. Verificar índice criado com \\di idx_clubs*. Testar query EXPLAIN SELECT display_name % 'Flamengo' LIMIT 1 para usar índice GIN.",
             "parentId": "undefined"
           },
@@ -680,7 +680,7 @@
               1
             ],
             "details": "Função: searchClubs(query: string, limit: number = 10). Query SQL com % e ILIKE, ORDER BY similarity DESC. Na página claim/page.tsx: useState, useEffect com debounce, exibir lista com display_name e similarity score.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar searchClubs('Flam', 5): retorna Flamengo + similares ordenados. UI: digitar 'Flamengoo' mostra resultados fuzzy após 300ms. Verificar score > 0.3 para matches relevantes.",
             "parentId": "undefined"
           }
@@ -710,7 +710,7 @@
             "description": "Implementar componente de busca de times com algoritmo fuzzy search para permitir seleção pelo manager.",
             "dependencies": [],
             "details": "Criar SearchClubs em app/(dashboard)/team/claim/components/SearchClubs.tsx. Usar fuse.js ou similar para busca fuzzy em lista de clubes carregada via API. Incluir input de busca e lista de resultados clicáveis.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar busca com nomes parciais/exatos. Verificar que seleciona time corretamente e armazena clubId selecionado.",
             "parentId": "undefined"
           },
@@ -722,7 +722,7 @@
               1
             ],
             "details": "Criar MatchPreview.tsx. Ao selecionar time no SearchClubs, chamar API EA para últimos 10 matches. Exibir cards com data, adversário, placar. Botão 'Confirmar' para prosseguir.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que carrega 10 jogos corretos. Testar com time sem jogos. Confirmar botão confirma e avança fluxo.",
             "parentId": "undefined"
           },
@@ -734,7 +734,7 @@
               2
             ],
             "details": "Criar PhotoUpload.tsx com drag&drop, validação (JPG/PNG, <5MB), preview. Após upload, botão 'Submit Claim' chama API. Usar Zustand ou Context para gerenciar estado do fluxo multi-step.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar upload de arquivos válidos/inválidos. Verificar preview e validações. Confirmar submit envia dados corretos.",
             "parentId": "undefined"
           },
@@ -746,7 +746,7 @@
               3
             ],
             "details": "Em app/api/claim/submit/route.ts: usar Supabase Storage para foto, inserir em tabela 'claims' (team_id, user_id, photo_url, status='pending'). Verificar se já existe claim active/pending. Enviar notificação admin via Supabase edge function ou email. Atualizar página principal para mostrar 'já reivindicado'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar submit com foto válida. Verificar claim criado pending. Testar segundo submit (deve falhar). Confirmar notificação enviada e storage com foto.",
             "parentId": "undefined"
           }
@@ -775,7 +775,7 @@
             "description": "Implementar app/(dashboard)/moderation/page.tsx com abas Claims, Tournaments, Disputes e Users usando componentes de tabs.",
             "dependencies": [],
             "details": "Usar shadcn/ui Tabs. Configurar roteamento interno das abas. Adicionar layout responsivo com header de moderação e sidebar. Incluir loader inicial.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que abas alternam corretamente. Confirmar que página carrega sem erros para usuário moderador.",
             "parentId": "undefined"
           },
@@ -787,7 +787,7 @@
               1
             ],
             "details": "Query Supabase para claims WHERE status='pending'. Modal para rejeição com rejection_reason. Ao aprovar: UPDATE club SET status='active', manager_id=user_id. Enviar notificação via Supabase realtime.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar aprovação muda club.status para 'active'. Verificar rejeição salva rejection_reason e notifica manager. Confirmar preview de imagem carrega.",
             "parentId": "undefined"
           },
@@ -799,7 +799,7 @@
               1
             ],
             "details": "Formulário para criar tournament (nome, capacidade, horário, formato). Tabela de inscrições. Botão gerar bracket (algoritmo round-robin). Botões avançar rodada e finalizar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criação de corujão salva no banco. Verificar geração de chaveamento cria matches corretos. Confirmar avanço de rodada atualiza status.",
             "parentId": "undefined"
           },
@@ -811,7 +811,7 @@
               1
             ],
             "details": "Disputes: tabela com disputes WHERE type='wo' AND status='contested'. Users: input busca por nome/email, tabela com botão excluir (DELETE com confirmação). Usar DataTable shadcn.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar busca de usuários retorna resultados filtrados. Verificar exclusão remove time/jogador. Confirmar Disputes lista apenas W.O. contestados.",
             "parentId": "undefined"
           },
@@ -825,7 +825,7 @@
               4
             ],
             "details": "RLS policies: moderador pode SELECT/UPDATE em claims, tournaments, users, disputes mas NÃO financial tables. Exportar componentes para /components/dashboard. Adicionar proteções contra dados financeiros.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar que moderador NÃO vê dados financeiros. Testar que RLS bloqueia acesso indevido. Confirmar componentes são reutilizáveis sem erros.",
             "parentId": "undefined"
           }
@@ -855,7 +855,7 @@
             "description": "Implementar app/(dashboard)/admin/page.tsx com Tabs do shadcn/ui contendo 6 abas: Dashboard, Discovery, Manual ID, Settings, Subscriptions, Financial.",
             "dependencies": [],
             "details": "Usar middleware para verificar role='admin' ou service_role. Layout responsivo com sidebar e header. Placeholder para cada aba. Proteger rota com RLS admin only.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que admin acessa /admin. Confirmar que user normal é redirecionado. Testar navegação entre abas.",
             "parentId": "undefined"
           },
@@ -867,7 +867,7 @@
               1
             ],
             "details": "Query Supabase: count(clubs), count(players), sum(revenue), count(corujoes). Refresh automático a cada 30s. Ícones heroicons para cada card.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar contadores corretos. Confirmar refresh atualiza dados. Testar com dados mock.",
             "parentId": "undefined"
           },
@@ -880,7 +880,7 @@
               10
             ],
             "details": "Chamar lib/discovery/engine.ts via API route. Tabela com sorting/filtros. Badge status (running, completed, failed). Toast notifications.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar botão dispara discovery. Verificar tabela popula com runs. Confirmar WebSocket atualiza status.",
             "parentId": "undefined"
           },
@@ -892,7 +892,7 @@
               1
             ],
             "details": "API EA para puxar jogos do clubId. Cards com preview jogo (times, score). Ao confirmar: insert discovered_clubs com status 'unclaimed'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar busca clubId válido/inválido. Verificar preview jogos. Confirmar insert em discovered_clubs.",
             "parentId": "undefined"
           },
@@ -904,7 +904,7 @@
               1
             ],
             "details": "Query service_role: SELECT * FROM v_financial_dashboard. Recharts: line/bar/pie. Filtros período. Alertas times >30d sem pagamento.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar gráficos com dados view. Confirmar service_role acessa dados sensíveis. Testar filtros período.",
             "parentId": "undefined"
           },
@@ -920,7 +920,7 @@
               5
             ],
             "details": "Settings: tabela config com upsert. Subscriptions: mock Fase 2 (tabela users com plano). Validações Zod. Full e2e tests painel.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar save settings. Verificar subscriptions CRUD. E2E: admin flow completo. Moderador bloqueado.",
             "parentId": "undefined"
           }
@@ -948,7 +948,7 @@
             "description": "Implementar enum com posições GK, ZAG, VOL, MC, AE, AD, ATA e lógica de mapeamento de categorias API (goalkeeper, defender, midfielder, forward) para posições do jogador com prioridade para principal em ambiguidades.",
             "dependencies": [],
             "details": "Definir mapeamento: goalkeeper→GK, defender→ZAG/VOL, midfielder→VOL/MC/AE/AD, forward→ATA. Usar primary_position primeiro, fallback para secondary. Incluir fallbacks para casos sem match.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar combinações: VOL/ZAG com 'midfielder'→VOL, 'defender'→ZAG; MC/AE com 'midfielder'→MC; sem match→null ou default.",
             "parentId": "undefined"
           },
@@ -960,7 +960,7 @@
               1
             ],
             "details": "Usar Supabase Auth para identificar user_id. Formulário com selects para posições (opções do enum). Update players row com posições selecionadas. Validação para posições diferentes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar seleção e salvamento no banco. Verificar que posições são atualizadas corretamente. Confirmar que página só acessível para usuários logados.",
             "parentId": "undefined"
           }
@@ -989,7 +989,7 @@
             "description": "Implementar endpoint que obtém cookies válidos, chama fetchMatches para times ativos, armazena em matches/match_players e atualiza last_scanned_at.",
             "dependencies": [],
             "details": "Usar /api/cookies para autenticação. Processar batch de clubs ativos. Incluir logging em collect_runs. Garantir tratamento de erros e transações no banco.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com clubs mockados. Verificar armazenamento e atualização de last_scanned_at. Confirmar cookies são usados corretamente.",
             "parentId": "undefined"
           },
@@ -1001,7 +1001,7 @@
               1
             ],
             "details": "Criar migration para UNIQUE em matches.ea_match_id. Integrar classifyMatch da Task 17. Armazenar match_type no banco durante coleta.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar inserção duplicada (deve falhar/ignorar). Validar classificação com diferentes cenários de torneios/matchmaking.",
             "parentId": "undefined"
           },
@@ -1013,7 +1013,7 @@
               1
             ],
             "details": "Usar Schedule Trigger com cron expression '0 4 * * 1,2,4'. Conectar com HTTP Request para o endpoint. Publicar workflow ativo.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar trigger manual no n8n. Verificar execução nos dias/horários corretos via logs. Confirmar chamada da API.",
             "parentId": "undefined"
           },
@@ -1025,7 +1025,7 @@
               1
             ],
             "details": "Usar localStorage + backend check no endpoint. Chamar /api/collect/run via fetch. Mostrar toast de sucesso/falha e progresso.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar clique múltiplo (bloqueia <30min). Verificar notificação após conclusão. Confirmar rate limit no backend.",
             "parentId": "undefined"
           }
@@ -1053,7 +1053,7 @@
             "description": "Implementar a lógica de classificação de partidas conforme as regras: verificar torneios agendados, matchmaking queue com status 'matched', e fallback para Friendly External usando timestamp do match.",
             "dependencies": [],
             "details": "Definir interface MatchType (Championship | FriendlyPIT | FriendlyExternal). Implementar regras sequenciais: 1) Buscar torneios por clubIds, scheduled_date e start_time próximos ao match.timestamp (±5min tolerância). 2) Verificar matchmakingQueue por clubIds com status 'matched' no horário. 3) Retornar default FriendlyExternal. Adicionar type guards e logging.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Criar testes unitários com Jest: mock de match com torneio agendado (espera Championship), mock de matchmaking matched (FriendlyPIT), sem contexto (FriendlyExternal). Testar edge cases como timestamp exato/fora de janela, clubIds ausentes.",
             "parentId": "undefined"
           },
@@ -1065,7 +1065,7 @@
               1
             ],
             "details": "No handler de POST /api/collect/run: após insert match, query Supabase para tournaments[] e matchmakingQueue[] filtrados por data/horário. Chamar classifyMatch(match, tournaments, queues). Fazer UPDATE em matches SET match_type = result. Para cada match_player, UPDATE match_type. Tratar erros com rollback se classificação falhar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testes E2E com Supabase mocks: simular collect/run com payload de championship (verificar DB atualizado Championship), friendly PIT (FriendlyPIT), external (FriendlyExternal). Validar que não conta stats para External. Testar performance com 100 matches paralelos.",
             "parentId": "undefined"
           }
@@ -1094,7 +1094,7 @@
             "description": "Implementar componente PlayerHeader com gamertag, posições e foto do jogador, e estruturar app/(dashboard)/profile/page.tsx com layout base.",
             "dependencies": [],
             "details": "Usar dados do player via params ou query. Fetch foto via EA API ou placeholder. Layout com grid responsivo para seções. Integrar com useAuth para player atual.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar renderização de gamertag, posições e foto. Testar com player logado e sem foto.",
             "parentId": "undefined"
           },
@@ -1106,7 +1106,7 @@
               1
             ],
             "details": "Query SQL na view v_player_stats filtrando match_type IN ('championship', 'friendly_pit'). Agregações: AVG(rating), SUM(gols, assists, passes, tackles). Filtros dropdown 7/30/90 dias.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar stats agregados corretos. Testar filtros alteram valores. Confirmar exclusão de friendly_external.",
             "parentId": "undefined"
           },
@@ -1118,7 +1118,7 @@
               1
             ],
             "details": "Query matches ORDER BY date DESC LIMIT 20, WHERE match_type correto. Tabela com colunas: data, adversário, resultado, rating. Drill-down navega para /matches/[id]. Filtros reativos com useState.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirmar últimos 20 matches exibidos. Testar filtros reduzem lista. Validar drill-down redireciona corretamente.",
             "parentId": "undefined"
           },
@@ -1130,7 +1130,7 @@
               2
             ],
             "details": "LineChart Recharts para rating por match data. PositionStats: GROUP BY position na v_player_stats. Responsivo, tooltip customizado. Filtros compartilham estado via Context ou props.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar gráfico renderiza linha contínua. Confirmar PositionStats agrupa corretamente. Testar responsividade em mobile.",
             "parentId": "undefined"
           }
@@ -1160,7 +1160,7 @@
             "description": "Criar tabela de jogadores do time mostrando gamertag, posições, stats e data de entrada. Incluir botão 'Convidar Jogador' com modal de busca fuzzy e botão 'Remover' restrito a manager.",
             "dependencies": [],
             "details": "Usar TanStack Table para tabela responsiva. Modal com React Hook Form e debounce na busca fuzzy por ea_gamertag. Verificar role 'manager' via Supabase auth para botão remover. Integrar com API club_players.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar exibição correta do elenco. Verificar busca fuzzy retorna jogadores relevantes. Confirmar botão remover só visível para manager. Validar tabela responsiva em mobile.",
             "parentId": "undefined"
           },
@@ -1172,7 +1172,7 @@
               1
             ],
             "details": "Criar mutation para POST /api/clubs/invite com insert em club_players e notificações. WebSocket ou polling para atualizar status em tempo real. Notificação com botões aceita/rejeita chamando PATCH /api/club_players/{id}.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criação de registro pending ao convidar. Verificar notificação enviada e recebida. Confirmar aceitação ativa jogador e rejeição deleta registro. Testar fluxo end-to-end.",
             "parentId": "undefined"
           },
@@ -1182,7 +1182,7 @@
             "description": "Criar tabela mostrando histórico de partidas do time: data, adversário, placar e jogadores participantes.",
             "dependencies": [],
             "details": "Query matches por club_id ordenado por data desc. Usar match-classifier para tipos (Championship/Friendly). Colunas: data, adversário (club_name), placar (home_score-away_score), lista jogadores.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar tabela carrega matches corretos do time. Confirmar classificação de match_type. Testar paginação para >20 matches. Validar formatação de placar.",
             "parentId": "undefined"
           },
@@ -1196,7 +1196,7 @@
               3
             ],
             "details": "Usar shadcn/ui Tabs. Layout com header do time (nome, manager, stats). Responsivo com mobile tabs. Stubs para Matchmaking (fila) e Escalação (grid 3-5-2) com TODOs. Proteção por auth manager.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar navegação entre abas. Verificar layout responsivo. Confirmar proteção de rota (só manager acessa). Validar stubs renderizam sem erros.",
             "parentId": "undefined"
           }
@@ -1224,7 +1224,7 @@
             "description": "Implementar components/team/LineupVisual.tsx com campo de futebol SVG representando formação 3-5-2 (1 GK, 3 ZAG, 2 VOL, 1 MC, 1 AE, 1 AD, 2 ATA) com posições detalhadas e marcadores vazios.",
             "dependencies": [],
             "details": "Criar SVG com proporções realistas de campo. Definir 11 posições exatas com coordenadas (x,y). Incluir labels das posições (GK, ZAG1-3, VOL1-2, MC, AE, AD, ATA1-2). Preparar estrutura para receber jogadores via props. Exportar tipos PositionId e PlayerInPosition.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar renderização correta do grid 3-5-2. Confirmar 11 posições com coordenadas precisas. Testar responsividade em diferentes tamanhos de tela.",
             "parentId": "undefined"
           },
@@ -1236,7 +1236,7 @@
               1
             ],
             "details": "Instalar @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. Usar DndContext com useDraggable para jogadores e useDroppable para posições. No onDragEnd validar player.positions inclui targetPosition. Exibir toast de erro se inválido. Manter estado local da escalação.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar drag jogador VOL para posição ZAG (erro). Testar drag jogador ZAG para ZAG (sucesso). Verificar toast de validação. Confirmar estado atualiza apenas com drags válidos.",
             "parentId": "undefined"
           },
@@ -1249,7 +1249,7 @@
               2
             ],
             "details": "Usar Supabase para tabela lineups. Implementar createLineup, updateLineup, setDefaultLineup, listLineups. Integrar LineupVisual com dados do lineup selecionado. Botão salvar captura estado atual do grid. Carregar escalação padrão automaticamente. Permitir múltiplas escalações nomeadas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criar escalação 'Ofensiva'. Verificar salvamento no Supabase. Testar 'Usar como Padrão' define is_default=true. Confirmar carregamento automático da padrão. Validar listagem de múltiplas escalações.",
             "parentId": "undefined"
           }
@@ -1278,7 +1278,7 @@
             "description": "Implementar tabelas no Supabase: matchmaking_queue, confrontation_chats e confrontation_messages com todos os campos especificados.",
             "dependencies": [],
             "details": "Definir schema exato: matchmaking_queue (club_id, slot_time, status, matched_with, expires_at, created_at); confrontation_chats (queue_entry_a, queue_entry_b, club_a_id, club_b_id, confirmed_by_a, confirmed_by_b, match_id, expires_at); confrontation_messages (chat_id, club_id, message, timestamp). Criar índices em club_id, slot_time, expires_at.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar criação das tabelas via Supabase dashboard. Testar INSERT básico em cada tabela. Confirmar índices e constraints (NOT NULL, foreign keys).",
             "parentId": "undefined"
           },
@@ -1290,7 +1290,7 @@
               1
             ],
             "details": "Usar horário UTC-3 fixo. Botão chama API para inserir em matchmaking_queue com status='waiting'. Mostrar status atual da fila do club. Refresh automático a cada 30s. Design responsivo com Tailwind.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar clique em slot insere na queue. Verificar UI mostra slots corretos. Confirmar refresh atualiza status. Testar múltiplos slots (bloquear duplicados).",
             "parentId": "undefined"
           },
@@ -1303,7 +1303,7 @@
               2
             ],
             "details": "Criar API endpoint /api/matchmaking/match. Query: SELECT clubs WHERE slot_time=?:slot AND status='waiting' AND expires_at > NOW() ORDER BY ABS(pit_rating - :target_rating). Limit 1. Se match: UPDATE status='matched', matched_with. Senão random do mesmo slot. Executar via cron a cada 30s.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar matching com ratings próximos (ex: 1500 vs 1520). Verificar random quando sem rating. Confirmar update matched_with. Testar exclusão de expirados.",
             "parentId": "undefined"
           },
@@ -1316,7 +1316,7 @@
               3
             ],
             "details": "Usar Supabase channel em confrontation_messages. Componente mostra chat quando queue.status='matched'. Enviar notificação push via Supabase Edge Function. UI com input mensagem, lista mensagens, avatar clubs. Auto-scroll.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar mensagens realtime (2 browsers). Verificar chat abre após match. Confirmar notificação push. Testar histórico carrega mensagens antigas.",
             "parentId": "undefined"
           },
@@ -1330,7 +1330,7 @@
               4
             ],
             "details": "API /api/matchmaking/confirm. Se ambos confirmed: status='confirmed', expires_at=+5min. Job cron verifica expires_at, se expired: status='waiting', deletar chat. Se confirmed após 5min: status='expired'. Notificações para cada estado.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar confirmação A+B → confirmed. Testar timeout 5min → expired. Verificar volta para fila. Testar apenas 1 confirma → ainda waiting.",
             "parentId": "undefined"
           },
@@ -1343,7 +1343,7 @@
               5
             ],
             "details": "Cron job monitora confirmed chats sem match_id. Chama EA API com club_ids/slot_time. Parse resultado, INSERT matches. UPDATE confrontation_chats com match_id. DELETE queue entries. Trigger para atualizar pit_rating.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar coleta mock EA API → cria match. Verificar stats atualizam. Confirmar cleanup queue/chat. Testar erro API → retry 3x.",
             "parentId": "undefined"
           }
@@ -1371,7 +1371,7 @@
             "description": "Implementar tabelas tournaments, tournament_entries, payments, trust_scores e hall_of_fame no Supabase",
             "dependencies": [],
             "details": "Definir schema completo: tournaments (name, type='corujao', format, status, capacity_min/max, scheduled_date, start_time, entry_fee); tournament_entries (tournament_id, club_id, payment_status, payment_id); payments (id, amount, pix_code, status); trust_scores (club_id, score); hall_of_fame (tournament_id, club_id, award_type, value)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que tabelas foram criadas com colunas corretas. Testar INSERT de tournament válido. Confirmar relacionamentos FK tournament_id → tournaments.id",
             "parentId": "undefined"
           },
@@ -1383,7 +1383,7 @@
               1
             ],
             "details": "Criar app/(admin)/tournaments/page.tsx com formulário (nome, capacidade min/max=8/16, data/horário, formato mata-mata, taxa R$3). API: POST /api/tournaments, GET /api/tournaments?type=corujao, PUT/DELETE. Validar capacity_min >=8, scheduled_date futura",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criação com dados válidos/inválidos. Verificar listagem filtra type='corujao'. Confirmar que tournament aparece em dashboard após criação",
             "parentId": "undefined"
           },
@@ -1396,7 +1396,7 @@
               2
             ],
             "details": "Em app/(dashboard)/tournaments/page.tsx criar TournamentCard com EnrollButton. Ao clicar: POST /api/tournament_entries → gera payment via MercadoPago (R$3,00), salva pix_code em payments. Webhook confirma pagamento → UPDATE tournament_entries.payment_status='paid'. UI polling a cada 10s",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar clique 'Inscrever' gera PIX válido. Simular webhook confirma pagamento. Verificar status muda para 'paid'. Testar que clube não pode se inscrever 2x",
             "parentId": "undefined"
           },
@@ -1409,7 +1409,7 @@
               3
             ],
             "details": "Criar lib/bracket-generator.ts: quando COUNT(entries.paid) >= capacity_min → UPDATE tournament.status='confirmed', gerar bracket JSON (rounds: [{match1: [teamA,teamB], winner: null}, ...]). Sorteio aleatório ou seed por trust_score/PitRating. Notificar todos inscritos via Supabase realtime",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular 8 inscrições → verificar status='confirmed' e bracket gerado. Testar com 16 times. Validar que seed ordena por trust_score descendente. Confirmar notificação enviada",
             "parentId": "undefined"
           },
@@ -1421,7 +1421,7 @@
               4
             ],
             "details": "Criar cron job a cada 5min: GET /api/matches?club_ids=entrants&date=tournament_date. Para cada match no bracket sem winner: se resultado encontrado → UPDATE bracket.match.winner=club_vencedor, avançar para próxima rodada. Se finalizada todas rodadas → calcular awards",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular API retorna resultado de match. Verificar bracket atualiza winner. Testar avanço automático para semi-final. Confirmar que playoff completa gera final",
             "parentId": "undefined"
           },
@@ -1434,7 +1434,7 @@
               5
             ],
             "details": "Criar lib/hall-of-fame.ts: extrair de todos matches do torneio: campeão=final.winner, MVP=maior avg rating, artilheiro=mais gols, garçom=mais assist, pitbull=mais tackles, muralha=mais clean sheets, melhor rating=avg rating. INSERT hall_of_fame com esses dados",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular torneio completo com stats. Verificar awards calculados corretamente. Confirmar campeão é final.winner. Testar que artilheiro soma gols de todos matches",
             "parentId": "undefined"
           },
@@ -1448,7 +1448,7 @@
               6
             ],
             "details": "app/(dashboard)/tournaments/page.tsx: lista TournamentCard (nome, status, vagas, botão Inscrever). BracketView mostra chaves visuais com winners destacados. HallOfFameCard mostra top7 awards com ícones. Usar realtime Supabase para updates live",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar TournamentCard mostra status corretos (aberto/cheio/confirmado/finalizado). Testar BracketView renderiza 8/16 times corretamente. Confirmar HallOfFameCard mostra awards do torneio",
             "parentId": "undefined"
           }
@@ -1476,7 +1476,7 @@
             "description": "Instalar @mercadopago/sdk, configurar credenciais no .env e implementar POST /api/payment/create que recebe tournament_id/club_id, cria payment PIX (R$3,00), retorna QR code/link e registra em payments (status='pending').",
             "dependencies": [],
             "details": "Usar lib/payment/mercadopago.ts com função createPayment(amount=300, description, externalReference). Integrar com Mercado Pago sandbox para testes iniciais. Validar parâmetros de entrada e tratar erros de API.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criação de payment com tournament_id válido. Verificar QR code/link retornados. Confirmar registro em payments com status='pending'.",
             "parentId": "undefined"
           },
@@ -1488,7 +1488,7 @@
               1
             ],
             "details": "Usar função handleWebhook(body) em lib/payment/mercadopago.ts. Implementar validação de assinatura HMAC. Logar eventos para debug. Tratar idempotência com externalReference.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular webhook com payload approved/rejected. Verificar atualizações em payments e tournament_entries. Testar validação de assinatura inválida (retorna 401).",
             "parentId": "undefined"
           },
@@ -1500,7 +1500,7 @@
               2
             ],
             "details": "Adicionar tabela trust_scores (club_id, score, last_payment). Ao confirmar pagamento, incrementar score. Verificar score > threshold para permitir inscrição com crédito 24h. Decay score após 30 dias sem pagamento.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar incremento de score após pagamento aprovado. Verificar permissão de inscrição com crédito para score alto. Confirmar expiração após 24h sem pagamento.",
             "parentId": "undefined"
           },
@@ -1512,7 +1512,7 @@
               3
             ],
             "details": "Adicionar tabela strikes (club_id, count, last_strike). Incrementar strike se não pagar em 24h. Ao atingir 3 strikes, setar ban_until (próximo FIFA date). Bloquear inscrições durante ban.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular 3 não-pagamentos e verificar ban aplicado. Testar reset de strikes após pagamento. Confirmar bloqueio de inscrições durante ban ativo.",
             "parentId": "undefined"
           }
@@ -1540,7 +1540,7 @@
             "description": "Implementar schema da tabela notifications no Supabase com campos user_id, type, title, body, is_read, data JSONB, created_at. Criar função createNotification(userId, type, title, body, data) que insere registro e configura RLS.",
             "dependencies": [],
             "details": "Usar Supabase SQL Editor para CREATE TABLE. Definir tipos enum para notification types. Implementar RLS policies para acesso por user_id. Testar inserção manual via SQL.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que tabela é criada com colunas corretas. Testar createNotification com diferentes tipos. Confirmar que RLS bloqueia acesso não autorizado.",
             "parentId": "undefined"
           },
@@ -1552,7 +1552,7 @@
               1
             ],
             "details": "Usar supabase.channel('notifications:' + userId).on('postgres_changes', {event: 'INSERT', table: 'notifications', filter: `user_id=eq.${userId}`}). Implementar estado local com notificações não lidas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que subscribe recebe notificações em tempo real. Verificar fetch inicial carrega últimas 10 notificações. Confirmar filtro por user_id funciona.",
             "parentId": "undefined"
           },
@@ -1564,7 +1564,7 @@
               2
             ],
             "details": "Usar hook useNotifications() para dados. Badge com contador no ícone sininho. Dropdown com lista de notificações (title, body, data). Auto-close ao clicar fora.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar contador atualiza em realtime. Confirmar dropdown mostra exatamente 10 notificações. Testar responsividade mobile.",
             "parentId": "undefined"
           },
@@ -1577,7 +1577,7 @@
               3
             ],
             "details": "Criar função markAsRead(notificationId). Mapear types para rotas (claim_approved → /claims). Adicionar tabela user_notification_prefs(user_id, type, email_enabled, inapp_enabled).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que clique marca como lida e contador diminui. Verificar navegação correta por type. Confirmar preferências salvam e respeitam opt-out.",
             "parentId": "undefined"
           }
@@ -1606,7 +1606,7 @@
             "description": "Implementar página app/(dashboard)/admin/manual-id/page.tsx com formulário contendo campo 'clubId' e botão 'Buscar'. Incluir validação de clubId como string válida e chamar fetchMatches(clubId) para obter 10 jogos.",
             "dependencies": [],
             "details": "Usar React Hook Form ou formulário nativo com validação client-side. Integrar com fetchMatches existente das dependências (tasks 14,8,7). Exibir loading e erros de validação/fetch. Proteger rota para admin apenas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar submissão com clubId válido/inválido. Verificar que fetchMatches é chamado. Confirmar loading e tratamento de erro de API.",
             "parentId": "undefined"
           },
@@ -1618,7 +1618,7 @@
               1
             ],
             "details": "Verificar se clubId já existe em discovered_clubs antes de insert. Normalizar display_name do primeiro match. Registrar em discovery_runs tipo='manual_admin'. Implementar notificação ao manager se houver contexto da solicitação.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar preview com dados corretos. Confirmar insert só com clubId novo. Validar campos status/discovered_via. Verificar logging em discovery_runs. Testar proteção contra duplicação.",
             "parentId": "undefined"
           }
