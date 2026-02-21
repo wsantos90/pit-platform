@@ -9,7 +9,7 @@
         "testStrategy": "Verificar se projeto inicia sem erros (npm run dev). Confirmar estrutura de pastas criada. Validar que Tailwind e shadcn/ui estão funcionando com componente de teste. Verificar dark mode aplicado globalmente.",
         "priority": "high",
         "dependencies": [],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -52,7 +52,7 @@
         "complexity": 3,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Divida esta tarefa em subtarefas para: 1) Inicialização do projeto Next.js com TypeScript, Tailwind e App Router; 2) Instalação e configuração de shadcn/ui, lucide-react e recharts; 3) Configuração de estrutura de pastas, tsconfig paths, CSS variables dark mode e font Inter.",
-        "updatedAt": "2026-02-20T19:21:37.654Z"
+        "updatedAt": "2026-02-20T22:13:35.248Z"
       },
       {
         "id": "2",
@@ -64,7 +64,7 @@
         "dependencies": [
           "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -72,9 +72,10 @@
             "description": "Criar conta no Supabase, novo projeto e verificar/configurar PostgreSQL 15+. Habilitar RLS em todas as tabelas futuras.",
             "dependencies": [],
             "details": "Acessar dashboard.supabase.com, criar conta se necessário. Criar novo projeto com PostgreSQL 15+. Executar 'select version();' no SQL Editor para confirmar versão PG15+. Preparar para RLS com 'ALTER TABLE nome_tabela ENABLE ROW LEVEL SECURITY;' após criação de tabelas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar projeto criado no dashboard. Confirmar versão PostgreSQL >=15 via SQL Editor. Testar conexão básica.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-20T20:46:04.587Z"
           },
           {
             "id": 2,
@@ -84,9 +85,10 @@
               1
             ],
             "details": "No dashboard Supabase > Authentication > Providers, habilitar Email. Configurar site URL se necessário. Confirmar configurações padrão para confirmação de email e recuperação de senha.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar cadastro/login via API ou dashboard. Verificar usuário criado na tabela auth.users.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-20T21:11:11.937Z"
           },
           {
             "id": 3,
@@ -96,9 +98,10 @@
               1
             ],
             "details": "No dashboard > Storage > Buckets, criar 'claims-photos' público ou privado. Criar políticas SQL para acesso: ex. INSERT/SELECT para usuários autenticados ou owners. Usar auth.uid() nas policies.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar upload de arquivo via dashboard ou cliente. Confirmar políticas bloqueiam acesso não autorizado.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-20T23:06:35.652Z"
           },
           {
             "id": 4,
@@ -108,14 +111,16 @@
               1
             ],
             "details": "Executar 'npm i @supabase/supabase-js @supabase/auth-helpers-nextjs'. Copiar URL e chaves do dashboard (anon_key, service_role_key). Criar lib/supabase/{client.ts, server.ts, admin.ts} com createClient(). Adicionar NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY no .env.local.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar importação dos clients sem erros. Validar conexão com Supabase via console.log no servidor.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-20T23:25:10.280Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Crie subtarefas separadas para: 1) Criação do projeto Supabase e configuração PostgreSQL; 2) Configuração de autenticação email/password; 3) Setup de Storage bucket e políticas; 4) Criação dos clients Supabase (client.ts, server.ts, admin.ts) e variáveis de ambiente."
+        "expansionPrompt": "Crie subtarefas separadas para: 1) Criação do projeto Supabase e configuração PostgreSQL; 2) Configuração de autenticação email/password; 3) Setup de Storage bucket e políticas; 4) Criação dos clients Supabase (client.ts, server.ts, admin.ts) e variáveis de ambiente.",
+        "updatedAt": "2026-02-20T23:25:10.280Z"
       },
       {
         "id": "3",
@@ -127,7 +132,7 @@
         "dependencies": [
           "2"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -135,9 +140,10 @@
             "description": "Implementar tabelas users e players com UUIDs, timestamps, campos JSONB, chaves primárias/estrangeiras e constraints NOT NULL/UNIQUE.",
             "dependencies": [],
             "details": "Executar CREATE TABLE no Supabase SQL Editor. Definir tipos corretos (UUID, TIMESTAMP TZ, JSONB). Incluir índices UNIQUE em ea_gamertag. Adicionar CHECK constraints para validações básicas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar criação via dashboard. Testar INSERT com dados válidos/inválidos para constraints.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T00:28:27.249Z"
           },
           {
             "id": 2,
@@ -147,9 +153,10 @@
               1
             ],
             "details": "Criar FKs para users.id, players.id. Índices UNIQUE em ea_club_id. Constraints NOT NULL em campos essenciais. Usar ENUM para club_status.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar FKs com INSERTs cruzados. Confirmar índices UNIQUE não permitem duplicatas.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T00:28:35.056Z"
           },
           {
             "id": 3,
@@ -159,9 +166,10 @@
               2
             ],
             "details": "Definir FKs para clubs.id, players.id. TIMESTAMP para match_date. JSONB para dados extras da EA. Constraints CHECK para validação de scores.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar inserção de match com players associados. Verificar UNIQUE em ea_match_id.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T00:28:44.586Z"
           },
           {
             "id": 4,
@@ -171,9 +179,10 @@
               3
             ],
             "details": "Agrupar por funcionalidade. Usar enums específicos (tournament_type, payment_status). FKs para tabelas anteriores. JSONB para dados flexíveis.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar todas tabelas no dashboard. Testar relacionamentos FK entre grupos.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T00:28:52.282Z"
           },
           {
             "id": 5,
@@ -183,14 +192,16 @@
               4
             ],
             "details": "CREATE TYPE para enums: user_role, player_position, etc. CREATE INDEX UNIQUE onde especificado. CREATE TRIGGER BEFORE UPDATE para updated_at. ALTER TABLE ENABLE RLS.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Listar enums com \\dT. Verificar índices com \\di. Testar trigger atualizando registro. Confirmar RLS bloqueia acesso anônimo.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T00:29:07.150Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Divida por grupos de tabelas: 1) Tabelas de usuários e perfis (users, players); 2) Tabelas de times (clubs, club_players, discovered_clubs); 3) Tabelas de partidas (matches, match_players); 4) Tabelas de torneios e pagamentos; 5) Enums, índices, triggers e RLS inicial."
+        "expansionPrompt": "Divida por grupos de tabelas: 1) Tabelas de usuários e perfis (users, players); 2) Tabelas de times (clubs, club_players, discovered_clubs); 3) Tabelas de partidas (matches, match_players); 4) Tabelas de torneios e pagamentos; 5) Enums, índices, triggers e RLS inicial.",
+        "updatedAt": "2026-02-21T00:29:07.150Z"
       },
       {
         "id": "4",
@@ -1619,9 +1630,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-20T19:21:37.654Z",
+      "lastModified": "2026-02-21T00:29:07.151Z",
       "taskCount": 25,
-      "completedCount": 0,
+      "completedCount": 3,
       "tags": [
         "master"
       ]

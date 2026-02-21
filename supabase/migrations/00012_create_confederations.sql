@@ -1,6 +1,7 @@
 -- ============================================================
 -- MIGRATION 00012: CONFEDERATIONS
--- P.I.T — Performance · Intelligence · Tracking
+-- Depende de: 00002 (users), 00003 (clubs)
+-- NOTA: Executar ANTES de 00009 (tournaments referencia confederations)
 -- ============================================================
 
 CREATE TABLE public.confederations (

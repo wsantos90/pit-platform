@@ -1,6 +1,6 @@
 -- ============================================================
 -- MIGRATION 00001: ENUMS
--- P.I.T — Performance · Intelligence · Tracking
+-- Executar PRIMEIRO no Supabase SQL Editor
 -- ============================================================
 
 -- Roles do sistema (acumulativos)

@@ -1,15 +1,24 @@
 -- ============================================================
--- SEED: Dados iniciais obrigatórios
--- P.I.T — Performance · Intelligence · Tracking
+-- SEED: Dados iniciais da plataforma P.I.T
+-- Executar APÓS todas as migrations
 -- ============================================================
 
--- Admin PIT (Wander) — o id vem do auth.users após cadastro
--- Executar APÓS o primeiro cadastro via UI e pegar o UUID
--- UPDATE public.users SET roles = '{player, manager, moderator, admin}' WHERE email = 'wander@pit.gg';
+-- IMPORTANTE: O admin user deve ser criado via Supabase Auth (SQL Editor ou Dashboard)
+-- Após criar o user no Auth, atualizar o role aqui:
+--
+-- UPDATE public.users
+-- SET roles = '{player, manager, moderator, admin}'
+-- WHERE email = 'seu-email-admin@exemplo.com';
 
--- Posições de referência (informativo — usadas como ENUM)
--- GK = Goleiro | ZAG = Zagueiro | VOL = Volante | MC = Meia Central
--- AE = Ala Esquerdo | AD = Ala Direito | ATA = Atacante
+-- ============================================================
+-- Nenhum dado seed obrigatório por ora.
+-- O sistema é auto-suficiente:
+-- - Usuários são criados via trigger on_auth_user_created
+-- - Times são descobertos via Discovery snowball
+-- - Torneios são criados pelo admin via dashboard
+-- ============================================================
 
--- Season inicial
--- INSERT INTO public.pit_ratings ... quando Fase 2 for implementada
+-- Opcional: Se quiser inserir um discovered_club de teste
+-- INSERT INTO public.discovered_clubs (ea_club_id, ea_name_raw, display_name)
+-- VALUES ('test_club_001', 'Test FC', 'Test FC')
+-- ON CONFLICT (ea_club_id) DO NOTHING;

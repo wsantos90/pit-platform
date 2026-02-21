@@ -1,6 +1,8 @@
 -- ============================================================
--- MIGRATION 00009: TOURNAMENTS
--- P.I.T — Performance · Intelligence · Tracking
+-- MIGRATION 00009: TOURNAMENTS + ENTRIES + BRACKETS
+-- Depende de: 00001 (tournament_type, tournament_format, tournament_status, payment_status)
+--             00002 (users), 00003 (clubs), 00012 (confederations)
+-- NOTA: Executar ANTES de 00006 (matches referencia tournaments)
 -- ============================================================
 
 CREATE TABLE public.tournaments (
@@ -13,9 +15,9 @@ CREATE TABLE public.tournaments (
   -- Configuração
   capacity_min    SMALLINT NOT NULL DEFAULT 8,
   capacity_max    SMALLINT NOT NULL DEFAULT 32,
-  group_count     SMALLINT,
-  teams_per_group SMALLINT,
-  advance_per_group SMALLINT,
+  group_count     SMALLINT,                  -- Para group_stage: quantos grupos
+  teams_per_group SMALLINT,                  -- Para group_stage: times por grupo
+  advance_per_group SMALLINT,                -- Quantos avançam por grupo
 
   -- Datas/Horários
   scheduled_date  DATE NOT NULL,
@@ -27,8 +29,8 @@ CREATE TABLE public.tournaments (
   prize_pool      DECIMAL(10,2) NOT NULL DEFAULT 0,
 
   -- Metadados
-  current_round   TEXT,
-  confederation_id UUID REFERENCES public.confederations(id),
+  current_round   TEXT,                      -- Ex: "group_stage", "quarter_final", "final"
+  confederation_id UUID REFERENCES public.confederations(id),  -- Futuro
   created_by      UUID NOT NULL REFERENCES public.users(id),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -49,10 +51,10 @@ CREATE TABLE public.tournament_entries (
   club_id         UUID NOT NULL REFERENCES public.clubs(id) ON DELETE CASCADE,
   enrolled_by     UUID NOT NULL REFERENCES public.users(id),
   payment_status  payment_status NOT NULL DEFAULT 'pending',
-  seed            SMALLINT,
-  group_letter    CHAR(1),
-  eliminated_at   TEXT,
-  final_position  SMALLINT,
+  seed            SMALLINT,                  -- Seed (Fase 2: baseado no Pit Rating)
+  group_letter    CHAR(1),                   -- 'A', 'B', 'C'... para fase de grupos
+  eliminated_at   TEXT,                      -- Rodada em que foi eliminado
+  final_position  SMALLINT,                  -- Classificação final (1º, 2º, etc.)
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -71,14 +73,14 @@ CREATE TRIGGER trg_te_updated_at
 CREATE TABLE public.tournament_brackets (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   tournament_id   UUID NOT NULL REFERENCES public.tournaments(id) ON DELETE CASCADE,
-  round           TEXT NOT NULL,
-  round_order     SMALLINT NOT NULL,
-  match_order     SMALLINT NOT NULL,
+  round           TEXT NOT NULL,             -- "group_a_round_1", "quarter_final", "semi_final", "final"
+  round_order     SMALLINT NOT NULL,         -- Ordem numérica (1, 2, 3...)
+  match_order     SMALLINT NOT NULL,         -- Ordem dentro da rodada (jogo 1, 2, 3...)
   home_entry_id   UUID REFERENCES public.tournament_entries(id),
   away_entry_id   UUID REFERENCES public.tournament_entries(id),
   home_club_id    UUID REFERENCES public.clubs(id),
   away_club_id    UUID REFERENCES public.clubs(id),
-  match_id        UUID REFERENCES public.matches(id),
+  match_id        UUID,                      -- Vinculado após coleta (FK adicionada em 00006)
   home_score      SMALLINT,
   away_score      SMALLINT,
   winner_entry_id UUID REFERENCES public.tournament_entries(id),
@@ -86,7 +88,7 @@ CREATE TABLE public.tournament_brackets (
     CHECK (status IN ('scheduled', 'live', 'completed', 'wo_home', 'wo_away', 'disputed')),
   scheduled_at    TIMESTAMPTZ,
   completed_at    TIMESTAMPTZ,
-  next_bracket_id UUID REFERENCES public.tournament_brackets(id),
+  next_bracket_id UUID REFERENCES public.tournament_brackets(id),  -- Para onde o vencedor vai
 
   CONSTRAINT uq_bracket_match UNIQUE (tournament_id, round, match_order)
 );

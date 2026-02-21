@@ -1,10 +1,7 @@
 -- ============================================================
--- MIGRATION 00017: VIEWS
--- P.I.T — Performance · Intelligence · Tracking
+-- MIGRATION 00017: VIEWS (Dashboards e Rankings)
+-- Depende de: todas as tabelas anteriores
 -- ============================================================
-
--- Habilitar extensão trigram para busca fuzzy
-CREATE EXTENSION IF NOT EXISTS pg_trgm;
 
 -- ============================================================
 -- VIEW: Stats acumuladas por jogador (dashboard do perfil)
@@ -63,7 +60,7 @@ WHERE c.status = 'active'
 GROUP BY c.id, c.display_name, c.ea_club_id;
 
 -- ============================================================
--- VIEW: Stats por jogador POR POSIÇÃO
+-- VIEW: Stats por jogador POR POSICAO
 -- ============================================================
 CREATE OR REPLACE VIEW public.v_player_stats_by_position AS
 SELECT
@@ -81,7 +78,7 @@ WHERE mp.player_id IS NOT NULL AND mp.resolved_position IS NOT NULL
 GROUP BY mp.player_id, mp.resolved_position;
 
 -- ============================================================
--- VIEW: Dashboard financeiro (Admin only — acessado via service_role)
+-- VIEW: Dashboard financeiro (Admin only)
 -- ============================================================
 CREATE OR REPLACE VIEW public.v_financial_dashboard AS
 SELECT

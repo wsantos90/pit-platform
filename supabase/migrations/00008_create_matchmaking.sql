@@ -1,6 +1,7 @@
 -- ============================================================
--- MIGRATION 00008: MATCHMAKING
--- P.I.T — Performance · Intelligence · Tracking
+-- MIGRATION 00008: MATCHMAKING + CONFRONTATION CHAT
+-- Depende de: 00001 (matchmaking_status, confrontation_status)
+--             00002 (users), 00003 (clubs), 00006 (matches)
 -- ============================================================
 
 -- Fila de matchmaking
@@ -8,10 +9,10 @@ CREATE TABLE public.matchmaking_queue (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   club_id     UUID NOT NULL REFERENCES public.clubs(id) ON DELETE CASCADE,
   queued_by   UUID NOT NULL REFERENCES public.users(id),
-  slot_time   TEXT NOT NULL,
-  custom_time TIMESTAMPTZ,
+  slot_time   TEXT NOT NULL,               -- Ex: "21:10", "22:30", "custom"
+  custom_time TIMESTAMPTZ,                 -- Quando slot_time = "custom"
   status      matchmaking_status NOT NULL DEFAULT 'waiting',
-  matched_with UUID REFERENCES public.matchmaking_queue(id),
+  matched_with UUID REFERENCES public.matchmaking_queue(id),  -- Quem fez match
   expires_at  TIMESTAMPTZ NOT NULL,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -36,7 +37,7 @@ CREATE TABLE public.confrontation_chats (
   status          confrontation_status NOT NULL DEFAULT 'active',
   confirmed_by_a  BOOLEAN NOT NULL DEFAULT false,
   confirmed_by_b  BOOLEAN NOT NULL DEFAULT false,
-  match_id        UUID REFERENCES public.matches(id),
+  match_id        UUID REFERENCES public.matches(id),  -- Vincula quando jogo é coletado
   expires_at      TIMESTAMPTZ NOT NULL,
   created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );

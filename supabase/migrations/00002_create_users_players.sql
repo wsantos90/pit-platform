@@ -1,9 +1,15 @@
 -- ============================================================
 -- MIGRATION 00002: USERS + PLAYERS
--- P.I.T — Performance · Intelligence · Tracking
+-- Depende de: 00001 (user_role, player_position)
 -- ============================================================
 
--- Estende o auth.users do Supabase com dados do perfil PIT
+-- Extensões necessárias
+CREATE EXTENSION IF NOT EXISTS "pg_trgm";
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ============================================================
+-- USERS: Estende o auth.users do Supabase com dados do perfil PIT
+-- ============================================================
 CREATE TABLE public.users (
   id              UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email           TEXT NOT NULL UNIQUE,
@@ -19,7 +25,7 @@ CREATE TABLE public.users (
 CREATE INDEX idx_users_roles ON public.users USING GIN (roles);
 CREATE INDEX idx_users_email ON public.users (email);
 
--- Trigger para updated_at
+-- Função reutilizável para updated_at (usada em todas as tabelas)
 CREATE OR REPLACE FUNCTION update_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -42,12 +48,13 @@ CREATE TABLE public.players (
   primary_position    player_position NOT NULL,
   secondary_position  player_position,
   bio                 TEXT,
-  is_free_agent       BOOLEAN NOT NULL DEFAULT false,
+  is_free_agent       BOOLEAN NOT NULL DEFAULT false,  -- Fase 2: mercado de jogadores
   status              TEXT NOT NULL DEFAULT 'active'
     CHECK (status IN ('active', 'inactive', 'banned')),
   created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
 
+  -- Constraint: posições primária e secundária devem ser diferentes
   CONSTRAINT chk_different_positions
     CHECK (secondary_position IS NULL OR primary_position != secondary_position)
 );

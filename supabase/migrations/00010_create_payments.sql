@@ -1,6 +1,6 @@
 -- ============================================================
 -- MIGRATION 00010: PAYMENTS + TRUST SCORES
--- P.I.T — Performance · Intelligence · Tracking
+-- Depende de: 00001 (payment_status), 00002 (users), 00003 (clubs), 00009 (tournaments)
 -- ============================================================
 
 CREATE TABLE public.payments (
@@ -12,8 +12,8 @@ CREATE TABLE public.payments (
   -- Gateway
   gateway         TEXT NOT NULL DEFAULT 'mercadopago'
     CHECK (gateway IN ('mercadopago', 'stripe')),
-  gateway_payment_id TEXT,
-  gateway_status  TEXT,
+  gateway_payment_id TEXT,                 -- ID retornado pelo gateway
+  gateway_status  TEXT,                    -- Status do gateway (para debug)
 
   -- Valores
   amount          DECIMAL(10,2) NOT NULL,
@@ -27,8 +27,8 @@ CREATE TABLE public.payments (
   refund_reason   TEXT,
 
   -- PIX específico
-  pix_qr_code     TEXT,
-  pix_copy_paste  TEXT,
+  pix_qr_code     TEXT,                    -- QR code gerado
+  pix_copy_paste  TEXT,                    -- Copia e cola do PIX
   pix_expiration  TIMESTAMPTZ,
 
   -- Assinatura (Fase 2)
@@ -59,7 +59,7 @@ CREATE TABLE public.trust_scores (
     CHECK (strikes >= 0 AND strikes <= 3),
   is_trusted      BOOLEAN NOT NULL DEFAULT true,
   suspended_until TIMESTAMPTZ,
-  banned_until    TIMESTAMPTZ,
+  banned_until    TIMESTAMPTZ,             -- NULL = não banido, data = até quando
   last_strike_at  TIMESTAMPTZ,
   notes           TEXT,
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()

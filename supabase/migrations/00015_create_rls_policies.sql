@@ -1,6 +1,6 @@
 -- ============================================================
--- MIGRATION 00015: RLS POLICIES
--- P.I.T — Performance · Intelligence · Tracking
+-- MIGRATION 00015: RLS POLICIES + HELPER FUNCTIONS
+-- Depende de: todas as tabelas anteriores (00001-00014B)
 -- ============================================================
 
 -- Habilitar RLS em todas as tabelas
@@ -66,10 +66,10 @@ $$ LANGUAGE sql SECURITY DEFINER STABLE;
 -- ============================================================
 -- POLICIES: users
 -- ============================================================
-CREATE POLICY "Users: leitura pública" ON public.users
+CREATE POLICY "Users: leitura publica" ON public.users
   FOR SELECT USING (true);
 
-CREATE POLICY "Users: atualiza próprio" ON public.users
+CREATE POLICY "Users: atualiza proprio" ON public.users
   FOR UPDATE USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
@@ -79,13 +79,13 @@ CREATE POLICY "Users: admin gerencia" ON public.users
 -- ============================================================
 -- POLICIES: players
 -- ============================================================
-CREATE POLICY "Players: leitura pública" ON public.players
+CREATE POLICY "Players: leitura publica" ON public.players
   FOR SELECT USING (true);
 
-CREATE POLICY "Players: cria/atualiza próprio" ON public.players
+CREATE POLICY "Players: cria proprio" ON public.players
   FOR INSERT WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Players: atualiza próprio" ON public.players
+CREATE POLICY "Players: atualiza proprio" ON public.players
   FOR UPDATE USING (user_id = auth.uid());
 
 CREATE POLICY "Players: admin gerencia" ON public.players
@@ -94,7 +94,7 @@ CREATE POLICY "Players: admin gerencia" ON public.players
 -- ============================================================
 -- POLICIES: clubs
 -- ============================================================
-CREATE POLICY "Clubs: leitura pública" ON public.clubs
+CREATE POLICY "Clubs: leitura publica" ON public.clubs
   FOR SELECT USING (true);
 
 CREATE POLICY "Clubs: manager atualiza" ON public.clubs
@@ -106,7 +106,7 @@ CREATE POLICY "Clubs: admin/mod gerencia" ON public.clubs
 -- ============================================================
 -- POLICIES: club_players
 -- ============================================================
-CREATE POLICY "Club Players: leitura pública" ON public.club_players
+CREATE POLICY "Club Players: leitura publica" ON public.club_players
   FOR SELECT USING (true);
 
 CREATE POLICY "Club Players: manager do time gerencia" ON public.club_players
@@ -121,13 +121,13 @@ CREATE POLICY "Club Players: manager do time gerencia" ON public.club_players
 -- ============================================================
 -- POLICIES: discovered_clubs / discovered_players
 -- ============================================================
-CREATE POLICY "Discovered: leitura pública" ON public.discovered_clubs
+CREATE POLICY "Discovered: leitura publica" ON public.discovered_clubs
   FOR SELECT USING (true);
 
 CREATE POLICY "Discovered: admin gerencia" ON public.discovered_clubs
   FOR ALL USING (public.is_admin());
 
-CREATE POLICY "Disc Players: leitura pública" ON public.discovered_players
+CREATE POLICY "Disc Players: leitura publica" ON public.discovered_players
   FOR SELECT USING (true);
 
 CREATE POLICY "Disc Players: admin gerencia" ON public.discovered_players
@@ -136,7 +136,7 @@ CREATE POLICY "Disc Players: admin gerencia" ON public.discovered_players
 -- ============================================================
 -- POLICIES: claims
 -- ============================================================
-CREATE POLICY "Claims: user vê próprias" ON public.claims
+CREATE POLICY "Claims: user ve proprias" ON public.claims
   FOR SELECT USING (user_id = auth.uid() OR public.is_moderator_or_admin());
 
 CREATE POLICY "Claims: user cria" ON public.claims
@@ -148,13 +148,13 @@ CREATE POLICY "Claims: mod/admin review" ON public.claims
 -- ============================================================
 -- POLICIES: matches + match_players
 -- ============================================================
-CREATE POLICY "Matches: leitura pública" ON public.matches
+CREATE POLICY "Matches: leitura publica" ON public.matches
   FOR SELECT USING (true);
 
 CREATE POLICY "Matches: sistema insere" ON public.matches
   FOR INSERT WITH CHECK (public.is_admin());
 
-CREATE POLICY "Match Players: leitura pública" ON public.match_players
+CREATE POLICY "Match Players: leitura publica" ON public.match_players
   FOR SELECT USING (true);
 
 CREATE POLICY "Match Players: sistema insere" ON public.match_players
@@ -178,6 +178,29 @@ CREATE POLICY "Lineups: manager gerencia" ON public.lineups
     EXISTS (
       SELECT 1 FROM public.clubs
       WHERE clubs.id = lineups.club_id AND clubs.manager_id = auth.uid()
+    )
+  );
+
+-- ============================================================
+-- POLICIES: lineup_players
+-- ============================================================
+CREATE POLICY "Lineup Players: leitura elenco/admin" ON public.lineup_players
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM public.lineups l
+      JOIN public.club_players cp ON cp.club_id = l.club_id
+      JOIN public.players p ON p.id = cp.player_id
+      WHERE l.id = lineup_players.lineup_id AND p.user_id = auth.uid() AND cp.is_active
+    )
+    OR public.is_moderator_or_admin()
+  );
+
+CREATE POLICY "Lineup Players: manager gerencia" ON public.lineup_players
+  FOR ALL USING (
+    EXISTS (
+      SELECT 1 FROM public.lineups l
+      JOIN public.clubs c ON c.id = l.club_id
+      WHERE l.id = lineup_players.lineup_id AND c.manager_id = auth.uid()
     )
   );
 
@@ -223,13 +246,13 @@ CREATE POLICY "Messages: participantes enviam" ON public.confrontation_messages
 -- ============================================================
 -- POLICIES: tournaments + entries + brackets
 -- ============================================================
-CREATE POLICY "Tournaments: leitura pública" ON public.tournaments
+CREATE POLICY "Tournaments: leitura publica" ON public.tournaments
   FOR SELECT USING (true);
 
 CREATE POLICY "Tournaments: mod/admin gerencia" ON public.tournaments
   FOR ALL USING (public.is_moderator_or_admin());
 
-CREATE POLICY "Entries: leitura pública" ON public.tournament_entries
+CREATE POLICY "Entries: leitura publica" ON public.tournament_entries
   FOR SELECT USING (true);
 
 CREATE POLICY "Entries: manager inscreve" ON public.tournament_entries
@@ -240,7 +263,7 @@ CREATE POLICY "Entries: manager inscreve" ON public.tournament_entries
     )
   );
 
-CREATE POLICY "Brackets: leitura pública" ON public.tournament_brackets
+CREATE POLICY "Brackets: leitura publica" ON public.tournament_brackets
   FOR SELECT USING (true);
 
 CREATE POLICY "Brackets: mod/admin gerencia" ON public.tournament_brackets
@@ -249,7 +272,7 @@ CREATE POLICY "Brackets: mod/admin gerencia" ON public.tournament_brackets
 -- ============================================================
 -- POLICIES: payments
 -- ============================================================
-CREATE POLICY "Payments: user vê próprios" ON public.payments
+CREATE POLICY "Payments: user ve proprios" ON public.payments
   FOR SELECT USING (user_id = auth.uid() OR public.is_admin());
 
 CREATE POLICY "Payments: admin total" ON public.payments
@@ -273,7 +296,7 @@ CREATE POLICY "Trust: admin gerencia" ON public.trust_scores
 -- ============================================================
 -- POLICIES: hall_of_fame
 -- ============================================================
-CREATE POLICY "HoF: leitura pública" ON public.hall_of_fame
+CREATE POLICY "HoF: leitura publica" ON public.hall_of_fame
   FOR SELECT USING (true);
 
 CREATE POLICY "HoF: sistema insere" ON public.hall_of_fame
@@ -282,7 +305,7 @@ CREATE POLICY "HoF: sistema insere" ON public.hall_of_fame
 -- ============================================================
 -- POLICIES: notifications
 -- ============================================================
-CREATE POLICY "Notif: user vê próprias" ON public.notifications
+CREATE POLICY "Notif: user ve proprias" ON public.notifications
   FOR SELECT USING (user_id = auth.uid());
 
 CREATE POLICY "Notif: user marca lida" ON public.notifications
@@ -307,7 +330,7 @@ CREATE POLICY "Disputes: mod/admin resolve" ON public.disputes
 -- ============================================================
 -- POLICIES: pit_ratings (Fase 2)
 -- ============================================================
-CREATE POLICY "Ratings: leitura pública" ON public.pit_ratings
+CREATE POLICY "Ratings: leitura publica" ON public.pit_ratings
   FOR SELECT USING (true);
 
 CREATE POLICY "Ratings: sistema gerencia" ON public.pit_ratings

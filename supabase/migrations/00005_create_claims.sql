@@ -1,13 +1,13 @@
 -- ============================================================
 -- MIGRATION 00005: CLAIMS (Reivindicações de Time)
--- P.I.T — Performance · Intelligence · Tracking
+-- Depende de: 00001 (claim_status), 00002 (users), 00004 (discovered_clubs)
 -- ============================================================
 
 CREATE TABLE public.claims (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id           UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   discovered_club_id UUID NOT NULL REFERENCES public.discovered_clubs(id),
-  photo_url         TEXT NOT NULL,
+  photo_url         TEXT NOT NULL,          -- URL no Supabase Storage
   status            claim_status NOT NULL DEFAULT 'pending',
   reviewed_by       UUID REFERENCES public.users(id),
   reviewed_at       TIMESTAMPTZ,

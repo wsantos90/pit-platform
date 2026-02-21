@@ -1,6 +1,7 @@
 -- ============================================================
 -- MIGRATION 00013: DISPUTES (W.O. — Fase 2)
--- P.I.T — Performance · Intelligence · Tracking
+-- Depende de: 00001 (dispute_status), 00002 (users), 00003 (clubs)
+--             00009 (tournaments, tournament_brackets)
 -- ============================================================
 
 CREATE TABLE public.disputes (
@@ -13,7 +14,7 @@ CREATE TABLE public.disputes (
 
   -- Conteúdo
   reason          TEXT NOT NULL,
-  evidence_urls   TEXT[],
+  evidence_urls   TEXT[],                  -- Screenshots, fotos
   status          dispute_status NOT NULL DEFAULT 'open',
 
   -- Resolução

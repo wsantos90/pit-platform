@@ -1,12 +1,12 @@
 -- ============================================================
 -- MIGRATION 00014: PIT RATINGS (Fase 2)
--- P.I.T — Performance · Intelligence · Tracking
+-- Depende de: 00001 (pit_league), 00003 (clubs), 00006 (matches)
 -- ============================================================
 
 CREATE TABLE public.pit_ratings (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   club_id         UUID NOT NULL REFERENCES public.clubs(id) ON DELETE CASCADE,
-  season          TEXT NOT NULL,
+  season          TEXT NOT NULL,            -- Ex: "FC25", "FC26"
 
   -- Rating atual
   rating          INTEGER NOT NULL DEFAULT 1500,
@@ -15,11 +15,11 @@ CREATE TABLE public.pit_ratings (
 
   -- Calibração
   matches_played  INTEGER NOT NULL DEFAULT 0,
-  is_calibrating  BOOLEAN NOT NULL DEFAULT true,
+  is_calibrating  BOOLEAN NOT NULL DEFAULT true,  -- true até 15 jogos
 
   -- Filtros
-  competitive_rating INTEGER NOT NULL DEFAULT 1500,
-  general_rating     INTEGER NOT NULL DEFAULT 1500,
+  competitive_rating INTEGER NOT NULL DEFAULT 1500,  -- Só campeonatos
+  general_rating     INTEGER NOT NULL DEFAULT 1500,  -- + amistosos PIT
 
   -- Histórico
   wins            INTEGER NOT NULL DEFAULT 0,
@@ -54,49 +54,3 @@ CREATE TABLE public.pit_rating_history (
 );
 
 CREATE INDEX idx_rh_rating ON public.pit_rating_history (pit_rating_id, created_at DESC);
-
--- ============================================================
--- NOTIFICATIONS + SUBSCRIPTIONS
--- ============================================================
-
--- Notificações in-app
-CREATE TABLE public.notifications (
-  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     UUID NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
-  type        notification_type NOT NULL,
-  title       TEXT NOT NULL,
-  message     TEXT NOT NULL,
-  data        JSONB,
-  is_read     BOOLEAN NOT NULL DEFAULT false,
-  created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-
-CREATE INDEX idx_notifications_user ON public.notifications (user_id, is_read, created_at DESC);
-
--- Assinaturas Premium (Fase 2)
-CREATE TABLE public.subscriptions (
-  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id         UUID REFERENCES public.users(id),
-  club_id         UUID REFERENCES public.clubs(id),
-  plan            subscription_plan NOT NULL,
-  status          subscription_status NOT NULL DEFAULT 'active',
-  gateway         TEXT NOT NULL DEFAULT 'mercadopago',
-  gateway_subscription_id TEXT,
-  amount          DECIMAL(10,2) NOT NULL,
-  current_period_start TIMESTAMPTZ NOT NULL DEFAULT now(),
-  current_period_end   TIMESTAMPTZ NOT NULL,
-  cancelled_at    TIMESTAMPTZ,
-  created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
-
-  CONSTRAINT chk_subscription_target
-    CHECK (user_id IS NOT NULL OR club_id IS NOT NULL)
-);
-
-CREATE INDEX idx_subs_user ON public.subscriptions (user_id);
-CREATE INDEX idx_subs_club ON public.subscriptions (club_id);
-CREATE INDEX idx_subs_status ON public.subscriptions (status);
-
-CREATE TRIGGER trg_subs_updated_at
-  BEFORE UPDATE ON public.subscriptions
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at();

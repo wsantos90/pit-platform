@@ -1,7 +1,29 @@
 -- ============================================================
--- MIGRATION 00016: FUNCTIONS + TRIGGERS
--- P.I.T — Performance · Intelligence · Tracking
+-- MIGRATION 00016: DATABASE FUNCTIONS + TRIGGERS
+-- Depende de: todas as tabelas (00001-00015)
 -- ============================================================
+
+-- ============================================================
+-- TRIGGER: Auto-criar public.users quando auth.users é criado
+-- (disparado pelo Supabase Auth no signup)
+-- ============================================================
+CREATE OR REPLACE FUNCTION public.fn_handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.users (id, email, display_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'display_name', split_part(NEW.email, '@', 1))
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.fn_handle_new_user();
 
 -- ============================================================
 -- FUNCTION: Auto-criar trust_score quando club fica active
@@ -61,7 +83,7 @@ BEGIN
     -- Criar notificação
     INSERT INTO public.notifications (user_id, type, title, message, data)
     VALUES (NEW.user_id, 'claim_approved', 'Time vinculado!',
-      'Seu time ' || v_dc.display_name || ' foi aprovado e vinculado à sua conta.',
+      'Seu time ' || v_dc.display_name || ' foi aprovado e vinculado a sua conta.',
       jsonb_build_object('club_id', v_club_id, 'club_name', v_dc.display_name));
   END IF;
 
@@ -73,8 +95,8 @@ BEGIN
 
     -- Notificar rejeição
     INSERT INTO public.notifications (user_id, type, title, message, data)
-    VALUES (NEW.user_id, 'claim_rejected', 'Reivindicação rejeitada',
-      COALESCE('Motivo: ' || NEW.rejection_reason, 'Sua reivindicação foi rejeitada. Tente novamente.'),
+    VALUES (NEW.user_id, 'claim_rejected', 'Reivindicacao rejeitada',
+      COALESCE('Motivo: ' || NEW.rejection_reason, 'Sua reivindicacao foi rejeitada. Tente novamente.'),
       jsonb_build_object('claim_id', NEW.id));
   END IF;
 
@@ -87,7 +109,7 @@ CREATE TRIGGER trg_claim_approved
   FOR EACH ROW EXECUTE FUNCTION public.fn_approve_claim();
 
 -- ============================================================
--- FUNCTION: Resolver posição detalhada do jogador
+-- FUNCTION: Resolver posicao detalhada do jogador
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.fn_resolve_position(
   p_ea_position ea_position_category,
@@ -160,7 +182,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE OR REPLACE FUNCTION public.fn_calculate_elo_delta(
   p_rating_a INTEGER,
   p_rating_b INTEGER,
-  p_result DECIMAL,
+  p_result DECIMAL,          -- 1.0 = vitória, 0.5 = empate, 0.0 = derrota
   p_is_calibrating BOOLEAN
 ) RETURNS INTEGER AS $$
 DECLARE
