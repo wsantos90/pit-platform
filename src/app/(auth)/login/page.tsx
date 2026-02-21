@@ -19,10 +19,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage } from "@/lib/supabase/auth-errors";
 import { ensurePlayerProfile } from "@/lib/supabase/player-profile";
-
-function isEmailValid(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+import { isEmailValid } from "@/lib/utils";
 
 function LoginContent() {
   const router = useRouter();
@@ -84,10 +81,10 @@ function LoginContent() {
     <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold tracking-tight">
-          Welcome back
+          Bem-vindo de volta
         </CardTitle>
         <CardDescription>
-          Enter your credentials to access your account
+          Entre com suas credenciais para acessar sua conta
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -107,12 +104,12 @@ function LoginContent() {
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Senha</Label>
               <Link
                 href="/forgot-password"
                 className="text-sm font-medium text-primary hover:text-primary/80 hover:underline"
               >
-                Forgot password?
+                Esqueceu sua senha?
               </Link>
             </div>
             <Input
@@ -132,7 +129,7 @@ function LoginContent() {
               onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
             />
             <Label htmlFor="remember" className="text-sm font-medium leading-none">
-              Remember me
+              Lembrar de mim
             </Label>
           </div>
 
@@ -147,7 +144,7 @@ function LoginContent() {
             disabled={isSubmitting}
             className="w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
           >
-            {isSubmitting ? "Entrando..." : "Sign In"}
+            {isSubmitting ? "Entrando..." : "Entrar"}
           </Button>
 
           <div className="relative my-4">
@@ -156,7 +153,7 @@ function LoginContent() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
+                Ou continue com
               </span>
             </div>
           </div>
@@ -173,12 +170,12 @@ function LoginContent() {
       </CardContent>
       <CardFooter className="flex justify-center border-t border-border/50 pt-6">
         <p className="text-sm text-muted-foreground">
-          Don&apos;t have an account?{" "}
+          Não tem uma conta?{" "}
           <Link
             href="/register"
             className="font-medium text-primary hover:text-primary/80 hover:underline"
           >
-            Sign up
+            Cadastre-se
           </Link>
         </p>
       </CardFooter>
@@ -193,9 +190,9 @@ export default function LoginPage() {
         <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold tracking-tight">
-              Welcome back
+              Bem-vindo de volta
             </CardTitle>
-            <CardDescription>Loading form...</CardDescription>
+            <CardDescription>Carregando formulário...</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="h-9 w-full rounded-md border border-border bg-background" />

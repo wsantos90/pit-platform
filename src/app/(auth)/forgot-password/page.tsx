@@ -17,10 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getAuthErrorMessage } from "@/lib/supabase/auth-errors";
 import { createClient } from "@/lib/supabase/client";
-
-function isEmailValid(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+import { isEmailValid } from "@/lib/utils";
 
 export default function ForgotPasswordPage() {
   const supabase = useMemo(() => createClient(), []);
@@ -57,10 +54,10 @@ export default function ForgotPasswordPage() {
     <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold tracking-tight">
-          Forgot password
+          Recuperar senha
         </CardTitle>
         <CardDescription>
-          Enter your email address and we will send you a reset link
+          Digite seu email e enviaremos um link de recuperação
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,7 +91,7 @@ export default function ForgotPasswordPage() {
             disabled={isSubmitting}
             className="w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
           >
-            {isSubmitting ? "Enviando..." : "Send Reset Link"}
+            {isSubmitting ? "Enviando..." : "Enviar Link"}
           </Button>
         </form>
       </CardContent>
@@ -104,7 +101,7 @@ export default function ForgotPasswordPage() {
           className="flex items-center text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to login
+          Voltar para o login
         </Link>
       </CardFooter>
     </Card>
