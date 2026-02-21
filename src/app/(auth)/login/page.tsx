@@ -50,7 +50,7 @@ function LoginContent() {
 
     setIsSubmitting(true);
     const supabase = createClient({ sessionOnly: !rememberMe });
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: email.trim(),
       password,
     });
@@ -62,15 +62,12 @@ function LoginContent() {
     }
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      const metadataGamertag = user?.user_metadata?.ea_gamertag;
-      if (user?.id && typeof metadataGamertag === "string") {
+      const authUser = signInData.user ?? signInData.session?.user;
+      const metadataGamertag = authUser?.user_metadata?.ea_gamertag;
+      if (authUser?.id && typeof metadataGamertag === "string") {
         await ensurePlayerProfile({
           supabase,
-          userId: user.id,
+          userId: authUser.id,
           gamertag: metadataGamertag,
         });
       }

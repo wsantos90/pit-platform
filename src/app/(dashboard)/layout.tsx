@@ -6,6 +6,7 @@
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { Navbar } from '@/components/layout/Navbar';
 
 export default async function DashboardLayout({
     children,
@@ -31,10 +32,7 @@ export default async function DashboardLayout({
             </aside>
 
             <main className="flex-1 flex flex-col overflow-hidden">
-                {/* TODO: <Navbar /> */}
-                <header className="h-14 bg-gray-900/50 border-b border-gray-800 flex items-center px-6">
-                    <span className="text-sm text-gray-400">Dashboard</span>
-                </header>
+                <Navbar />
 
                 <div className="flex-1 overflow-auto p-6">
                     {children}
