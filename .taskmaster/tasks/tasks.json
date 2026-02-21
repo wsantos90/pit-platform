@@ -434,7 +434,7 @@
         "dependencies": [
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -442,7 +442,7 @@
             "description": "Criar a funÃ§Ã£o normalizeClubName(rawName: string): string que corrige encoding Latin-1 interpretado como UTF-8 usando mapa de substituiÃ§Ãµes ou iconv-lite com exemplos como CÃƒÂ¡ssia â†’ CÃ¡ssia.",
             "dependencies": [],
             "details": "Implementar mapa {'ÃƒÂ¡':'Ã¡', 'ÃƒÂ©':'Ã©', etc.} ou usar iconv-lite para decodificar rawName como latin1 e re-encodar utf8. Adicionar testes unitÃ¡rios com casos do PRD (CÃƒÂ¡ssia, AthÃƒÂ©tica). Exportar funÃ§Ã£o para uso em pipeline.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com todos os exemplos PRD: CÃƒÂ¡ssiaâ†’CÃ¡ssia, AthÃƒÂ©ticaâ†’AthÃ©tica. Verificar 100% acurÃ¡cia em normalizaÃ§Ã£o.",
             "parentId": "undefined"
           },
@@ -453,8 +453,8 @@
             "dependencies": [
               1
             ],
-            "details": "Alterar schema Supabase para incluir ea_name_raw:string e display_name:string. No insert/update de discovered_clubs, salvar raw e normalizado. Usar display_name em fuzzy search e UI. Preservar ea_name_raw para match exato API.",
-            "status": "pending",
+            "details": "Alterar schema Supabase para incluir ea_name_raw:string e display_name:string. No insert/update de discovered_clubs, salvar raw e normalizado. Usar display_name em fuzzy search e UI. Preservar ea_name_raw para match exato API. Integracao funcional da rota POST /api/discovery/scan com validacao Zod e resumo de processamento.",
+            "status": "done",
             "testStrategy": "Verificar que discovered_clubs armazena ambos campos corretamente. Confirmar busca fuzzy usa display_name. Validar exibiÃ§Ã£o UI com nomes normalizados.",
             "parentId": "undefined"
           }
