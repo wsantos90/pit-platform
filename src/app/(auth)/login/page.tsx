@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { FormEvent, Suspense, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ function isEmailValid(email: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export default function LoginPage() {
+function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const nextPath = searchParams.get("next");
@@ -186,5 +186,29 @@ export default function LoginPage() {
         </p>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Welcome back
+            </CardTitle>
+            <CardDescription>Loading form...</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="h-9 w-full rounded-md border border-border bg-background" />
+            <div className="h-9 w-full rounded-md border border-border bg-background" />
+            <div className="h-9 w-full rounded-md bg-primary/30" />
+          </CardContent>
+        </Card>
+      }
+    >
+      <LoginContent />
+    </Suspense>
   );
 }
