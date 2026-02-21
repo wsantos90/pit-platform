@@ -1,6 +1,7 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { UserRole } from "@/types";
+import { hasAnyRole } from "@/lib/auth/roles";
 
 type RateLimitEntry = {
   timestamps: number[];
@@ -105,6 +106,7 @@ export function isPublicRoute(pathname: string) {
     "/login",
     "/register",
     "/forgot-password",
+    "/unauthorized",
     "/rankings",
     "/hall-of-fame",
     "/payment/success",
@@ -130,14 +132,15 @@ export function getRequiredRoles(pathname: string): UserRole[] | null {
   const rules: Array<{ prefix: string; roles: UserRole[] }> = [
     { prefix: "/admin", roles: ["admin"] },
     { prefix: "/moderation", roles: ["moderator", "admin"] },
-    { prefix: "/team", roles: ["manager", "admin"] },
-    { prefix: "/matchmaking", roles: ["player", "manager", "admin"] },
+    { prefix: "/team", roles: ["manager", "moderator", "admin"] },
+    { prefix: "/matchmaking", roles: ["manager", "moderator", "admin"] },
     { prefix: "/profile", roles: ["player", "manager", "moderator", "admin"] },
-    { prefix: "/tournaments", roles: ["player", "manager", "moderator", "admin"] },
+    { prefix: "/tournaments", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/claim/review", roles: ["moderator", "admin"] },
     { prefix: "/api/claim/submit", roles: ["player", "manager", "admin"] },
-    { prefix: "/api/matchmaking", roles: ["player", "manager", "admin"] },
-    { prefix: "/api/tournament", roles: ["manager", "admin"] },
+    { prefix: "/api/matchmaking", roles: ["manager", "moderator", "admin"] },
+    { prefix: "/api/tournament/enroll", roles: ["manager", "moderator", "admin"] },
+    { prefix: "/api/tournament", roles: ["moderator", "admin"] },
     { prefix: "/api/discovery/insert-manual", roles: ["admin"] },
   ];
   const match = rules.find((rule) => pathname.startsWith(rule.prefix));
@@ -238,8 +241,8 @@ export async function updateSession(request: NextRequest) {
         .maybeSingle();
       const roles = (userRow?.roles ?? []) as UserRole[];
       const active = userRow?.is_active ?? true;
-      const hasRole = roles.some((role) => requiredRoles.includes(role));
-      if (!active || !hasRole) {
+      const isAllowed = hasAnyRole(roles, requiredRoles);
+      if (!active || !isAllowed) {
         console.warn("unauthorized_access", {
           pathname,
           ip: getClientIp(request),
@@ -254,7 +257,7 @@ export async function updateSession(request: NextRequest) {
           );
         }
         const fallbackUrl = request.nextUrl.clone();
-        fallbackUrl.pathname = "/profile";
+        fallbackUrl.pathname = "/unauthorized";
         const redirectResponse = NextResponse.redirect(fallbackUrl);
         return applySecurityHeaders(
           withSessionCookies(response, redirectResponse),

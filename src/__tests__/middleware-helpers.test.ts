@@ -96,6 +96,7 @@ describe("isPublicRoute", () => {
     "/login",
     "/register",
     "/forgot-password",
+    "/unauthorized",
     "/rankings",
     "/hall-of-fame",
     "/payment/success",
@@ -171,12 +172,12 @@ describe("getRequiredRoles", () => {
     expect(getRequiredRoles("/moderation")).toEqual(["moderator", "admin"]);
   });
 
-  it('retorna ["manager", "admin"] para /team', () => {
-    expect(getRequiredRoles("/team")).toEqual(["manager", "admin"]);
+  it('retorna ["manager", "moderator", "admin"] para /team', () => {
+    expect(getRequiredRoles("/team")).toEqual(["manager", "moderator", "admin"]);
   });
 
-  it('retorna ["player", "manager", "admin"] para /matchmaking', () => {
-    expect(getRequiredRoles("/matchmaking")).toEqual(["player", "manager", "admin"]);
+  it('retorna ["manager", "moderator", "admin"] para /matchmaking', () => {
+    expect(getRequiredRoles("/matchmaking")).toEqual(["manager", "moderator", "admin"]);
   });
 
   it("retorna 4 roles para /profile", () => {
@@ -188,9 +189,8 @@ describe("getRequiredRoles", () => {
     ]);
   });
 
-  it("retorna 4 roles para /tournaments", () => {
+  it("retorna 3 roles para /tournaments", () => {
     expect(getRequiredRoles("/tournaments")).toEqual([
-      "player",
       "manager",
       "moderator",
       "admin",
@@ -209,17 +209,25 @@ describe("getRequiredRoles", () => {
     ]);
   });
 
-  it('retorna ["player", "manager", "admin"] para /api/matchmaking/queue', () => {
+  it('retorna ["manager", "moderator", "admin"] para /api/matchmaking/queue', () => {
     expect(getRequiredRoles("/api/matchmaking/queue")).toEqual([
-      "player",
       "manager",
+      "moderator",
       "admin",
     ]);
   });
 
-  it('retorna ["manager", "admin"] para /api/tournament/create', () => {
+  it('retorna ["moderator", "admin"] para /api/tournament/create', () => {
     expect(getRequiredRoles("/api/tournament/create")).toEqual([
+      "moderator",
+      "admin",
+    ]);
+  });
+
+  it('retorna ["manager", "moderator", "admin"] para /api/tournament/enroll', () => {
+    expect(getRequiredRoles("/api/tournament/enroll")).toEqual([
       "manager",
+      "moderator",
       "admin",
     ]);
   });
