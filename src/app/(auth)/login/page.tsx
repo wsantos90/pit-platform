@@ -1,206 +1,214 @@
-﻿'use client';
+"use client";
 
-import { useMemo, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FormEvent, Suspense, useState } from "react";
 
-export default function Page() {
-    const supabase = useMemo(() => createClient(), []);
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [file, setFile] = useState<File | null>(null);
-    const [status, setStatus] = useState<string | null>(null);
-    const [userId, setUserId] = useState<string | null>(null);
-    const [listPrefix, setListPrefix] = useState('');
-    const [files, setFiles] = useState<Array<{ name: string }>>([]);
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { createClient } from "@/lib/supabase/client";
+import { getAuthErrorMessage } from "@/lib/supabase/auth-errors";
+import { ensurePlayerProfile } from "@/lib/supabase/player-profile";
 
-    const handleLogin = async () => {
-        setStatus(null);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) {
-            setStatus(error.message);
-            return;
-        }
-        setUserId(data.user?.id ?? null);
-        setStatus('login ok');
-    };
+function isEmailValid(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
-    const handleLogout = async () => {
-        setStatus(null);
-        await supabase.auth.signOut();
-        setUserId(null);
-        setStatus('logout ok');
-    };
+function LoginContent() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const nextPath = searchParams.get("next");
 
-    const handleUpload = async () => {
-        setStatus(null);
-        if (!file) {
-            setStatus('selecione um arquivo');
-            return;
-        }
-        const { data: session } = await supabase.auth.getUser();
-        if (!session.user) {
-            setStatus('faça login antes do upload');
-            return;
-        }
-        const path = `${session.user.id}/${Date.now()}-${file.name}`;
-        const { error } = await supabase.storage.from('claims-photos').upload(path, file, {
-            upsert: false,
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+
+    if (!isEmailValid(email)) {
+      setError("Informe um email válido.");
+      return;
+    }
+    if (!password) {
+      setError("Informe sua senha.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    const supabase = createClient({ sessionOnly: !rememberMe });
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    });
+
+    if (signInError) {
+      setError(getAuthErrorMessage(signInError.message));
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      const metadataGamertag = user?.user_metadata?.ea_gamertag;
+      if (user?.id && typeof metadataGamertag === "string") {
+        await ensurePlayerProfile({
+          supabase,
+          userId: user.id,
+          gamertag: metadataGamertag,
         });
-        if (error) {
-            setStatus(error.message);
-            return;
-        }
-        setStatus(`upload ok: ${path}`);
-    };
+      }
+    } catch (profileError) {
+      console.error("Falha ao garantir perfil de jogador no login:", profileError);
+    }
 
-    const resolvePrefix = async () => {
-        const { data: session } = await supabase.auth.getUser();
-        if (!session.user) return null;
-        const trimmed = listPrefix.trim();
-        return trimmed.length ? trimmed : session.user.id;
-    };
+    const safeNextPath = nextPath && nextPath.startsWith("/") ? nextPath : "/profile";
+    router.push(safeNextPath);
+    router.refresh();
+  }
 
-    const handleList = async () => {
-        setStatus(null);
-        const prefix = await resolvePrefix();
-        if (!prefix) {
-            setStatus('faça login para listar');
-            return;
-        }
-        const { data, error } = await supabase.storage.from('claims-photos').list(prefix, {
-            limit: 50,
-        });
-        if (error) {
-            setStatus(error.message);
-            setFiles([]);
-            return;
-        }
-        setFiles(data ?? []);
-        setStatus(`listagem ok: ${prefix}`);
-    };
+  return (
+    <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold tracking-tight">
+          Welcome back
+        </CardTitle>
+        <CardDescription>
+          Enter your credentials to access your account
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+            />
+          </div>
 
-    const handleDelete = async (name: string) => {
-        setStatus(null);
-        const prefix = await resolvePrefix();
-        if (!prefix) {
-            setStatus('faça login para deletar');
-            return;
-        }
-        const path = `${prefix}/${name}`;
-        const { error } = await supabase.storage.from('claims-photos').remove([path]);
-        if (error) {
-            setStatus(error.message);
-            return;
-        }
-        setFiles((current) => current.filter((item) => item.name !== name));
-        setStatus(`delete ok: ${path}`);
-    };
-
-    const handleDownload = async (name: string) => {
-        setStatus(null);
-        const prefix = await resolvePrefix();
-        if (!prefix) {
-            setStatus('faça login para baixar');
-            return;
-        }
-        const path = `${prefix}/${name}`;
-        const { data, error } = await supabase.storage.from('claims-photos').createSignedUrl(path, 60);
-        if (error || !data?.signedUrl) {
-            setStatus(error?.message ?? 'não foi possível gerar link');
-            return;
-        }
-        window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
-    };
-
-    return (
-        <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
-            <div className="w-full max-w-md space-y-4 bg-card border border-border rounded-xl p-6">
-                <h1 className="text-xl font-semibold">Login simples</h1>
-                <div className="space-y-2">
-                    <input
-                        className="w-full rounded-md bg-background border border-border px-3 py-2 text-sm"
-                        placeholder="email"
-                        value={email}
-                        onChange={(event) => setEmail(event.target.value)}
-                    />
-                    <input
-                        className="w-full rounded-md bg-background border border-border px-3 py-2 text-sm"
-                        placeholder="senha"
-                        type="password"
-                        value={password}
-                        onChange={(event) => setPassword(event.target.value)}
-                    />
-                    <div className="flex gap-2">
-                        <button
-                            className="flex-1 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm"
-                            onClick={handleLogin}
-                        >
-                            Entrar
-                        </button>
-                        <button
-                            className="flex-1 rounded-md border border-border px-3 py-2 text-sm"
-                            onClick={handleLogout}
-                        >
-                            Sair
-                        </button>
-                    </div>
-                </div>
-
-                <div className="space-y-2">
-                    <p className="text-sm text-muted-foreground">User: {userId ?? 'não autenticado'}</p>
-                    <input
-                        className="w-full rounded-md bg-background border border-border px-3 py-2 text-sm"
-                        type="file"
-                        onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                    />
-                    <button
-                        className="w-full rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm"
-                        onClick={handleUpload}
-                    >
-                        Upload para claims-photos
-                    </button>
-                </div>
-
-                <div className="space-y-2">
-                    <input
-                        className="w-full rounded-md bg-background border border-border px-3 py-2 text-sm"
-                        placeholder="prefixo (userId) para listar"
-                        value={listPrefix}
-                        onChange={(event) => setListPrefix(event.target.value)}
-                    />
-                    <button
-                        className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                        onClick={handleList}
-                    >
-                        Listar arquivos
-                    </button>
-                    {files.length ? (
-                        <div className="space-y-2">
-                            {files.map((item) => (
-                                <div key={item.name} className="flex items-center justify-between gap-2 text-sm">
-                                    <span className="truncate">{item.name}</span>
-                                    <div className="flex gap-2">
-                                        <button
-                                            className="rounded-md border border-border px-2 py-1 text-xs"
-                                            onClick={() => handleDownload(item.name)}
-                                        >
-                                            Baixar
-                                        </button>
-                                        <button
-                                            className="rounded-md border border-border px-2 py-1 text-xs"
-                                            onClick={() => handleDelete(item.name)}
-                                        >
-                                            Deletar
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    ) : null}
-                </div>
-
-                {status ? <p className="text-sm text-muted-foreground">{status}</p> : null}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-sm font-medium text-primary hover:text-primary/80 hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
-        </div>
-    );
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="remember"
+              checked={rememberMe}
+              onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+            />
+            <Label htmlFor="remember" className="text-sm font-medium leading-none">
+              Remember me
+            </Label>
+          </div>
+
+          {error ? (
+            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+              {error}
+            </p>
+          ) : null}
+
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            className="w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
+          >
+            {isSubmitting ? "Entrando..." : "Sign In"}
+          </Button>
+
+          <div className="relative my-4">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-border" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">
+                Or continue with
+              </span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <Button type="button" variant="outline" className="w-full" disabled>
+              Google
+            </Button>
+            <Button type="button" variant="outline" className="w-full" disabled>
+              Discord
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+      <CardFooter className="flex justify-center border-t border-border/50 pt-6">
+        <p className="text-sm text-muted-foreground">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="font-medium text-primary hover:text-primary/80 hover:underline"
+          >
+            Sign up
+          </Link>
+        </p>
+      </CardFooter>
+    </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold tracking-tight">
+              Welcome back
+            </CardTitle>
+            <CardDescription>Loading form...</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="h-9 w-full rounded-md border border-border bg-background" />
+            <div className="h-9 w-full rounded-md border border-border bg-background" />
+            <div className="h-9 w-full rounded-md bg-primary/30" />
+          </CardContent>
+        </Card>
+      }
+    >
+      <LoginContent />
+    </Suspense>
+  );
 }

@@ -14,6 +14,10 @@ export function useAuth() {
     const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(true);
     const supabase = useMemo(() => createClient(), []);
+    const signOut = async () => {
+        await supabase.auth.signOut();
+        setUser(null);
+    };
 
     useEffect(() => {
         const getUser = async () => {
@@ -48,5 +52,5 @@ export function useAuth() {
         return () => subscription.unsubscribe();
     }, [supabase]);
 
-    return { user, loading };
+    return { user, loading, signOut };
 }
