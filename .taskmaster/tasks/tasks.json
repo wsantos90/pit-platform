@@ -318,10 +318,10 @@
               1
             ],
             "details": "Configurar cliente Supabase com URL e chave pÃºblica. Implementar funÃ§Ã£o signUpWithEmail que chama supabase.auth.signUp() com email e senha. ApÃ³s signup bem-sucedido, criar registro em tabela 'players' com ea_gamertag, role 'player' e user_id. Implementar funÃ§Ã£o signInWithPassword que chama supabase.auth.signInWithPassword(). Adicionar tratamento de erros especÃ­ficos (email jÃ¡ existe, senha fraca, etc). Usar async/await para operaÃ§Ãµes assÃ­ncronas.",
-            "status": "done",
+            "status": "review",
             "testStrategy": "Testar registro com email vÃ¡lido e verificar que registro Ã© criado em players. Testar com email invÃ¡lido e confirmar erro. Testar login com credenciais corretas e incorretas. Verificar que gamertag Ã© salvo corretamente em players.",
             "parentId": "undefined",
-            "updatedAt": "2026-02-21T03:46:47.100Z"
+            "updatedAt": "2026-02-21T03:58:45.203Z"
           },
           {
             "id": 3,
@@ -352,7 +352,7 @@
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Separe em: 1) Páginas de register/login/forgot-password; 2) Integração Supabase Auth (signup/signin); 3) Middleware de proteção de rotas; 4) Hook useAuth() e componente logout.",
-        "updatedAt": "2026-02-21T03:46:47.100Z"
+        "updatedAt": "2026-02-21T03:58:45.203Z"
       },
       {
         "id": "6",
@@ -1633,7 +1633,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-21T03:46:47.100Z",
+      "lastModified": "2026-02-21T03:58:45.203Z",
       "taskCount": 25,
       "completedCount": 4,
       "tags": [

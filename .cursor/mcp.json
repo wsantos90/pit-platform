@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "pit-mcp-vercel": {
+      "url": "https://SEU-DEPLOY.vercel.app/api/mcp",
+      "headers": {
+        "Authorization": "Bearer SEU_TOKEN"
+      }
+    }
+  }
+}
