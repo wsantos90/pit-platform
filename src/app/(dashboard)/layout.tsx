@@ -23,6 +23,7 @@ export default async function DashboardLayout({
     }
 
     return (
+<<<<<<< HEAD
         <AppContextProvider>
             <div className="flex h-screen bg-gray-950">
                 {/* TODO: <Sidebar /> */}
@@ -36,6 +37,17 @@ export default async function DashboardLayout({
                     </div>
                     {/* TODO: Nav items baseados em role */}
                 </aside>
+=======
+        <div className="flex h-screen bg-background">
+            {/* TODO: <Sidebar /> */}
+            <aside className="w-64 bg-card border-r border-border">
+                <div className="p-4">
+                    <h1 className="text-xl font-bold text-primary">P.I.T</h1>
+                    <p className="text-xs text-muted-foreground">Performance · Intelligence · Tracking</p>
+                </div>
+                {/* TODO: Nav items baseados em role */}
+            </aside>
+>>>>>>> origin/main
 
                 <main className="flex-1 flex flex-col overflow-hidden">
                     <Navbar />
