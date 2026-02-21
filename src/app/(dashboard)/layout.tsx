@@ -7,6 +7,8 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Navbar } from '@/components/layout/Navbar';
+import { ContextSwitcher } from '@/components/layout/ContextSwitcher';
+import { AppContextProvider } from '@/hooks/useContext';
 
 export default async function DashboardLayout({
     children,
@@ -21,23 +23,26 @@ export default async function DashboardLayout({
     }
 
     return (
-        <div className="flex h-screen bg-background">
-            {/* TODO: <Sidebar /> */}
-            <aside className="w-64 bg-card border-r border-border">
-                <div className="p-4">
-                    <h1 className="text-xl font-bold text-primary">P.I.T</h1>
-                    <p className="text-xs text-muted-foreground">Performance · Intelligence · Tracking</p>
-                </div>
-                {/* TODO: Nav items baseados em role */}
-            </aside>
+        <AppContextProvider>
+            <div className="flex h-screen bg-background">
+                <aside className="w-64 bg-card border-r border-border">
+                    <div className="p-4">
+                        <h1 className="text-xl font-bold text-primary">P.I.T</h1>
+                        <p className="text-xs text-muted-foreground">Performance · Intelligence · Tracking</p>
+                    </div>
+                    <div className="px-4 pb-4">
+                        <ContextSwitcher />
+                    </div>
+                </aside>
 
-            <main className="flex-1 flex flex-col overflow-hidden">
-                <Navbar />
+                <main className="flex-1 flex flex-col overflow-hidden">
+                    <Navbar />
 
-                <div className="flex-1 overflow-auto p-6">
-                    {children}
-                </div>
-            </main>
-        </div>
+                    <div className="flex-1 overflow-auto p-6">
+                        {children}
+                    </div>
+                </main>
+            </div>
+        </AppContextProvider>
     );
 }

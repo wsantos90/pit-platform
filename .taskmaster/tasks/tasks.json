@@ -366,7 +366,7 @@
         "dependencies": [
           "5"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -374,9 +374,10 @@
             "description": "Adicionar coluna 'roles' como array de strings na tabela users do Supabase com valores ['player', 'manager', 'moderator', 'admin'].",
             "dependencies": [],
             "details": "Executar migraÃ§Ã£o SQL: ALTER TABLE users ADD COLUMN roles text[] DEFAULT ARRAY['player']::text[]; Criar trigger para adicionar 'manager' ao reivindicar time. Definir polÃ­ticas RLS para acesso por role.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que novos usuÃ¡rios tÃªm ['player']. Confirmar que manager tem ['player','manager']. Testar query por role especÃ­fica.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T06:45:20.317Z"
           },
           {
             "id": 2,
@@ -386,9 +387,10 @@
               1
             ],
             "details": "Implementar hooks/useRole.ts com Supabase query para user.roles. Criar RoleContext com useContext() gerenciando {context: 'profile'|'team_id', setContext}. Inicializar com localStorage.getItem('appContext').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar useRole() retorna array correto. Verificar useContext() persiste em localStorage apÃ³s setContext(). Confirmar hydration inicial.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T07:02:18.411Z"
           },
           {
             "id": 3,
@@ -398,9 +400,10 @@
               2
             ],
             "details": "Usar useContext() para alternar contexto. Query Supabase para times onde user Ã© manager. Dropdown com 'Meu Perfil' (profile) e lista de times. Sincronizar localStorage via useEffect no Context Provider.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar dropdown mostra perfil + times corretos. Testar switch persiste apÃ³s refresh. Confirmar manager sem times mostra sÃ³ 'Meu Perfil'.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T07:05:36.885Z"
           },
           {
             "id": 4,
@@ -411,14 +414,15 @@
               2
             ],
             "details": "Middleware: mapear rotas (/admin â†’ ['admin'], /team â†’ ['manager','moderator','admin']). Redirect nÃ£o-autorizados para /unauthorized. RoleGuard: HOC que usa useRole() e renderiza loading/redirect. FunÃ§Ã£o hasRole(roles: string[], required: string).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar /admin redireciona nÃ£o-admin. Verificar RoleGuard bloqueia seÃ§Ãµes. Confirmar roles acumulativos funcionam (moderator acessa manager routes).",
             "parentId": "undefined"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Divida em: 1) Schema roles array na tabela users; 2) Hooks useRole() e useContext(); 3) Componente ContextSwitcher com localStorage; 4) RoleGuard e middleware de rotas protegidas."
+        "expansionPrompt": "Divida em: 1) Schema roles array na tabela users; 2) Hooks useRole() e useContext(); 3) Componente ContextSwitcher com localStorage; 4) RoleGuard e middleware de rotas protegidas.",
+        "updatedAt": "2026-02-21T07:05:36.885Z"
       },
       {
         "id": "7",
@@ -1635,7 +1639,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-21T05:44:00.584Z",
+      "lastModified": "2026-02-21T07:05:36.886Z",
       "taskCount": 25,
       "completedCount": 5,
       "tags": [

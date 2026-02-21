@@ -305,25 +305,32 @@ describe("acesso de usuário não autenticado", () => {
 // ROLE INSUFICIENTE — PÁGINAS
 // ---------------------------------------------------------------------------
 describe("role insuficiente em páginas", () => {
-  it("redireciona player que tenta acessar /admin para /profile", async () => {
+  it("redireciona player que tenta acessar /admin para /unauthorized", async () => {
     asAuthenticatedUser(["player"]);
     const res = await updateSession(makeRequest("/admin"));
     expect(res.status).toBeGreaterThanOrEqual(300);
-    expect(res.headers.get("location")).toContain("/profile");
+    expect(res.headers.get("location")).toContain("/unauthorized");
   });
 
-  it("redireciona player que tenta acessar /moderation para /profile", async () => {
+  it("redireciona player que tenta acessar /moderation para /unauthorized", async () => {
     asAuthenticatedUser(["player"]);
     const res = await updateSession(makeRequest("/moderation"));
     expect(res.status).toBeGreaterThanOrEqual(300);
-    expect(res.headers.get("location")).toContain("/profile");
+    expect(res.headers.get("location")).toContain("/unauthorized");
   });
 
-  it("redireciona usuário inativo (mesmo com role correta) para /profile", async () => {
+  it("redireciona player que tenta acessar /matchmaking para /unauthorized", async () => {
+    asAuthenticatedUser(["player"]);
+    const res = await updateSession(makeRequest("/matchmaking"));
+    expect(res.status).toBeGreaterThanOrEqual(300);
+    expect(res.headers.get("location")).toContain("/unauthorized");
+  });
+
+  it("redireciona usuário inativo (mesmo com role correta) para /unauthorized", async () => {
     asAuthenticatedUser(["admin"], false); // isActive = false
     const res = await updateSession(makeRequest("/admin"));
     expect(res.status).toBeGreaterThanOrEqual(300);
-    expect(res.headers.get("location")).toContain("/profile");
+    expect(res.headers.get("location")).toContain("/unauthorized");
   });
 });
 
@@ -342,6 +349,18 @@ describe("role insuficiente em rotas de API", () => {
   it("retorna 403 JSON para player acessando /api/claim/review (exige moderator/admin)", async () => {
     asAuthenticatedUser(["player"]);
     const res = await updateSession(makeRequest("/api/claim/review"));
+    expect(res.status).toBe(403);
+  });
+
+  it("retorna 403 JSON para player acessando /api/matchmaking/queue", async () => {
+    asAuthenticatedUser(["player"]);
+    const res = await updateSession(makeRequest("/api/matchmaking/queue"));
+    expect(res.status).toBe(403);
+  });
+
+  it("retorna 403 JSON para manager acessando /api/tournament/create", async () => {
+    asAuthenticatedUser(["manager"]);
+    const res = await updateSession(makeRequest("/api/tournament/create"));
     expect(res.status).toBe(403);
   });
 
@@ -380,9 +399,27 @@ describe("acesso autorizado", () => {
     expect(res.status).toBeLessThan(300);
   });
 
-  it("permite player acessar /matchmaking", async () => {
-    asAuthenticatedUser(["player"]);
+  it("permite moderator acessar /team (roles acumulativos)", async () => {
+    asAuthenticatedUser(["moderator"]);
+    const res = await updateSession(makeRequest("/team"));
+    expect(res.status).toBeLessThan(300);
+  });
+
+  it("permite moderator acessar /api/tournament/create (rota de criação)", async () => {
+    asAuthenticatedUser(["moderator"]);
+    const res = await updateSession(makeRequest("/api/tournament/create"));
+    expect(res.status).toBeLessThan(300);
+  });
+
+  it("permite manager acessar /matchmaking", async () => {
+    asAuthenticatedUser(["manager"]);
     const res = await updateSession(makeRequest("/matchmaking"));
+    expect(res.status).toBeLessThan(300);
+  });
+
+  it("permite manager acessar /api/tournament/enroll", async () => {
+    asAuthenticatedUser(["manager"]);
+    const res = await updateSession(makeRequest("/api/tournament/enroll"));
     expect(res.status).toBeLessThan(300);
   });
 
