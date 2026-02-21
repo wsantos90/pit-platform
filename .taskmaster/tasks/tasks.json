@@ -297,7 +297,7 @@
           "2",
           "1"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -318,10 +318,10 @@
               1
             ],
             "details": "Configurar cliente Supabase com URL e chave pÃºblica. Implementar funÃ§Ã£o signUpWithEmail que chama supabase.auth.signUp() com email e senha. ApÃ³s signup bem-sucedido, criar registro em tabela 'players' com ea_gamertag, role 'player' e user_id. Implementar funÃ§Ã£o signInWithPassword que chama supabase.auth.signInWithPassword(). Adicionar tratamento de erros especÃ­ficos (email jÃ¡ existe, senha fraca, etc). Usar async/await para operaÃ§Ãµes assÃ­ncronas.",
-            "status": "review",
+            "status": "done",
             "testStrategy": "Testar registro com email vÃ¡lido e verificar que registro Ã© criado em players. Testar com email invÃ¡lido e confirmar erro. Testar login com credenciais corretas e incorretas. Verificar que gamertag Ã© salvo corretamente em players.",
             "parentId": "undefined",
-            "updatedAt": "2026-02-21T03:58:45.203Z"
+            "updatedAt": "2026-02-21T05:21:55.314Z"
           },
           {
             "id": 3,
@@ -331,10 +331,10 @@
               2
             ],
             "details": "Criar arquivo middleware.ts na raiz do projeto. Implementar lÃ³gica que verifica se usuÃ¡rio estÃ¡ autenticado usando sessÃ£o Supabase. Redirecionar requisiÃ§Ãµes para rotas protegidas (exceto /auth/*) para /login se nÃ£o autenticado. Usar getSession() ou getClaims() do Supabase para validar token. Configurar matcher para aplicar middleware apenas a rotas necessÃ¡rias. Adicionar logging de redirecionamentos para debug.",
-            "status": "review",
+            "status": "done",
             "testStrategy": "Testar que usuÃ¡rio nÃ£o autenticado Ã© redirecionado para /login ao acessar rota protegida. Verificar que usuÃ¡rio autenticado consegue acessar rotas protegidas. Confirmar que rotas /auth/* sÃ£o acessÃ­veis sem autenticaÃ§Ã£o.",
             "parentId": "undefined",
-            "updatedAt": "2026-02-21T04:34:17.084Z"
+            "updatedAt": "2026-02-21T05:21:48.066Z"
           },
           {
             "id": 4,
@@ -345,15 +345,16 @@
               3
             ],
             "details": "Criar hooks/useAuth.ts que retorna objeto com user, loading e funÃ§Ã£o signOut. Implementar listener de mudanÃ§as de autenticaÃ§Ã£o usando supabase.auth.onAuthStateChange(). Armazenar estado em Context API ou estado local. Implementar funÃ§Ã£o signOut que chama supabase.auth.signOut() e redireciona para /login. Adicionar botÃ£o de logout na navbar que chama signOut(). Garantir que hook funciona em componentes cliente (use 'use client').",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que useAuth retorna user quando autenticado e null quando nÃ£o. Verificar que loading Ã© true durante autenticaÃ§Ã£o. Testar que logout remove sessÃ£o e redireciona para /login. Confirmar que navbar exibe botÃ£o logout apenas para usuÃ¡rios autenticados.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T05:44:00.583Z"
           }
         ],
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Separe em: 1) Páginas de register/login/forgot-password; 2) Integração Supabase Auth (signup/signin); 3) Middleware de proteção de rotas; 4) Hook useAuth() e componente logout.",
-        "updatedAt": "2026-02-21T04:34:17.084Z"
+        "updatedAt": "2026-02-21T05:44:00.583Z"
       },
       {
         "id": "6",
@@ -1634,9 +1635,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-21T04:34:17.084Z",
+      "lastModified": "2026-02-21T05:44:00.584Z",
       "taskCount": 25,
-      "completedCount": 4,
+      "completedCount": 5,
       "tags": [
         "master"
       ]
