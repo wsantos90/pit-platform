@@ -473,7 +473,7 @@
         "dependencies": [
           "7"
         ],
-        "status": "pending",
+        "status": "in-progress",
         "subtasks": [
           {
             "id": 1,
@@ -481,9 +481,10 @@
             "description": "Criar funÃ§Ã£o fetchMatchesRaw em lib/ea/api.ts que faz requisiÃ§Ã£o GET para proclubs.ea.com/api/fc/clubs/matches com suporte a cookies Akamai (ak_bmsc, bm_sv), headers obrigatÃ³rios (User-Agent, Accept, Accept-Language) e retry logic (3 tentativas com backoff exponencial).",
             "dependencies": [],
             "details": "Usar fetch nativo ou axios. Parsear cookies string para Cookie header. Headers: User-Agent: 'Mozilla/5.0...', Accept: 'application/json', Accept-Language: 'pt-BR'. Backoff: 1s, 2s, 4s. Logar tentativas e erros. Retornar raw response JSON.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com clubId vÃ¡lido e cookies. Verificar 3 retries em falha de rede simulada. Confirmar headers e cookies no request. Validar backoff exponencial.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T21:33:08.507Z"
           },
           {
             "id": 2,
@@ -513,7 +514,8 @@
         ],
         "complexity": 7,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Separe: 1) Cliente HTTP com cookies Akamai, headers e retry logic; 2) Parser de response EA (matchId, stats, timestamp UTC-3); 3) Integração com normalização de nomes."
+        "expansionPrompt": "Separe: 1) Cliente HTTP com cookies Akamai, headers e retry logic; 2) Parser de response EA (matchId, stats, timestamp UTC-3); 3) Integração com normalização de nomes.",
+        "updatedAt": "2026-02-21T21:33:08.507Z"
       },
       {
         "id": "9",
@@ -1639,9 +1641,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-21T07:05:36.886Z",
+      "lastModified": "2026-02-21T21:33:08.508Z",
       "taskCount": 25,
-      "completedCount": 5,
+      "completedCount": 7,
       "tags": [
         "master"
       ]
