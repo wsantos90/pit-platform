@@ -21,12 +21,12 @@ export default async function DashboardLayout({
     }
 
     return (
-        <div className="flex h-screen bg-gray-950">
+        <div className="flex h-screen bg-background">
             {/* TODO: <Sidebar /> */}
-            <aside className="w-64 bg-gray-900 border-r border-gray-800">
+            <aside className="w-64 bg-card border-r border-border">
                 <div className="p-4">
-                    <h1 className="text-xl font-bold text-orange-500">P.I.T</h1>
-                    <p className="text-xs text-gray-400">Performance · Intelligence · Tracking</p>
+                    <h1 className="text-xl font-bold text-primary">P.I.T</h1>
+                    <p className="text-xs text-muted-foreground">Performance · Intelligence · Tracking</p>
                 </div>
                 {/* TODO: Nav items baseados em role */}
             </aside>

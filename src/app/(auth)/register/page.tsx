@@ -18,10 +18,7 @@ import { Label } from "@/components/ui/label";
 import { createClient } from "@/lib/supabase/client";
 import { getAuthErrorMessage } from "@/lib/supabase/auth-errors";
 import { ensurePlayerProfile } from "@/lib/supabase/player-profile";
-
-function isEmailValid(email: string) {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+import { isEmailValid } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -110,10 +107,10 @@ export default function RegisterPage() {
     <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold tracking-tight">
-          Create an account
+          Criar conta
         </CardTitle>
         <CardDescription>
-          Enter your email below to create your account
+          Preencha os dados abaixo para criar sua conta
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -136,19 +133,19 @@ export default function RegisterPage() {
             <Input
               id="gamertag"
               type="text"
-              placeholder="Your EA ID"
+              placeholder="Seu EA ID"
               value={gamertag}
               onChange={(event) => setGamertag(event.target.value)}
               autoComplete="nickname"
               required
             />
             <p className="text-[0.8rem] text-muted-foreground">
-              This will be your public identity on the platform.
+              Este será seu identificador público na plataforma.
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password">Senha</Label>
             <Input
               id="password"
               type="password"
@@ -160,7 +157,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Label htmlFor="confirm-password">Confirmar Senha</Label>
             <Input
               id="confirm-password"
               type="password"
@@ -187,7 +184,7 @@ export default function RegisterPage() {
             disabled={isSubmitting}
             className="mt-2 w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
           >
-            {isSubmitting ? "Criando conta..." : "Create Account"}
+            {isSubmitting ? "Criando conta..." : "Criar Conta"}
           </Button>
 
           <div className="relative my-4">
@@ -196,7 +193,7 @@ export default function RegisterPage() {
             </div>
             <div className="relative flex justify-center text-xs uppercase">
               <span className="bg-background px-2 text-muted-foreground">
-                Or continue with
+                Ou continue com
               </span>
             </div>
           </div>
@@ -213,12 +210,12 @@ export default function RegisterPage() {
       </CardContent>
       <CardFooter className="flex justify-center border-t border-border/50 pt-6">
         <p className="text-sm text-muted-foreground">
-          Already have an account?{" "}
+          Já tem uma conta?{" "}
           <Link
             href="/login"
             className="font-medium text-primary hover:text-primary/80 hover:underline"
           >
-            Sign in
+            Entrar
           </Link>
         </p>
       </CardFooter>

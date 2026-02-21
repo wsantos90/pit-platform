@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "P.I.T - Authentication",
-  description: "Performance - Intelligence - Tracking Authentication",
+  title: "P.I.T — Autenticação",
+  description: "Plataforma de gestão competitiva para FIFA Pro Clubs 11v11",
 };
 
 export default function AuthLayout({
@@ -18,7 +18,7 @@ export default function AuthLayout({
             <h1 className="text-3xl font-bold tracking-tighter text-primary">P.I.T</h1>
           </div>
           <p className="text-sm uppercase tracking-widest text-muted-foreground">
-            Performance - Intelligence - Tracking
+            Performance · Intelligence · Tracking
           </p>
         </div>
         {children}
