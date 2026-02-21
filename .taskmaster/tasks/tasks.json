@@ -473,7 +473,7 @@
         "dependencies": [
           "7"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -494,9 +494,10 @@
               1
             ],
             "details": "Definir interface Match e MatchPlayer. Converter timestamp: new Date(timestamp * 1000). Converter para UTC-3 usando toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}). Tratar arrays de times/jogadores. Validar dados obrigatÃ³rios.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com mock response real. Verificar conversÃ£o timestamp UTC-3. Validar extraÃ§Ã£o de todos stats. Confirmar estrutura Match[]. Testar edge cases (sem jogadores, placar 0-0).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T22:00:00.000Z"
           },
           {
             "id": 3,
@@ -506,16 +507,17 @@
               1,
               2
             ],
-            "details": "Chamar fetchMatchesRaw â†’ parseMatches â†’ normalizar displayName dos clubs. Integrar em discovered_clubs e discovery engine. Adicionar tipagem TypeScript completa. Documentar uso da funÃ§Ã£o.",
-            "status": "pending",
+            "details": "Chamar fetchMatchesRaw â†' parseMatches â†' normalizar displayName dos clubs. Integrar em discovered_clubs e discovery engine. Adicionar tipagem TypeScript completa. Documentar uso da funÃ§Ã£o.",
+            "status": "done",
             "testStrategy": "Testar fetchMatches end-to-end com clubId real. Verificar normalizaÃ§Ã£o de nomes. Confirmar que discovered_clubs recebe dados corretos. Validar performance (<2s com cache).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T22:00:00.000Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Separe: 1) Cliente HTTP com cookies Akamai, headers e retry logic; 2) Parser de response EA (matchId, stats, timestamp UTC-3); 3) Integração com normalização de nomes.",
-        "updatedAt": "2026-02-21T21:33:08.507Z"
+        "updatedAt": "2026-02-21T22:00:00.000Z"
       },
       {
         "id": "9",

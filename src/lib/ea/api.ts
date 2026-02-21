@@ -6,11 +6,22 @@
  * Princípio SRP: Este arquivo cuida APENAS de fetch HTTP da API EA.
  */
 
+import type { EaParsedMatch } from '@/types/ea-api';
+import { parseMatches } from './parser';
+import { upsertDiscoveredClub } from './discovery';
+import { createAdminClient } from '@/lib/supabase/admin';
+
 const EA_BASE_URL = process.env.EA_API_BASE_URL || 'https://proclubs.ea.com/api/fc';
 const EA_PLATFORM = process.env.EA_PLATFORM || 'common-gen5';
 
-/** Tempos de espera para retry: 1s, 2s, 4s (backoff exponencial) */
+/**
+ * Backoff exponencial entre retries: 1s → 2s → 4s.
+ * Total: 4 tentativas (1 inicial + 3 retries com backoff).
+ */
 const RETRY_BACKOFF_MS = [1000, 2000, 4000] as const;
+
+/** Timeout por requisição individual (10 segundos) */
+const FETCH_TIMEOUT_MS = 10_000;
 
 function sleep(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -27,9 +38,17 @@ function getEAHeaders(cookies?: string): Record<string, string> {
     return headers;
 }
 
+/** Fetch com AbortController para timeout automático */
+function fetchWithTimeout(url: string, options: RequestInit): Promise<Response> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    return fetch(url, { ...options, signal: controller.signal })
+        .finally(() => clearTimeout(timer));
+}
+
 /**
  * Faz GET na API EA para buscar partidas brutas de um time.
- * Retry com backoff exponencial (3 tentativas: 1s → 2s → 4s).
+ * Retry com backoff exponencial (4 tentativas: imediata → 1s → 2s → 4s).
  *
  * @param clubId  - ID do clube EA (ex: "637741")
  * @param cookies - Cookie string Akamai: "ak_bmsc=abc; bm_sv=xyz" (opcional)
@@ -42,15 +61,17 @@ export async function fetchMatchesRaw(
     const url = `${EA_BASE_URL}/clubs/matches?platform=${EA_PLATFORM}&clubIds=${clubId}&maxResultCount=10&matchType=friendlyMatch`;
     let lastError: Error = new Error('Unknown error');
 
-    for (let attempt = 0; attempt < 3; attempt++) {
+    const maxAttempts = RETRY_BACKOFF_MS.length + 1; // 4 tentativas no total
+
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
         if (attempt > 0) {
             const waitMs = RETRY_BACKOFF_MS[attempt - 1];
-            console.log(`[EA API] Tentativa ${attempt + 1}/3 para clubId=${clubId} (aguardando ${waitMs}ms)`);
+            console.log(`[EA API] Tentativa ${attempt + 1}/${maxAttempts} para clubId=${clubId} (aguardando ${waitMs}ms)`);
             await sleep(waitMs);
         }
 
         try {
-            const response = await fetch(url, {
+            const response = await fetchWithTimeout(url, {
                 headers: getEAHeaders(cookies),
                 // desabilita cache do Next.js para dados sempre frescos
                 next: { revalidate: 0 },
@@ -70,8 +91,44 @@ export async function fetchMatchesRaw(
     }
 
     throw new Error(
-        `[EA API] Todas as 3 tentativas falharam para clubId=${clubId}: ${lastError.message}`
+        `[EA API] Todas as ${maxAttempts} tentativas falharam para clubId=${clubId}: ${lastError.message}`
     );
+}
+
+/**
+ * Busca e parseia partidas de um clube EA.
+ * Persiste automaticamente todos os clubes descobertos nas partidas
+ * na tabela discovered_clubs para alimentar o Snowball Discovery.
+ */
+export async function fetchMatches(clubId: string, cookies?: string): Promise<EaParsedMatch[]> {
+    const raw = await fetchMatchesRaw(clubId, cookies);
+    const matches = parseMatches(raw, clubId);
+
+    // Coleta clubes únicos de todas as partidas para o Discovery Engine
+    const uniqueClubs = new Map<string, { clubId: string; name: string }>();
+    for (const match of matches) {
+        for (const [cId, club] of Object.entries(match.clubs)) {
+            if (!uniqueClubs.has(cId)) {
+                uniqueClubs.set(cId, { clubId: cId, name: club.nameRaw });
+            }
+        }
+    }
+
+    if (uniqueClubs.size > 0) {
+        const adminClient = createAdminClient();
+        const results = await Promise.allSettled(
+            Array.from(uniqueClubs.values()).map(club =>
+                upsertDiscoveredClub(club, adminClient)
+            )
+        );
+        results.forEach(result => {
+            if (result.status === 'rejected') {
+                console.error(`[EA API] Falha ao persistir clube no Discovery: ${result.reason}`);
+            }
+        });
+    }
+
+    return matches;
 }
 
 /**
@@ -90,7 +147,7 @@ export async function fetchClubMatches(
 export async function fetchClubInfo(clubId: string, cookie: string): Promise<unknown> {
     const url = `${EA_BASE_URL}/clubs/info?platform=${EA_PLATFORM}&clubIds=${clubId}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
         headers: getEAHeaders(cookie),
         next: { revalidate: 0 },
     });
@@ -106,7 +163,7 @@ export async function fetchClubInfo(clubId: string, cookie: string): Promise<unk
 export async function fetchClubMembers(clubId: string, cookie: string): Promise<unknown> {
     const url = `${EA_BASE_URL}/members/stats?platform=${EA_PLATFORM}&clubId=${clubId}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
         headers: getEAHeaders(cookie),
         next: { revalidate: 0 },
     });
@@ -122,7 +179,7 @@ export async function fetchClubMembers(clubId: string, cookie: string): Promise<
 export async function searchClubs(searchTerm: string, cookie: string): Promise<unknown> {
     const url = `${EA_BASE_URL}/clubs/search?platform=${EA_PLATFORM}&clubName=${encodeURIComponent(searchTerm)}`;
 
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
         headers: getEAHeaders(cookie),
         next: { revalidate: 0 },
     });

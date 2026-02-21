@@ -1,5 +1,15 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Mock do admin client (usado como fallback em upsertDiscoveredClub)
+const { mockCreateAdminClient } = vi.hoisted(() => ({
+  mockCreateAdminClient: vi.fn(),
+}));
+
+vi.mock('@/lib/supabase/admin', () => ({
+  createAdminClient: mockCreateAdminClient,
+}));
+
+// Mock do server client (usado em searchDiscoveredClubs)
 const { mockCreateClient } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
 }));
@@ -56,47 +66,38 @@ describe('Discovery Integration', () => {
   });
 
   it('should upsert without using non-existent updated_at column', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
     const single = vi.fn().mockResolvedValue({
-      data: { id: 'club-1', ea_club_id: '12345', scan_count: 0 },
+      data: { id: 'club-1', ea_club_id: '12345', scan_count: 1 },
       error: null,
     });
     const selectAfterUpsert = vi.fn().mockReturnValue({ single });
     const upsert = vi.fn().mockReturnValue({ select: selectAfterUpsert });
-    const eq = vi.fn().mockReturnValue({ maybeSingle });
-    const selectForExists = vi.fn().mockReturnValue({ eq });
-    const from = vi
-      .fn()
-      .mockReturnValueOnce({ select: selectForExists })
-      .mockReturnValueOnce({ upsert });
+    const from = vi.fn().mockReturnValue({ upsert });
+    const rpc = vi.fn().mockResolvedValue({ error: null });
 
-    mockCreateClient.mockResolvedValue({ from });
+    // Usa mockCreateAdminClient (novo fallback sem cliente explícito)
+    mockCreateAdminClient.mockReturnValue({ from, rpc });
 
-    await upsertDiscoveredClub({ clubId: '12345', name: 'CÃƒÆ’Ã‚Â¡ssia' });
+    await upsertDiscoveredClub({ clubId: '12345', name: 'CÃ¡ssia' });
 
     const upsertPayload = upsert.mock.calls[0][0] as Record<string, unknown>;
     expect(upsertPayload).not.toHaveProperty('updated_at');
   });
 
-  it('should increment scan_count via rpc on rescan', async () => {
-    const maybeSingle = vi.fn().mockResolvedValue({ data: { id: 'club-1' }, error: null });
+  it('should increment scan_count via rpc em todo upsert', async () => {
     const single = vi.fn().mockResolvedValue({
       data: { id: 'club-1', ea_club_id: '12345', scan_count: 4 },
       error: null,
     });
     const selectAfterUpsert = vi.fn().mockReturnValue({ single });
     const upsert = vi.fn().mockReturnValue({ select: selectAfterUpsert });
-    const eq = vi.fn().mockReturnValue({ maybeSingle });
-    const selectForExists = vi.fn().mockReturnValue({ eq });
-    const from = vi
-      .fn()
-      .mockReturnValueOnce({ select: selectForExists })
-      .mockReturnValueOnce({ upsert });
+    const from = vi.fn().mockReturnValue({ upsert });
     const rpc = vi.fn().mockResolvedValue({ error: null });
 
-    mockCreateClient.mockResolvedValue({ from, rpc });
+    // Usa mockCreateAdminClient (novo fallback sem cliente explícito)
+    mockCreateAdminClient.mockReturnValue({ from, rpc });
 
-    await upsertDiscoveredClub({ clubId: '12345', name: 'CÃƒÆ’Ã‚Â¡ssia' });
+    await upsertDiscoveredClub({ clubId: '12345', name: 'CÃ¡ssia' });
 
     expect(rpc).toHaveBeenCalledWith('increment_discovered_club_scan_count', {
       p_ea_club_id: '12345',

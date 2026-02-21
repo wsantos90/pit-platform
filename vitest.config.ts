@@ -12,7 +12,11 @@ export default defineConfig({
     },
     coverage: {
       provider: "v8",
-      include: ["src/lib/supabase/**/*.ts"],
+      include: [
+        "src/lib/supabase/**/*.ts",
+        "src/lib/ea/**/*.ts",
+        "src/app/api/ea/**/*.ts",
+      ],
       exclude: [
         "src/lib/supabase/client.ts",
         "src/lib/supabase/server.ts",
