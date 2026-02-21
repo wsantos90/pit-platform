@@ -10,14 +10,14 @@ const rateLimitStore = new Map<string, RateLimitEntry>();
 const rateLimitWindowMs = 60_000;
 const rateLimitMax = 12;
 
-function withSessionCookies(baseResponse: NextResponse, target: NextResponse) {
+export function withSessionCookies(baseResponse: NextResponse, target: NextResponse) {
   baseResponse.cookies.getAll().forEach((cookie) => {
     target.cookies.set(cookie);
   });
   return target;
 }
 
-function getClientIp(request: NextRequest) {
+export function getClientIp(request: NextRequest) {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]?.trim() ?? "unknown";
   const realIp = request.headers.get("x-real-ip");
@@ -25,7 +25,7 @@ function getClientIp(request: NextRequest) {
   return "unknown";
 }
 
-function shouldRateLimit(pathname: string) {
+export function shouldRateLimit(pathname: string) {
   return (
     pathname === "/login" ||
     pathname === "/register" ||
@@ -33,7 +33,7 @@ function shouldRateLimit(pathname: string) {
   );
 }
 
-function isRateLimited(request: NextRequest) {
+export function isRateLimited(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   if (!shouldRateLimit(pathname)) return false;
   const ip = getClientIp(request);
@@ -46,7 +46,7 @@ function isRateLimited(request: NextRequest) {
   return entry.timestamps.length > rateLimitMax;
 }
 
-function applySecurityHeaders(response: NextResponse, request: NextRequest) {
+export function applySecurityHeaders(response: NextResponse, request: NextRequest) {
   const origin = request.headers.get("origin");
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
@@ -76,7 +76,7 @@ function applySecurityHeaders(response: NextResponse, request: NextRequest) {
   return response;
 }
 
-function hasMaliciousInput(request: NextRequest) {
+export function hasMaliciousInput(request: NextRequest) {
   const values = Array.from(request.nextUrl.searchParams.values());
   const combined = values.join(" ").toLowerCase();
   if (!combined) return false;
@@ -99,7 +99,7 @@ function hasMaliciousInput(request: NextRequest) {
   return patterns.some((pattern) => combined.includes(pattern));
 }
 
-function isPublicRoute(pathname: string) {
+export function isPublicRoute(pathname: string) {
   const publicRoutes = [
     "/",
     "/login",
@@ -110,14 +110,12 @@ function isPublicRoute(pathname: string) {
     "/payment/success",
     "/payment/failure",
     "/payment/pending",
-    "/api/mcp",
-    "/.well-known/oauth-protected-resource",
   ];
   if (publicRoutes.includes(pathname)) return true;
   return false;
 }
 
-function isProtectedApi(pathname: string) {
+export function isProtectedApi(pathname: string) {
   const protectedApiPrefixes = [
     "/api/matchmaking",
     "/api/claim/submit",
@@ -128,7 +126,7 @@ function isProtectedApi(pathname: string) {
   return protectedApiPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
-function getRequiredRoles(pathname: string): UserRole[] | null {
+export function getRequiredRoles(pathname: string): UserRole[] | null {
   const rules: Array<{ prefix: string; roles: UserRole[] }> = [
     { prefix: "/admin", roles: ["admin"] },
     { prefix: "/moderation", roles: ["moderator", "admin"] },

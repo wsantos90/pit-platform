@@ -331,9 +331,10 @@
               2
             ],
             "details": "Criar arquivo middleware.ts na raiz do projeto. Implementar lÃ³gica que verifica se usuÃ¡rio estÃ¡ autenticado usando sessÃ£o Supabase. Redirecionar requisiÃ§Ãµes para rotas protegidas (exceto /auth/*) para /login se nÃ£o autenticado. Usar getSession() ou getClaims() do Supabase para validar token. Configurar matcher para aplicar middleware apenas a rotas necessÃ¡rias. Adicionar logging de redirecionamentos para debug.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Testar que usuÃ¡rio nÃ£o autenticado Ã© redirecionado para /login ao acessar rota protegida. Verificar que usuÃ¡rio autenticado consegue acessar rotas protegidas. Confirmar que rotas /auth/* sÃ£o acessÃ­veis sem autenticaÃ§Ã£o.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T04:34:17.084Z"
           },
           {
             "id": 4,
@@ -352,7 +353,7 @@
         "complexity": 6,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Separe em: 1) Páginas de register/login/forgot-password; 2) Integração Supabase Auth (signup/signin); 3) Middleware de proteção de rotas; 4) Hook useAuth() e componente logout.",
-        "updatedAt": "2026-02-21T03:58:45.203Z"
+        "updatedAt": "2026-02-21T04:34:17.084Z"
       },
       {
         "id": "6",
@@ -1633,7 +1634,7 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-21T03:58:45.203Z",
+      "lastModified": "2026-02-21T04:34:17.084Z",
       "taskCount": 25,
       "completedCount": 4,
       "tags": [
