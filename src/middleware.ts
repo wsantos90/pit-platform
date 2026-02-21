@@ -13,11 +13,12 @@ export const config = {
     matcher: [
         /*
          * Match todas as rotas exceto:
+         * - api (rotas backend)
          * - _next/static (arquivos estáticos)
          * - _next/image (otimização de imagem)
          * - favicon.ico (ícone do site)
          * - Arquivos de imagem (svg, png, jpg, etc.)
          */
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
     ],
 };
