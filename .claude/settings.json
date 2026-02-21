@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gh:*)",
+      "Bash(git --version:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(where:*)",
+      "Bash(powershell -Command:*)",
+      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" repo create pit-platform --private --source=. --remote=origin --push --description \"P.I.T — Performance Intelligence Tracking | FIFA Pro Clubs 11v11 competitive management platform\")",
+      "Read(//c/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/**)",
+      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\wdsan\\\\AppData\\\\Local\\\\Temp\\\\fix-routes.ps1\")",
+      "Bash(git push:*)",
+      "Bash(npx tsc:*)",
+      "Bash(node -e:*)",
+      "Bash(npx task-master:*)",
+      "Bash(del \"C:\\\\Users\\\\wdsan\\\\OneDrive\\\\Documentos\\\\Projetos Coding\\\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING\\\\pit-platform\\\\.taskmaster\\\\tasks\\\\tasks.json\")",
+      "Read(//c/Users/wdsan/**)",
+      "Bash(dir:*)",
+      "Bash(cd:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\wdsan\\AppData\\Local\\Temp"
+    ]
+  }
+}
