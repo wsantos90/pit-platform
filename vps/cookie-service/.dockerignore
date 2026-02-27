@@ -1,0 +1,11 @@
+node_modules
+dist
+.env
+.env.stack
+.env.local
+*.log
+runtime/
+.dockerignore
+README.md
+OPERATIONS.md
+deploy-stack.sh
