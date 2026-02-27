@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { fetchMatches } from '@/lib/ea/api';
+import { tryFetchAkamaiCookies } from '@/lib/ea/cookieClient';
 
 const fetchMatchesSchema = z.object({
   clubId: z.string().trim().min(1, 'clubId is required'),
@@ -26,8 +27,11 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Se cookies não foram fornecidos pelo caller, busca automaticamente do cookie service
+  const cookies = parsed.data.cookies ?? (await tryFetchAkamaiCookies()) ?? undefined;
+
   try {
-    const matches = await fetchMatches(parsed.data.clubId, parsed.data.cookies);
+    const matches = await fetchMatches(parsed.data.clubId, cookies);
     return NextResponse.json({ matches });
   } catch (error) {
     return NextResponse.json(

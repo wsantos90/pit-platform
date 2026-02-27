@@ -16,8 +16,8 @@ Atualmente o cenário brasileiro gerencia tudo de forma fragmentada: WhatsApp, p
 - Frontend: Next.js 14+ (App Router, TypeScript)
 - Backend: Supabase (PostgreSQL 15+, Auth, RLS, Edge Functions, Realtime, Storage)
 - Cron/Automação: n8n (VPS)
-- Cookie Renewal: Puppeteer (VPS)
-- Hosting: Vercel + VPS (Contabo/Hetzner)
+- Cookie Renewal: GitHub Actions (cron) + Cookie Microservice (VPS)
+- Hosting: Vercel + VPS (OVH)
 - Pagamento: Mercado Pago (PIX automático)
 - UI: Tailwind CSS + shadcn/ui + Lucide React
 
@@ -126,10 +126,10 @@ Solução técnica: Pipeline de normalização no momento da ingestão. Decodifi
 
 ### 4.4 Proteção Anti-Bot (Cookie Akamai)
 A API usa proteção Akamai Bot Manager (cookies ak_bmsc e bm_sv). Estratégia:
-- Recomendada (MVP): Puppeteer na VPS — headless browser acessa o site EA, obtém cookies, passa para as requisições da API.
-- Fallback: Browserless.io ou ScrapingBee (serviços externos que lidam com Akamai).
-- Fallback 2: Proxy residencial rotativo.
-- Renovação: Microserviço na VPS que renova cookies a cada 15-30 min e disponibiliza via endpoint interno.
+- Recomendada (MVP): GitHub Actions cron (*/20 * * * *) — runner Ubuntu com IP Azure executa Playwright, obtém cookies, POST para o Cookie Microservice na VPS.
+- Fallback: Puppeteer na VPS com proxy residencial rotativo (PUPPETEER_PROXY_URL). IP datacenter fixo é bloqueado pelo Akamai antes de qualquer JS challenge.
+- Fallback 2: Injeção manual via POST /api/cookies com header x-secret.
+- Renovação: Cookie Microservice (cookie.menteembeta.com.br) armazena via GET/POST /api/cookies. TTL: 30 min.
 
 ### 4.5 Coleta Periódica
 - Cron: Seg/ter/qui às 04:00 AM (n8n). Puppeteer renova cookies antes.
@@ -362,8 +362,8 @@ REGRA FUNDAMENTAL: Só conta jogos que acontecem PELA plataforma (campeonatos ou
 | Frontend | Next.js 14+ (React, App Router, TypeScript) | SSR, dev solo |
 | Backend | Supabase | PostgreSQL, Auth, Edge Functions, Realtime (chat), Storage (fotos claims) |
 | Cron/Automação | n8n (VPS) | Discovery, coleta, limpeza storage |
-| Cookie | Puppeteer (VPS) | Renovar cookies Akamai antes de cada coleta |
-| Hosting | Vercel + VPS | Vercel (free) para Next.js. VPS para n8n/Puppeteer |
+| Cookie | GitHub Actions + Cookie Microservice (VPS) | Renovação automática via runner Azure. Fallback: proxy residencial na VPS. |
+| Hosting | Vercel + VPS (OVH) | Vercel (free) para Next.js. VPS para n8n/Cookie Microservice. |
 | Pagamento | Mercado Pago | PIX automático para corujões. Recorrente para assinaturas (Fase 2) |
 
 ---

@@ -1,0 +1,30 @@
+name: Renew EA Akamai Cookies
+
+on:
+  schedule:
+    # A cada 20 minutos (cookie TTL = 30 min, margem de 10 min)
+    - cron: '*/20 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  renew:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright + Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Renew cookies and push to cookie service
+        env:
+          COOKIE_SERVICE_URL: ${{ secrets.COOKIE_SERVICE_URL }}
+          COOKIE_SERVICE_SECRET: ${{ secrets.COOKIE_SERVICE_SECRET }}
+          EA_COOKIE_TARGET_URL: ${{ secrets.EA_COOKIE_TARGET_URL }}
+          EA_COOKIE_BOOTSTRAP_URL: ${{ secrets.EA_COOKIE_BOOTSTRAP_URL }}
+        run: node scripts/renew-ea-cookies.js
