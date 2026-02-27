@@ -18,7 +18,10 @@ jobs:
         with:
           node-version: '20'
 
-      - name: Install Playwright + Chromium
+      - name: Install Playwright npm package
+        run: npm install --no-save playwright
+
+      - name: Install Chromium browser
         run: npx playwright install chromium --with-deps
 
       - name: Renew cookies and push to cookie service
