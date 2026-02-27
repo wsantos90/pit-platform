@@ -20,6 +20,7 @@ type NodeCronModule = {
 type Request = {
   headers: Record<string, string | string[] | undefined>;
   path: string;
+  body: unknown;
 };
 
 type Response = {
@@ -111,6 +112,7 @@ const renewalState: RenewalState = {
 let latestBundle: AkamaiCookieBundle | null = null;
 
 function computeNextExecution(from = new Date()): string {
+  if (CRON_DISABLED) return 'disabled';
   // Calcula o proximo tick real do cron (proximo multiplo de INTERVAL_MINUTES na hora atual)
   const ms = from.getTime();
   const intervalMs = INTERVAL_MINUTES * 60_000;
