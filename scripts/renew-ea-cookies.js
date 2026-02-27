@@ -102,24 +102,24 @@ async function main() {
 
     const page = await context.newPage();
 
+    // Estrategia: visitar homepage multiplas vezes para deixar o JS do Akamai rodar.
+    // Evitar navegar para URL de API (retorna JSON e causa ERR_HTTP2_PROTOCOL_ERROR
+    // com networkidle; alem disso o endpoint pode ser bloqueado para IPs de CI).
+
     // 1. Homepage — Akamai registra primeira visita e define ak_bmsc
-    console.log('   [1/4] Navegando para homepage...');
+    console.log('   [1/3] Navegando para homepage (primeira visita)...');
+    await page.goto(BOOTSTRAP_URL, { waitUntil: 'domcontentloaded', timeout: TIMEOUT_MS });
+    await sleep(4_000);
+
+    // 2. Segunda visita — Akamai avalia sensor data e define bm_sv
+    console.log('   [2/3] Navegando para homepage (segunda visita)...');
+    await page.goto(BOOTSTRAP_URL, { waitUntil: 'domcontentloaded', timeout: TIMEOUT_MS });
+    await sleep(4_000);
+
+    // 3. Terceira visita — garante que bm_sv foi renovado
+    console.log('   [3/3] Navegando para homepage (terceira visita)...');
     await page.goto(BOOTSTRAP_URL, { waitUntil: 'domcontentloaded', timeout: TIMEOUT_MS });
     await sleep(3_000);
-
-    // 2. URL da API — Akamai avalia fingerprint completo e define bm_sv
-    console.log('   [2/4] Navegando para URL da API...');
-    await page.goto(TARGET_URL, { waitUntil: 'networkidle', timeout: TIMEOUT_MS });
-    await sleep(2_000);
-
-    // 3. Segunda visita ao bootstrap — reforco do fingerprint
-    console.log('   [3/4] Segunda visita ao bootstrap...');
-    await page.goto(BOOTSTRAP_URL, { waitUntil: 'domcontentloaded', timeout: TIMEOUT_MS });
-    await sleep(2_000);
-
-    // 4. Segunda visita a API — geralmente suficiente para bm_sv aparecer
-    console.log('   [4/4] Segunda visita a URL da API...');
-    await page.goto(TARGET_URL, { waitUntil: 'networkidle', timeout: TIMEOUT_MS });
 
     // Polling ate os dois cookies estarem presentes
     console.log('   ⏳ Aguardando cookies...');
