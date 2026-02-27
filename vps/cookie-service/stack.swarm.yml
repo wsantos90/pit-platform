@@ -1,0 +1,58 @@
+version: "3.8"
+
+services:
+  cookie-service:
+    image: pit-cookie-service:latest
+    networks:
+      - MenteEmBetaNet
+    environment:
+      PORT: "3001"
+      TIMEZONE: "America/Sao_Paulo"
+      COOKIE_SERVICE_SECRET: "${COOKIE_SERVICE_SECRET}"
+      COOKIE_RENEW_INTERVAL_MINUTES: "${COOKIE_RENEW_INTERVAL_MINUTES}"
+      COOKIE_RENEW_CRON: "${COOKIE_RENEW_CRON}"
+      COOKIE_STORAGE_DRIVER: "${COOKIE_STORAGE_DRIVER}"
+      COOKIE_STORAGE_FILE_PATH: "/app/runtime/akamai-cookies.json"
+      AKAMAI_COOKIE_MAX_AGE_MINUTES: "${AKAMAI_COOKIE_MAX_AGE_MINUTES}"
+      AKAMAI_COOKIE_TTL_MINUTES: "${AKAMAI_COOKIE_TTL_MINUTES}"
+      PUPPETEER_TIMEOUT_MS: "${PUPPETEER_TIMEOUT_MS}"
+      PUPPETEER_MAX_ATTEMPTS: "${PUPPETEER_MAX_ATTEMPTS}"
+      PUPPETEER_DISABLE_DEV_SHM: "${PUPPETEER_DISABLE_DEV_SHM}"
+      PUPPETEER_PROXY_URL: "${PUPPETEER_PROXY_URL}"
+      EA_COOKIE_TARGET_URL: "${EA_COOKIE_TARGET_URL}"
+      EA_COOKIE_BOOTSTRAP_URL: "${EA_COOKIE_BOOTSTRAP_URL}"
+      BROWSERLESS_BASE_URL: "${BROWSERLESS_BASE_URL}"
+      BROWSERLESS_TOKEN: "${BROWSERLESS_TOKEN}"
+      BROWSERLESS_FALLBACK_URL: "${BROWSERLESS_FALLBACK_URL}"
+      BROWSERLESS_ALLOW_NO_TOKEN: "${BROWSERLESS_ALLOW_NO_TOKEN}"
+      BROWSERLESS_STEALTH: "${BROWSERLESS_STEALTH}"
+      BROWSERLESS_BLOCK_ADS: "${BROWSERLESS_BLOCK_ADS}"
+      BROWSERLESS_TIMEOUT_MS: "${BROWSERLESS_TIMEOUT_MS}"
+      LOG_LEVEL: "${LOG_LEVEL}"
+      LOG_DIR: "/app/runtime/logs"
+      LOG_RETENTION_DAYS: "${LOG_RETENTION_DAYS}"
+      LOG_MAX_SIZE: "${LOG_MAX_SIZE}"
+      SUPABASE_URL: "${SUPABASE_URL}"
+      SUPABASE_SERVICE_ROLE_KEY: "${SUPABASE_SERVICE_ROLE_KEY}"
+      AKAMAI_COOKIES_TABLE: "${AKAMAI_COOKIES_TABLE}"
+    volumes:
+      - cookie_service_runtime:/app/runtime
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+      labels:
+        - traefik.enable=true
+        - traefik.http.routers.cookie-service.entrypoints=websecure
+        - traefik.http.routers.cookie-service.rule=Host(`${COOKIE_SERVICE_DOMAIN}`)
+        - traefik.http.routers.cookie-service.tls=true
+        - traefik.http.routers.cookie-service.tls.certresolver=letsencrypt
+        - traefik.http.services.cookie-service.loadbalancer.server.port=3001
+
+volumes:
+  cookie_service_runtime:
+
+networks:
+  MenteEmBetaNet:
+    external: true

@@ -88,6 +88,51 @@ Veja `.env.example` para a lista completa. Credenciais necessárias:
 - **VPS:** Cookie Service URL + Secret
 - **n8n:** Webhook Secret
 
+## 🧩 Parser EA Sports
+
+O parser converte o response bruto da EA em dados tipados e prontos para persistência.
+
+Entrada esperada:
+
+```ts
+import type { EaMatchRawResponse } from '@/types';
+
+const raw: EaMatchRawResponse[] = await fetchMatchesRaw('637741', cookies);
+```
+
+Saída do parser:
+
+```ts
+import { parseMatches } from '@/lib/ea/parser';
+
+const matches = parseMatches(raw, '637741');
+```
+
+Campos principais:
+
+- matchId, timestampUtc, timestampBrasilia
+- homeClubId, awayClubId, homeClubName, awayClubName
+- homeScore, awayScore
+- players com stats numéricos e posição normalizada
+
+Exemplo de uso completo:
+
+```ts
+import { fetchMatchesRaw } from '@/lib/ea/api';
+import { parseMatches } from '@/lib/ea/parser';
+
+const raw = await fetchMatchesRaw(clubId, cookies);
+const matches = parseMatches(raw, clubId);
+```
+
+Uso integrado:
+
+```ts
+import { fetchMatches } from '@/lib/ea/api';
+
+const matches = await fetchMatches(clubId, cookies);
+```
+
 ## 📖 Docs de Referência
 
 | Documento | Descrição |

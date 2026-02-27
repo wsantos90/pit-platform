@@ -1,3 +1,5 @@
+import type { EaPositionCategory } from './database';
+
 /**
  * EA API Types — Tipos das respostas da API EA Sports
  * Princípio SSOT: Definição única dos shapes de resposta da API EA.
@@ -69,6 +71,55 @@ export interface EaMatchRawResponse {
     players?: Record<string, Record<string, EaRawPlayer>>;
     /** Mapa clubId → totais agregados do clube */
     aggregate?: Record<string, EaRawAggregate>;
+}
+
+export interface EaParsedClub {
+    eaClubId: string;
+    nameRaw: string;
+    nameDisplay: string;
+    goals: number;
+    goalsAgainst: number;
+    wins: number;
+    losses: number;
+    ties: number;
+    winnerByDnf: number;
+    result: number | null;
+}
+
+export interface EaParsedMatchPlayer {
+    eaClubId: string;
+    gamertag: string;
+    playerName: string;
+    position: EaPositionCategory;
+    goals: number;
+    assists: number;
+    rating: number | null;
+    passesAttempted: number;
+    passesMade: number;
+    tacklesAttempted: number;
+    tacklesMade: number;
+    shots: number;
+    shotsOnTarget: number;
+    yellowCards: number;
+    redCards: number;
+    cleanSheets: number;
+    saves: number;
+    manOfMatch: boolean;
+    minutesPlayed: number;
+}
+
+export interface EaParsedMatch {
+    matchId: string;
+    timestampUtc: Date;
+    timestampBrasilia: string;
+    homeClubId: string;
+    awayClubId: string;
+    homeClubName: string;
+    awayClubName: string;
+    homeScore: number;
+    awayScore: number;
+    clubs: Record<string, EaParsedClub>;
+    players: EaParsedMatchPlayer[];
 }
 
 // ─── Tipos legados mantidos para retrocompatibilidade ───────────────────────

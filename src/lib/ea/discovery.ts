@@ -1,5 +1,6 @@
 import { normalizeClubName } from './normalize';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { DiscoveredClub } from '@/types/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
@@ -8,7 +9,6 @@ export interface EADiscoveredClubInput {
   name: string; // Raw name from EA API (potentially Latin-1/ISO-8859-1 encoded as UTF-8)
   regionId?: number;
   teamId?: number;
-  // Add other relevant fields from EA API response as needed
 }
 
 type DiscoveryClient = SupabaseClient;
@@ -24,32 +24,31 @@ export function prepareDiscoveredClubData(input: EADiscoveredClubInput): Partial
     display_name: normalizeClubName(input.name),
     last_scanned_at: new Date().toISOString(),
     // status defaults to 'unclaimed' in DB
-    // scan_count defaults to 0 in DB, should probably be incremented on update
   };
 }
 
 /**
  * Upserts a discovered club into the database.
  * Handles normalization and data preparation.
+ *
+ * Usa createAdminClient() como fallback para contornar RLS em contextos
+ * sem sessão autenticada (cron jobs, n8n, discovery automático).
+ *
+ * Race condition corrigida: usa apenas UPSERT atômico + RPC de incremento,
+ * sem SELECT prévio que causava inconsistência em execuções paralelas.
  */
 export async function upsertDiscoveredClub(
   input: EADiscoveredClubInput,
   supabaseClient?: DiscoveryClient
 ) {
-  const supabase = supabaseClient ?? await createClient();
+  // Usa admin client como fallback para garantir que RLS não bloqueie writes
+  const supabase = supabaseClient ?? createAdminClient();
   const preparedData = prepareDiscoveredClubData(input);
-  const { data: existingClub } = await supabase
-    .from('discovered_clubs')
-    .select('id')
-    .eq('ea_club_id', input.clubId)
-    .maybeSingle();
 
   const { data, error } = await supabase
     .from('discovered_clubs')
     .upsert(
-      {
-        ...preparedData,
-      },
+      { ...preparedData },
       {
         onConflict: 'ea_club_id',
         ignoreDuplicates: false,
@@ -63,16 +62,15 @@ export async function upsertDiscoveredClub(
     throw error;
   }
 
-  // On re-scan, increment scan_count atomically at database level.
-  if (existingClub) {
-    const { error: incrementError } = await supabase.rpc('increment_discovered_club_scan_count', {
-      p_ea_club_id: input.clubId,
-    });
+  // Incrementa scan_count atomicamente a cada upsert (insert ou update).
+  // Clubs novos: 0 → 1. Re-scans: N → N+1.
+  const { error: incrementError } = await supabase.rpc('increment_discovered_club_scan_count', {
+    p_ea_club_id: input.clubId,
+  });
 
-    if (incrementError) {
-      console.error('Error incrementing scan_count:', incrementError);
-      throw incrementError;
-    }
+  if (incrementError) {
+    // scan_count é não-crítico — não propaga o erro para não abortar coleta
+    console.error('Error incrementing scan_count:', incrementError);
   }
 
   return data;

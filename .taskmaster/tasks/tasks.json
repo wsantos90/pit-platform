@@ -473,7 +473,7 @@
         "dependencies": [
           "7"
         ],
-        "status": "in-progress",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -494,9 +494,10 @@
               1
             ],
             "details": "Definir interface Match e MatchPlayer. Converter timestamp: new Date(timestamp * 1000). Converter para UTC-3 usando toLocaleString('pt-BR', {timeZone: 'America/Sao_Paulo'}). Tratar arrays de times/jogadores. Validar dados obrigatÃ³rios.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com mock response real. Verificar conversÃ£o timestamp UTC-3. Validar extraÃ§Ã£o de todos stats. Confirmar estrutura Match[]. Testar edge cases (sem jogadores, placar 0-0).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T22:00:00.000Z"
           },
           {
             "id": 3,
@@ -506,16 +507,17 @@
               1,
               2
             ],
-            "details": "Chamar fetchMatchesRaw â†’ parseMatches â†’ normalizar displayName dos clubs. Integrar em discovered_clubs e discovery engine. Adicionar tipagem TypeScript completa. Documentar uso da funÃ§Ã£o.",
-            "status": "pending",
+            "details": "Chamar fetchMatchesRaw â†' parseMatches â†' normalizar displayName dos clubs. Integrar em discovered_clubs e discovery engine. Adicionar tipagem TypeScript completa. Documentar uso da funÃ§Ã£o.",
+            "status": "done",
             "testStrategy": "Testar fetchMatches end-to-end com clubId real. Verificar normalizaÃ§Ã£o de nomes. Confirmar que discovered_clubs recebe dados corretos. Validar performance (<2s com cache).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-21T22:00:00.000Z"
           }
         ],
         "complexity": 7,
         "recommendedSubtasks": 3,
         "expansionPrompt": "Separe: 1) Cliente HTTP com cookies Akamai, headers e retry logic; 2) Parser de response EA (matchId, stats, timestamp UTC-3); 3) Integração com normalização de nomes.",
-        "updatedAt": "2026-02-21T21:33:08.507Z"
+        "updatedAt": "2026-02-21T22:00:00.000Z"
       },
       {
         "id": "9",
@@ -527,7 +529,7 @@
         "dependencies": [
           "8"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -535,9 +537,11 @@
             "description": "Desenvolver script Node.js que acessa proclubs.ea.com, aguarda carregamento completo e extrai cookies ak_bmsc e bm_sv usando Puppeteer",
             "dependencies": [],
             "details": "Implementar funÃ§Ã£o async que: 1) LanÃ§a browser com Puppeteer, 2) Navega para proclubs.ea.com, 3) Aguarda elemento especÃ­fico carregar (waitForSelector), 4) Extrai cookies usando page.cookies() conforme documentaÃ§Ã£o Puppeteer, 5) Retorna objeto com ak_bmsc e bm_sv. Adicionar tratamento de erros e timeout de 30 segundos. Usar page.setCookie() para validar cookies antes de retornar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar script manualmente e verificar que cookies ak_bmsc e bm_sv sÃ£o extraÃ­dos com sucesso. Validar que cookies contÃªm valores vÃ¡lidos (nÃ£o vazios). Testar timeout e tratamento de erro quando site nÃ£o carrega.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-25T04:13:18.264Z",
+            "updated": "2026-02-26"
           },
           {
             "id": 2,
@@ -547,9 +551,11 @@
               1
             ],
             "details": "Usar node-cron ou similar para agendar execuÃ§Ã£o periÃ³dica. Configurar intervalo de 15 minutos como padrÃ£o (ajustÃ¡vel via variÃ¡vel de ambiente). Implementar fila de execuÃ§Ã£o para evitar sobreposiÃ§Ã£o de processos. Adicionar verificaÃ§Ã£o: se execuÃ§Ã£o anterior ainda estÃ¡ rodando, aguardar ou pular ciclo. Registrar timestamp de Ãºltima execuÃ§Ã£o bem-sucedida.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que cron executa em intervalos corretos (15 min). Confirmar que nÃ£o hÃ¡ execuÃ§Ãµes sobrepostas. Validar que timestamp de Ãºltima execuÃ§Ã£o Ã© atualizado. Testar que processo continua rodando apÃ³s reinicializaÃ§Ã£o.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-25T04:13:26.323Z",
+            "updated": "2026-02-26"
           },
           {
             "id": 3,
@@ -559,9 +565,11 @@
               1
             ],
             "details": "Implementar funÃ§Ã£o saveCookies(cookies, storage: 'supabase'|'file'). Para Supabase: criar tabela 'akamai_cookies' com colunas (id, ak_bmsc, bm_sv, extracted_at, expires_at). Para arquivo: salvar em JSON com estrutura {ak_bmsc, bm_sv, extracted_at}. Implementar funÃ§Ã£o loadCookies() que retorna cookies mais recentes. Adicionar validaÃ§Ã£o de expiraÃ§Ã£o (cookies com mais de 30 min sÃ£o considerados invÃ¡lidos). Usar transaÃ§Ãµes Supabase para garantir integridade.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar salvamento em Supabase e arquivo. Verificar que cookies sÃ£o recuperados corretamente. Validar que cookies expirados nÃ£o sÃ£o retornados. Confirmar que estrutura de dados estÃ¡ correta em ambos os storages.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-25T04:13:36.488Z",
+            "updated": "2026-02-26"
           },
           {
             "id": 4,
@@ -571,9 +579,11 @@
               3
             ],
             "details": "Implementar rota Express GET /api/cookies que: 1) Tenta carregar cookies do storage (Supabase/arquivo), 2) Se vÃ¡lidos e recentes (< 30 min), retorna imediatamente, 3) Se invÃ¡lidos/expirados, tenta executar script Puppeteer, 4) Se Puppeteer falha, chama API Browserless.io com mesma lÃ³gica de extraÃ§Ã£o, 5) Armazena resultado e retorna. Adicionar header de autenticaÃ§Ã£o interna (token). Retornar JSON: {ak_bmsc, bm_sv, source: 'puppeteer'|'browserless', extracted_at, valid_until}.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar endpoint com cookies vÃ¡lidos em cache. Verificar que retorna imediatamente sem chamar Puppeteer. Simular falha de Puppeteer e confirmar fallback para Browserless. Validar autenticaÃ§Ã£o do endpoint. Testar timeout e tratamento de erro.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-25T05:25:40.004Z",
+            "updated": "2026-02-26"
           },
           {
             "id": 5,
@@ -584,14 +594,19 @@
               4
             ],
             "details": "Criar arquivo ecosystem.config.js para PM2 com: nome 'akamai-cookies', script principal, variÃ¡veis de ambiente (SUPABASE_URL, BROWSERLESS_TOKEN), restart automÃ¡tico, max_memory_restart. Implementar logging com Winston ou Pino: registrar sucesso/falha de cada execuÃ§Ã£o, timestamp, cookies extraÃ­dos (sem valores sensÃ­veis), erros com stack trace. Configurar rotaÃ§Ã£o de logs (diÃ¡rio, mÃ¡x 7 dias). Adicionar health check: endpoint GET /health que retorna {status, last_execution, next_execution}. Documentar processo de deploy e rollback.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que PM2 inicia processo automaticamente. Confirmar que logs sÃ£o gerados e rotacionados. Testar health check endpoint. Validar que processo reinicia apÃ³s crash. Simular falha de VPS e confirmar recuperaÃ§Ã£o automÃ¡tica com PM2.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-02-25T06:39:41.006Z",
+            "updated": "2026-02-26"
           }
         ],
         "complexity": 9,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Divida em: 1) Script Puppeteer para extração cookies; 2) Cron job (15-30min); 3) Armazenamento cookies (Supabase/file); 4) Endpoint /api/cookies + fallback Browserless; 5) Deploy VPS (PM2, logging)."
+        "expansionPrompt": "Divida em: 1) Script Puppeteer para extração cookies; 2) Cron job (15-30min); 3) Armazenamento cookies (Supabase/file); 4) Endpoint /api/cookies + fallback Browserless; 5) Deploy VPS (PM2, logging).",
+        "updatedAt": "2026-02-25T06:39:41.006Z",
+        "updated": "2026-02-26",
+        "completionSummary": "Cookie service Akamai deployado na VPS (cookie.menteembeta.com.br). POST /api/cookies adicionado para injecao externa (IP datacenter bloqueado pelo Akamai). Integracao Next.js via cookieClient.ts e proxy route /api/ea/cookie."
       },
       {
         "id": "10",
@@ -1641,9 +1656,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-21T21:33:08.508Z",
+      "lastModified": "2026-02-25T06:39:41.007Z",
       "taskCount": 25,
-      "completedCount": 7,
+      "completedCount": 8,
       "tags": [
         "master"
       ]
