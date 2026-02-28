@@ -147,8 +147,8 @@ describe("isProtectedApi", () => {
     expect(isProtectedApi("/api/discovery/insert-manual")).toBe(true);
   });
 
-  it("retorna false para /api/ea/cookie (API não protegida)", () => {
-    expect(isProtectedApi("/api/ea/cookie")).toBe(false);
+  it("retorna false para /api/ea/fetch-matches (API não protegida por auth — usa webhook secret)", () => {
+    expect(isProtectedApi("/api/ea/fetch-matches")).toBe(false);
   });
 
   it("retorna false para /api/payment/create (API não protegida)", () => {
@@ -240,8 +240,8 @@ describe("getRequiredRoles", () => {
     expect(getRequiredRoles("/rankings")).toBeNull();
   });
 
-  it("retorna null para /api/ea/cookie (API não protegida por role)", () => {
-    expect(getRequiredRoles("/api/ea/cookie")).toBeNull();
+  it("retorna null para /api/ea/fetch-matches (API não protegida por role)", () => {
+    expect(getRequiredRoles("/api/ea/fetch-matches")).toBeNull();
   });
 });
 

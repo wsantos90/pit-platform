@@ -18,17 +18,24 @@ import type {
     EaParsedMatchPlayer,
 } from '@/types/ea-api';
 
+const rawClubDetailsSchema = z.object({
+    name: z.string().optional(),
+    clubId: z.union([z.string(), z.number()]).optional(),
+    teamId: z.union([z.string(), z.number()]).optional(),
+}).passthrough().optional();
+
 const rawClubSchema = z.object({
-    name: z.string(),
-    clubId: z.string(),
+    name: z.string().optional(),
+    clubId: z.string().optional(),
     goals: z.string(),
     goalsAgainst: z.string(),
-    teamId: z.string(),
+    teamId: z.string().optional(),
     winnerByDnf: z.string(),
     wins: z.string(),
     losses: z.string(),
     ties: z.string(),
     result: z.string().optional(),
+    details: rawClubDetailsSchema,
 }).passthrough();
 
 const rawPlayerSchema = z.object({
@@ -98,10 +105,12 @@ export function parseMatches(raw: unknown, primaryClubId?: string): EaParsedMatc
         }
 
         const clubs = Object.entries(match.clubs).reduce<Record<string, EaParsedClub>>((acc, [clubId, club]) => {
+            // O nome pode estar no nível raiz ou em details.name (formato atual da EA API)
+            const clubName = club.name ?? (typeof club.details?.name === 'string' ? club.details.name : null) ?? clubId;
             acc[clubId] = {
                 eaClubId: clubId,
-                nameRaw: club.name,
-                nameDisplay: normalizeClubName(club.name),
+                nameRaw: clubName,
+                nameDisplay: normalizeClubName(clubName),
                 goals: toNumber(club.goals),
                 goalsAgainst: toNumber(club.goalsAgainst),
                 wins: toNumber(club.wins),
@@ -152,12 +161,14 @@ export function parseMatches(raw: unknown, primaryClubId?: string): EaParsedMatc
                     cleanSheets: toNumber(player.cleansheetsany),
                     saves: toNumber(player.saves),
                     manOfMatch: toBoolean(player.mom),
-                    minutesPlayed: toNumber(getValue(playerRecord, [
-                        'minutes',
-                        'minutesplayed',
-                        'minsplayed',
-                        'minsPlayed',
-                    ])),
+                    minutesPlayed: (() => {
+                        const secs = toNumber(getValue(playerRecord, [
+                            'secondsPlayed', 'secondsplayed', 'gameTime', 'gametime',
+                            'minutes', 'minutesplayed', 'minsplayed', 'minsPlayed',
+                        ]));
+                        // secondsPlayed/gameTime > 200 → converter para minutos
+                        return secs > 200 ? Math.round(secs / 60) : secs;
+                    })(),
                 } satisfies EaParsedMatchPlayer;
             });
         });
@@ -175,8 +186,8 @@ export function parseMatches(raw: unknown, primaryClubId?: string): EaParsedMatc
             timestampBrasilia,
             homeClubId,
             awayClubId,
-            homeClubName: clubs[homeClubId]?.nameDisplay ?? normalizeClubName(homeClubRaw.name),
-            awayClubName: clubs[awayClubId]?.nameDisplay ?? normalizeClubName(awayClubRaw.name),
+            homeClubName: clubs[homeClubId]?.nameDisplay ?? normalizeClubName(homeClubRaw.name ?? homeClubId),
+            awayClubName: clubs[awayClubId]?.nameDisplay ?? normalizeClubName(awayClubRaw.name ?? awayClubId),
             homeScore: toNumber(homeClubRaw.goals),
             awayScore: toNumber(awayClubRaw.goals),
             clubs,
@@ -202,11 +213,17 @@ function toBoolean(value: unknown): boolean {
 }
 
 function parsePositionCategory(value: string): EaPositionCategory {
-    const normalized = value.trim();
+    const normalized = value.trim().toLowerCase();
+    // Códigos numéricos legados
     if (normalized === '0') return 'goalkeeper';
     if (normalized === '1') return 'defender';
     if (normalized === '2') return 'midfielder';
     if (normalized === '3') return 'forward';
+    // Strings por nome (formato atual da API EA)
+    if (normalized === 'goalkeeper') return 'goalkeeper';
+    if (normalized === 'defender') return 'defender';
+    if (normalized === 'midfielder') return 'midfielder';
+    if (normalized === 'forward') return 'forward';
     // Fallback robusto: posição desconhecida não deve derrubar o parse de toda a partida
     console.warn(`EA parser: posição desconhecida "${value}", usando 'forward' como fallback`);
     return 'forward';

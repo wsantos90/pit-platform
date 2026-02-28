@@ -26,6 +26,8 @@ type Request = {
 type Response = {
   status: (code: number) => Response;
   json: (payload: unknown) => void;
+  setHeader: (name: string, value: string) => void;
+  end: () => void;
 };
 
 type Next = () => void;
@@ -284,6 +286,19 @@ async function bootstrap(): Promise<void> {
 
   const app = express();
   app.use(express.json());
+
+  // CORS — permite requests de extensoes de browser (chrome-extension://) e qualquer origem.
+  // O endpoint e protegido pelo x-secret header, entao CORS aberto e seguro aqui.
+  app.use((req: Request, res: Response, next: Next) => {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-secret');
+    if ((req as any).method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
 
   app.use((req: Request, res: Response, next: Next) => {
     if (req.path === '/health') {

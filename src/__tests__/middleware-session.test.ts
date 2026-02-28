@@ -268,15 +268,15 @@ describe("acesso de usuário não autenticado", () => {
     expect(res.status).toBeLessThan(300);
   });
 
-  it("redireciona /api/ea/cookie para /login (todas as rotas de API requerem auth)", async () => {
-    const res = await updateSession(makeRequest("/api/ea/cookie"));
+  it("redireciona /api/ea/fetch-matches para /login sem webhook secret (rotas de API requerem auth)", async () => {
+    const res = await updateSession(makeRequest("/api/ea/fetch-matches"));
     expect(res.status).toBeGreaterThanOrEqual(300);
     expect(res.status).toBeLessThan(400);
     expect(res.headers.get("location")).toContain("/login");
   });
 
-  it("redireciona /api/ea/cookie preservando ?next na URL", async () => {
-    const res = await updateSession(makeRequest("/api/ea/cookie"));
+  it("redireciona /api/ea/fetch-matches preservando ?next na URL", async () => {
+    const res = await updateSession(makeRequest("/api/ea/fetch-matches"));
     expect(res.headers.get("location")).toContain("next=");
   });
 
@@ -423,10 +423,10 @@ describe("acesso autorizado", () => {
     expect(res.status).toBeLessThan(300);
   });
 
-  it("passa /api/ea/cookie sem verificar role quando autenticado (sem restrição de role)", async () => {
-    // Com autenticação mas sem roles específicas — /api/ea/cookie não exige role
+  it("passa /api/ea/fetch-matches sem verificar role quando autenticado (sem restrição de role)", async () => {
+    // Com autenticação mas sem roles específicas — /api/ea/fetch-matches não exige role
     asAuthenticatedUser(["player"]);
-    const res = await updateSession(makeRequest("/api/ea/cookie"));
+    const res = await updateSession(makeRequest("/api/ea/fetch-matches"));
     // Não deve retornar 403 (não exige role específica)
     expect(res.status).not.toBe(403);
     expect(res.status).toBeLessThan(300);

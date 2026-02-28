@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "PIT Cookie Sync",
+  "version": "1.0.0",
+  "description": "Sincroniza cookies EA/Akamai com o PIT Cookie Service automaticamente.",
+  "permissions": [
+    "cookies",
+    "alarms"
+  ],
+  "host_permissions": [
+    "https://*.ea.com/*",
+    "https://cookie.menteembeta.com.br/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "icons": {
+    "48": "icon.png"
+  },
+  "action": {
+    "default_title": "PIT Cookie Sync"
+  }
+}

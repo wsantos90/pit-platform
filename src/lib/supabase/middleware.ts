@@ -128,6 +128,13 @@ export function isProtectedApi(pathname: string) {
   return protectedApiPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
+export function isWebhookRoute(pathname: string) {
+  const webhookPrefixes = [
+    "/api/ea/",
+  ];
+  return webhookPrefixes.some((prefix) => pathname.startsWith(prefix));
+}
+
 export function getRequiredRoles(pathname: string): UserRole[] | null {
   const rules: Array<{ prefix: string; roles: UserRole[] }> = [
     { prefix: "/admin", roles: ["admin"] },
@@ -211,6 +218,14 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser(bearer || undefined);
 
   const pathname = request.nextUrl.pathname;
+
+  // Rotas webhook têm sua própria autenticação (x-webhook-secret) — bypass do middleware auth
+  const webhookSecret = request.headers.get("x-webhook-secret");
+  const expectedWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
+  if (isWebhookRoute(pathname) && expectedWebhookSecret && webhookSecret === expectedWebhookSecret) {
+    return applySecurityHeaders(response, request);
+  }
+
   const publicRoute = isPublicRoute(pathname) || (!isProtectedApi(pathname) && !pathname.startsWith("/api"));
 
   if (!user && !publicRoute) {
