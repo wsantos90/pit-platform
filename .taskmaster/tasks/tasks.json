@@ -873,7 +873,7 @@
           "4",
           "10"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -881,7 +881,7 @@
             "description": "Implementar app/(dashboard)/admin/page.tsx com Tabs do shadcn/ui contendo 6 abas: Dashboard, Discovery, Manual ID, Settings, Subscriptions, Financial.",
             "dependencies": [],
             "details": "Usar middleware para verificar role='admin' ou service_role. Layout responsivo com sidebar e header. Placeholder para cada aba. Proteger rota com RLS admin only.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que admin acessa /admin. Confirmar que user normal Ã© redirecionado. Testar navegaÃ§Ã£o entre abas.",
             "parentId": "undefined"
           },
@@ -893,7 +893,7 @@
               1
             ],
             "details": "Query Supabase: count(clubs), count(players), sum(revenue), count(corujoes). Refresh automÃ¡tico a cada 30s. Ãcones heroicons para cada card.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar contadores corretos. Confirmar refresh atualiza dados. Testar com dados mock.",
             "parentId": "undefined"
           },
@@ -906,7 +906,7 @@
               10
             ],
             "details": "Chamar lib/discovery/engine.ts via API route. Tabela com sorting/filtros. Badge status (running, completed, failed). Toast notifications.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar botÃ£o dispara discovery. Verificar tabela popula com runs. Confirmar WebSocket atualiza status.",
             "parentId": "undefined"
           },
@@ -918,7 +918,7 @@
               1
             ],
             "details": "API EA para puxar jogos do clubId. Cards com preview jogo (times, score). Ao confirmar: insert discovered_clubs com status 'unclaimed'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar busca clubId vÃ¡lido/invÃ¡lido. Verificar preview jogos. Confirmar insert em discovered_clubs.",
             "parentId": "undefined"
           },
@@ -930,7 +930,7 @@
               1
             ],
             "details": "Query service_role: SELECT * FROM v_financial_dashboard. Recharts: line/bar/pie. Filtros perÃ­odo. Alertas times >30d sem pagamento.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar grÃ¡ficos com dados view. Confirmar service_role acessa dados sensÃ­veis. Testar filtros perÃ­odo.",
             "parentId": "undefined"
           },
@@ -946,7 +946,7 @@
               5
             ],
             "details": "Settings: tabela config com upsert. Subscriptions: mock Fase 2 (tabela users com plano). ValidaÃ§Ãµes Zod. Full e2e tests painel.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar save settings. Verificar subscriptions CRUD. E2E: admin flow completo. Moderador bloqueado.",
             "parentId": "undefined"
           }
