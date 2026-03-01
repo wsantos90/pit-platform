@@ -21,6 +21,7 @@ type Request = {
   headers: Record<string, string | string[] | undefined>;
   path: string;
   body: unknown;
+  method?: string;
 };
 
 type Response = {
@@ -293,7 +294,7 @@ async function bootstrap(): Promise<void> {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-secret');
-    if ((req as any).method === 'OPTIONS') {
+    if (req.method === 'OPTIONS') {
       res.status(204).end();
       return;
     }

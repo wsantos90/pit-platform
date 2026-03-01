@@ -96,7 +96,7 @@ async function main() {
       Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
       Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
       Object.defineProperty(navigator, 'languages', { get: () => ['pt-BR', 'pt', 'en'] });
-      // @ts-ignore
+      // @ts-expect-error window.chrome is not in standard DOM typings
       window.chrome = { runtime: {} };
     });
 

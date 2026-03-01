@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
@@ -24,15 +24,11 @@ export default function ClaimRejectDialog({
 }: ClaimRejectDialogProps) {
   const [reason, setReason] = useState("")
   const [error, setError] = useState<string | null>(initialError)
-
-  useEffect(() => {
-    if (!open) {
-      setReason("")
-      setError(null)
-      return
-    }
-    setError(initialError)
-  }, [initialError, open])
+  const handleClose = () => {
+    setReason("")
+    setError(null)
+    onClose()
+  }
 
   if (!open) return null
 
@@ -63,7 +59,7 @@ export default function ClaimRejectDialog({
           ) : null}
 
           <div className="flex items-center justify-end gap-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={loading}>
+            <Button type="button" variant="outline" onClick={handleClose} disabled={loading}>
               Cancelar
             </Button>
             <Button

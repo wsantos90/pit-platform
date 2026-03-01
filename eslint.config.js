@@ -2,6 +2,9 @@ const coreWebVitals = require("eslint-config-next/core-web-vitals");
 const typescript = require("eslint-config-next/typescript");
 
 module.exports = [
+  {
+    ignores: ["coverage/**"],
+  },
   ...coreWebVitals,
   ...typescript,
   {
@@ -14,6 +17,12 @@ module.exports = [
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+    },
+  },
+  {
+    files: ["src/app/(dashboard)/moderation/components/ClaimQueue.tsx"],
+    rules: {
+      "@next/next/no-img-element": "off",
     },
   },
   {

@@ -1,6 +1,6 @@
 'use client'
 
-import { lazy, Suspense, useEffect, useMemo, useState } from "react"
+import { lazy, Suspense, useMemo, useSyncExternalStore } from "react"
 import { useSearchParams } from "next/navigation"
 import { CreditCard, DollarSign, LayoutDashboard, Radar, Search, Settings } from "lucide-react"
 import { RoleGuard } from "@/components/layout/RoleGuard"
@@ -38,10 +38,12 @@ function setUrlTab(tab: AdminTab, replace = false) {
 
   if (replace) {
     window.history.replaceState(null, "", url)
+    window.dispatchEvent(new Event("hashchange"))
     return
   }
 
   window.history.pushState(null, "", url)
+  window.dispatchEvent(new Event("hashchange"))
 }
 
 function getTabFromLocation(searchTab: string | null): AdminTab {
@@ -64,13 +66,19 @@ function AdminTabFallback() {
 export default function AdminPage() {
   const searchParams = useSearchParams()
   const searchTab = searchParams.get("tab")
-  const [activeTab, setActiveTab] = useState<AdminTab>("dashboard")
-
-  useEffect(() => {
-    const resolvedTab = getTabFromLocation(searchTab)
-    setActiveTab(resolvedTab)
-    setUrlTab(resolvedTab, true)
-  }, [searchTab])
+  const activeTab = useSyncExternalStore(
+    (onStoreChange) => {
+      if (typeof window === "undefined") return () => {}
+      window.addEventListener("hashchange", onStoreChange)
+      window.addEventListener("popstate", onStoreChange)
+      return () => {
+        window.removeEventListener("hashchange", onStoreChange)
+        window.removeEventListener("popstate", onStoreChange)
+      }
+    },
+    () => getTabFromLocation(searchTab),
+    () => "dashboard"
+  )
 
   const defaultTab = useMemo<AdminTab>(() => {
     const fallbackTab = normalizeAdminTab(searchTab)
@@ -93,7 +101,6 @@ export default function AdminPage() {
           onValueChange={(value) => {
             const nextTab = normalizeAdminTab(value)
             if (!nextTab) return
-            setActiveTab(nextTab)
             setUrlTab(nextTab)
           }}
           className="space-y-4"

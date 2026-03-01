@@ -110,7 +110,7 @@ export default function FinancialDashboard() {
     void fetchFinancial(period)
   }, [fetchFinancial, period])
 
-  const timeline = data?.timeline ?? []
+  const timeline = useMemo(() => data?.timeline ?? [], [data])
   const compositionData = useMemo(
     () =>
       timeline.map((row) => ({
