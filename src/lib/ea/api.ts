@@ -96,6 +96,15 @@ export async function fetchMatchesRaw(
 }
 
 /**
+ * Preview de partidas sem efeitos colaterais no banco.
+ * Usado em fluxos de confirmação manual (admin/manual-id).
+ */
+export async function fetchMatchesPreview(clubId: string, cookies?: string): Promise<EaParsedMatch[]> {
+    const raw = await fetchMatchesRaw(clubId, cookies);
+    return parseMatches(raw, clubId);
+}
+
+/**
  * Busca e parseia partidas de um clube EA.
  * Persiste automaticamente todos os clubes descobertos nas partidas
  * na tabela discovered_clubs para alimentar o Snowball Discovery.

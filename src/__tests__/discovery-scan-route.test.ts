@@ -1,71 +1,241 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { NextRequest } from 'next/server';
+import { beforeEach, describe, expect, it, vi } from "vitest"
+import { NextRequest, NextResponse } from "next/server"
 
-const { mockCreateAdminClient, mockUpsertDiscoveredClub } = vi.hoisted(() => ({
-  mockCreateAdminClient: vi.fn(),
-  mockUpsertDiscoveredClub: vi.fn(),
-}));
+const { mockCreateAdminClient, mockRequireAdmin, mockFetchMatches, mockTryFetchAkamaiCookies } = vi.hoisted(
+  () => ({
+    mockCreateAdminClient: vi.fn(),
+    mockRequireAdmin: vi.fn(),
+    mockFetchMatches: vi.fn(),
+    mockTryFetchAkamaiCookies: vi.fn(),
+  })
+)
 
-vi.mock('@/lib/supabase/admin', () => ({
+vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: mockCreateAdminClient,
-}));
+}))
 
-vi.mock('@/lib/ea/discovery', () => ({
-  upsertDiscoveredClub: mockUpsertDiscoveredClub,
-}));
+vi.mock("@/app/api/admin/_auth", () => ({
+  requireAdmin: mockRequireAdmin,
+}))
 
-import { POST } from '@/app/api/discovery/scan/route';
+vi.mock("@/lib/ea/api", () => ({
+  fetchMatches: mockFetchMatches,
+}))
+
+vi.mock("@/lib/ea/cookieClient", () => ({
+  tryFetchAkamaiCookies: mockTryFetchAkamaiCookies,
+}))
+
+import { POST } from "@/app/api/discovery/scan/route"
 
 function makeRequest(body: unknown) {
-  return new NextRequest('http://localhost/api/discovery/scan', {
-    method: 'POST',
+  return new NextRequest("http://localhost/api/discovery/scan", {
+    method: "POST",
     headers: {
-      'content-type': 'application/json',
+      "content-type": "application/json",
     },
     body: JSON.stringify(body),
-  });
+  })
 }
 
-describe('POST /api/discovery/scan', () => {
+function makeAdminClient(options?: {
+  legacySuccessStatusOnly?: boolean
+  discoveredCounts?: number[]
+  scanTargets?: Array<{ ea_club_id: string; display_name: string; ea_name_raw: string; last_scanned_at: string | null }>
+}) {
+  const discoveredCounts = [...(options?.discoveredCounts ?? [10, 16])]
+  const staleCleanupLt = vi.fn().mockResolvedValue({ data: null, error: null })
+
+  const discoveryRunInsertSingle = vi.fn().mockResolvedValue({
+    data: { id: "run-1" },
+    error: null,
+  })
+
+  const discoveryRunUpdate = vi.fn().mockImplementation((payload: { status: string }) => ({
+    eq: vi.fn((column: string) => {
+      if (column === "status") {
+        return {
+          lt: staleCleanupLt,
+        }
+      }
+
+      if (options?.legacySuccessStatusOnly && payload.status === "completed") {
+        return Promise.resolve({
+          data: null,
+          error: { message: "check constraint violation for completed" },
+        })
+      }
+
+      return Promise.resolve({ data: null, error: null })
+    }),
+  }))
+
+  const discoveredPlayersIn = vi.fn().mockResolvedValue({
+    data: [{ ea_gamertag: "player-a", matches_seen: 2 }],
+    error: null,
+  })
+  const discoveredPlayersUpsert = vi.fn().mockResolvedValue({ data: null, error: null })
+
+  return {
+    from: vi.fn((table: string) => {
+      if (table === "discovery_runs") {
+        return {
+          insert: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: discoveryRunInsertSingle,
+            }),
+          }),
+          update: discoveryRunUpdate,
+        }
+      }
+
+      if (table === "discovered_clubs") {
+        return {
+          select: vi.fn((_: string, optionsArg?: { head?: boolean }) => {
+            if (optionsArg?.head) {
+              return Promise.resolve({
+                count: discoveredCounts.shift() ?? 0,
+                error: null,
+              })
+            }
+
+            return {
+              order: vi.fn().mockReturnValue({
+                limit: vi.fn().mockResolvedValue({
+                  data: options?.scanTargets ?? [],
+                  error: null,
+                }),
+              }),
+            }
+          }),
+        }
+      }
+
+      if (table === "clubs") {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              limit: vi.fn().mockResolvedValue({
+                data: [],
+                error: null,
+              }),
+            }),
+          }),
+        }
+      }
+
+      if (table === "discovered_players") {
+        return {
+          select: vi.fn().mockReturnValue({
+            in: discoveredPlayersIn,
+          }),
+          upsert: discoveredPlayersUpsert,
+        }
+      }
+
+      return {}
+    }),
+    __mocks: {
+      discoveredPlayersUpsert,
+      staleCleanupLt,
+    },
+  }
+}
+
+describe("POST /api/discovery/scan", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
-  });
+    vi.clearAllMocks()
+    mockRequireAdmin.mockResolvedValue({
+      ok: true,
+      user: {
+        id: "11111111-1111-4111-8111-111111111111",
+        email: "admin@example.com",
+      },
+    })
+    mockTryFetchAkamaiCookies.mockResolvedValue(null)
+  })
 
-  it('returns 400 for invalid payload', async () => {
-    const response = await POST(makeRequest({ clubs: [] }));
-    const body = await response.json();
+  it("returns 401 when unauthorized", async () => {
+    mockRequireAdmin.mockResolvedValue({
+      ok: false,
+      response: NextResponse.json({ error: "Unauthorized" }, { status: 401 }),
+    })
 
-    expect(response.status).toBe(400);
-    expect(body.error).toBe('Invalid payload');
-  });
+    const response = await POST(makeRequest({ clubs: [{ clubId: "1", name: "Club One" }] }))
+    const body = await response.json()
 
-  it('processes valid payload and returns summary counters', async () => {
-    const adminClient = { tag: 'admin-client' };
-    mockCreateAdminClient.mockReturnValue(adminClient);
-    mockUpsertDiscoveredClub.mockResolvedValue({});
+    expect(response.status).toBe(401)
+    expect(body.error).toBe("Unauthorized")
+  })
+
+  it("returns 400 for invalid payload", async () => {
+    const response = await POST(makeRequest({ clubs: [] }))
+    const body = await response.json()
+
+    expect(response.status).toBe(400)
+    expect(body.error).toBe("Invalid payload")
+  })
+
+  it("executes scan linked to EA fetch and returns discovery counters", async () => {
+    const adminClient = makeAdminClient({ discoveredCounts: [10, 16] })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+
+    mockFetchMatches
+      .mockResolvedValueOnce([
+        {
+          timestampUtc: new Date("2026-03-01T00:00:00.000Z"),
+          players: [
+            { gamertag: "player-a", eaClubId: "1" },
+            { gamertag: "player-b", eaClubId: "1" },
+          ],
+        },
+      ] as never)
+      .mockResolvedValueOnce([
+        {
+          timestampUtc: new Date("2026-03-01T00:10:00.000Z"),
+          players: [{ gamertag: "player-b", eaClubId: "2" }],
+        },
+      ] as never)
 
     const response = await POST(
       makeRequest({
         clubs: [
-          { clubId: '1', name: 'CÃƒÆ’Ã‚Â¡ssia' },
-          { clubId: '2', name: 'AthÃƒÆ’Ã‚Â©tica' },
+          { clubId: "1", name: "Cassia" },
+          { clubId: "2", name: "Athetica" },
         ],
       })
-    );
-    const body = await response.json();
+    )
+    const body = await response.json()
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(200)
     expect(body).toEqual({
+      run_id: "run-1",
       processed: 2,
       inserted_or_updated: 2,
+      players_found: 2,
       failed: 0,
       failures: [],
-    });
-    expect(mockUpsertDiscoveredClub).toHaveBeenCalledTimes(2);
-    expect(mockUpsertDiscoveredClub).toHaveBeenNthCalledWith(
-      1,
-      { clubId: '1', name: 'CÃƒÆ’Ã‚Â¡ssia' },
-      adminClient
-    );
-  });
-});
+    })
+    expect(mockFetchMatches).toHaveBeenCalledTimes(2)
+    expect(adminClient.__mocks.discoveredPlayersUpsert).toHaveBeenCalledTimes(2)
+  })
+
+  it("falls back to legacy success status when completed is rejected", async () => {
+    const adminClient = makeAdminClient({
+      legacySuccessStatusOnly: true,
+      discoveredCounts: [4, 4],
+    })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+    mockFetchMatches.mockResolvedValue([] as never)
+
+    const response = await POST(
+      makeRequest({
+        clubs: [{ clubId: "1", name: "Cassia" }],
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.failed).toBe(0)
+  })
+})
