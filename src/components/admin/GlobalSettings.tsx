@@ -9,16 +9,23 @@ import { Label } from "@/components/ui/label"
 
 const settingDefinitions = [
   {
+    key: "discovery_max_targets",
+    label: "Discovery max targets",
+    description: "Total de clubes escaneados por varredura",
+    min: "1",
+    step: "1",
+  },
+  {
     key: "discovery_batch_size",
     label: "Discovery batch size",
-    description: "Clubes por batch no discovery",
+    description: "Clubes processados em paralelo por lote",
     min: "1",
     step: "1",
   },
   {
     key: "discovery_rate_limit_ms",
     label: "Discovery rate limit (ms)",
-    description: "Delay entre batches em milissegundos",
+    description: "Delay entre lotes em milissegundos",
     min: "1",
     step: "1",
   },
@@ -52,6 +59,7 @@ type SettingsPayload = {
 }
 
 const defaultFormValues: Record<SettingKey, string> = {
+  discovery_max_targets: "20",
   discovery_batch_size: "10",
   discovery_rate_limit_ms: "1500",
   max_claims_per_club: "3",
@@ -59,6 +67,7 @@ const defaultFormValues: Record<SettingKey, string> = {
 }
 
 const settingsSchema = z.object({
+  discovery_max_targets: z.coerce.number().int().min(1).max(500),
   discovery_batch_size: z.coerce.number().int().min(1).max(10000),
   discovery_rate_limit_ms: z.coerce.number().int().min(1).max(120000),
   max_claims_per_club: z.coerce.number().int().min(1).max(100),

@@ -68,13 +68,12 @@ async function loadSeedClubs(adminClient: ReturnType<typeof createAdminClient>) 
 
 async function loadScanTargets(
   adminClient: ReturnType<typeof createAdminClient>,
-  explicitClubs: ScanTarget[] | undefined
+  explicitClubs: ScanTarget[] | undefined,
+  maxTargets: number
 ) {
   if (explicitClubs && explicitClubs.length > 0) {
     return explicitClubs
   }
-
-  const maxTargets = parsePositiveInt(process.env.DISCOVERY_SCAN_MAX_TARGETS, DEFAULT_MAX_TARGETS)
 
   const { data: discoveredRows, error: discoveredError } = await adminClient
     .from("discovered_clubs")
@@ -119,8 +118,10 @@ async function persistDiscoveredPlayers(
   for (const match of matches) {
     const lastSeenAt = match.timestampUtc.toISOString()
     for (const player of match.players) {
-      const gamertag = player.gamertag?.trim()
-      if (!gamertag) continue
+      // playerName = display name real; gamertag = chave do objeto EA (pode ser ID numérico)
+      const gamertag = (player.playerName || player.gamertag)?.trim()
+      // Ignorar placeholders inválidos retornados pela EA API ("-", ".", etc.)
+      if (!gamertag || gamertag === "-" || gamertag === "." || /^\d+$/.test(gamertag)) continue
       playersByGamertag.set(gamertag, {
         lastSeenClub: player.eaClubId,
         lastSeenAt,
@@ -139,18 +140,22 @@ async function persistDiscoveredPlayers(
 
   const gamertags = Array.from(playersByGamertag.keys())
 
-  const { data: existingRows, error: existingError } = await adminClient
-    .from("discovered_players")
-    .select("ea_gamertag,matches_seen")
-    .in("ea_gamertag", gamertags)
+  // Chunkar o SELECT para evitar URLs > 16KB (limite do undici)
+  const existingByGamertag = new Map<string, number>()
+  for (const chunk of chunkArray(gamertags, 100)) {
+    const { data: chunkRows, error: chunkError } = await adminClient
+      .from("discovered_players")
+      .select("ea_gamertag,matches_seen")
+      .in("ea_gamertag", chunk)
 
-  if (existingError) {
-    throw existingError
+    if (chunkError) {
+      throw chunkError
+    }
+
+    for (const row of chunkRows ?? []) {
+      existingByGamertag.set(row.ea_gamertag, row.matches_seen ?? 0)
+    }
   }
-
-  const existingByGamertag = new Map(
-    (existingRows ?? []).map((row) => [row.ea_gamertag, row.matches_seen ?? 0])
-  )
 
   const upsertRows = gamertags.map((gamertag) => {
     const player = playersByGamertag.get(gamertag)!
@@ -261,7 +266,28 @@ export async function POST(request: NextRequest) {
     }
 
     runId = runData.id as string
-    const scanTargets = await loadScanTargets(adminClient, parsedPayload.data.clubs)
+
+    const { data: cfgRows } = await adminClient
+      .from("admin_config")
+      .select("key, value")
+      .in("key", ["discovery_batch_size", "discovery_max_targets", "discovery_rate_limit_ms"])
+
+    const cfg = Object.fromEntries((cfgRows ?? []).map((r) => [r.key, String(r.value)]))
+
+    const maxTargets = parsePositiveInt(
+      cfg["discovery_max_targets"] ?? process.env.DISCOVERY_SCAN_MAX_TARGETS,
+      DEFAULT_MAX_TARGETS
+    )
+    const batchSize = parsePositiveInt(
+      cfg["discovery_batch_size"] ?? process.env.DISCOVERY_BATCH_SIZE,
+      DEFAULT_BATCH_SIZE
+    )
+    const rateLimitMs = parsePositiveInt(
+      cfg["discovery_rate_limit_ms"] ?? process.env.DISCOVERY_RATE_LIMIT_MS,
+      DEFAULT_RATE_LIMIT_MS
+    )
+
+    const scanTargets = await loadScanTargets(adminClient, parsedPayload.data.clubs, maxTargets)
 
     if (scanTargets.length === 0) {
       await updateDiscoveryRun(adminClient, runId, {
@@ -283,21 +309,6 @@ export async function POST(request: NextRequest) {
     const beforeCount = await countDiscoveredClubs(adminClient)
     const cookieHeader = (await tryFetchAkamaiCookies()) ?? undefined
 
-    const { data: cfgRows } = await adminClient
-      .from("admin_config")
-      .select("key, value")
-      .in("key", ["discovery_batch_size", "discovery_rate_limit_ms"])
-
-    const cfg = Object.fromEntries((cfgRows ?? []).map((r) => [r.key, String(r.value)]))
-
-    const batchSize = parsePositiveInt(
-      cfg["discovery_batch_size"] ?? process.env.DISCOVERY_BATCH_SIZE,
-      DEFAULT_BATCH_SIZE
-    )
-    const rateLimitMs = parsePositiveInt(
-      cfg["discovery_rate_limit_ms"] ?? process.env.DISCOVERY_RATE_LIMIT_MS,
-      DEFAULT_RATE_LIMIT_MS
-    )
     const batches = chunkArray(scanTargets, batchSize)
 
     const failures: Array<{ clubId: string; reason: string }> = []

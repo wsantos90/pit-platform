@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 
 const adminConfigKeys = [
   "discovery_batch_size",
+  "discovery_max_targets",
   "discovery_rate_limit_ms",
   "max_claims_per_club",
   "tournament_entry_fee_brl",
@@ -22,6 +23,7 @@ const entryFeeSchema = z.coerce.number().min(0).max(100000)
 
 const settingsDescription: Record<AdminConfigKey, string> = {
   discovery_batch_size: "Clubes por batch no discovery",
+  discovery_max_targets: "Total de clubes escaneados por varredura",
   discovery_rate_limit_ms: "Delay entre batches (ms)",
   max_claims_per_club: "Max tentativas de claim por clube",
   tournament_entry_fee_brl: "Taxa default de entrada em torneios",
