@@ -1,2 +1,5 @@
-﻿// TODO: Implementar pagina claims
-export default function Page() { return <div>claims</div>; }
+import { redirect } from "next/navigation"
+
+export default function ModerationClaimsAliasPage() {
+  redirect("/moderation?tab=claims")
+}

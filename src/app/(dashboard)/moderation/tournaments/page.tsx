@@ -1,2 +1,5 @@
-﻿// TODO: Implementar pagina tournaments
-export default function Page() { return <div>tournaments</div>; }
+import { redirect } from "next/navigation"
+
+export default function ModerationTournamentsAliasPage() {
+  redirect("/moderation?tab=tournaments")
+}

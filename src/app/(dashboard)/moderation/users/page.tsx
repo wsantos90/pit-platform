@@ -1,2 +1,5 @@
-﻿// TODO: Implementar pagina users
-export default function Page() { return <div>users</div>; }
+import { redirect } from "next/navigation"
+
+export default function ModerationUsersAliasPage() {
+  redirect("/moderation?tab=users")
+}

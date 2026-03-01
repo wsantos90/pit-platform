@@ -14,32 +14,47 @@ import type { UserRole } from '@/types';
 
 export function useRole() {
     const { user, loading } = useAuth();
+    const currentUserId = user?.id ?? null;
+    const currentUserEmail = user?.email ?? null;
     const supabase = useMemo(() => createClient(), []);
     const [dbRoles, setDbRoles] = useState<UserRole[] | null>(null);
     const [rolesLoading, setRolesLoading] = useState(true);
+    const [resolvedUserId, setResolvedUserId] = useState<string | null>(null);
 
     useEffect(() => {
         let isMounted = true;
 
         const loadRoles = async () => {
-            if (!user?.id) {
+            if (!currentUserId) {
                 if (isMounted) {
                     setDbRoles(null);
                     setRolesLoading(false);
+                    setResolvedUserId(null);
                 }
                 return;
             }
 
             try {
                 setRolesLoading(true);
-                const { data } = await supabase
+                setResolvedUserId(null);
+                const { data: byId } = await supabase
                     .from('users')
                     .select('roles')
-                    .eq('id', user.id)
+                    .eq('id', currentUserId)
                     .maybeSingle();
 
+                let nextRoles = (byId?.roles ?? null) as UserRole[] | null;
+                if (!nextRoles && currentUserEmail) {
+                    const { data: byEmail } = await supabase
+                        .from('users')
+                        .select('roles')
+                        .eq('email', currentUserEmail)
+                        .maybeSingle();
+                    nextRoles = (byEmail?.roles ?? null) as UserRole[] | null;
+                }
+
                 if (isMounted) {
-                    setDbRoles((data?.roles ?? null) as UserRole[] | null);
+                    setDbRoles(nextRoles);
                 }
             } catch {
                 if (isMounted) {
@@ -48,6 +63,7 @@ export function useRole() {
             } finally {
                 if (isMounted) {
                     setRolesLoading(false);
+                    setResolvedUserId(currentUserId);
                 }
             }
         };
@@ -57,11 +73,13 @@ export function useRole() {
         return () => {
             isMounted = false;
         };
-    }, [supabase, user?.id]);
+    }, [supabase, currentUserId, currentUserEmail]);
+
+    const isHydratingCurrentUser = Boolean(currentUserId) && resolvedUserId !== currentUserId;
 
     const roles = useMemo(
-        () => (dbRoles?.length ? dbRoles : (user?.roles ?? [])),
-        [dbRoles, user],
+        () => (dbRoles?.length ? dbRoles : (resolvedUserId === currentUserId ? (user?.roles ?? []) : [])),
+        [dbRoles, resolvedUserId, currentUserId, user?.roles],
     );
 
     const hasRole = (role: UserRole) => roles.includes(role);
@@ -81,7 +99,7 @@ export function useRole() {
 
     return {
         user,
-        loading: loading || rolesLoading,
+        loading: loading || rolesLoading || isHydratingCurrentUser,
         roles,
         hasRole,
         isAdmin,

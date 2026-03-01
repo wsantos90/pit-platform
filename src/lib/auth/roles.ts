@@ -1,10 +1,28 @@
 import type { UserRole } from "@/types";
 
-export function hasRole(roles: string[], required: string) {
-  return roles.includes(required);
+export function normalizeRoles(roles: unknown): string[] {
+  if (Array.isArray(roles)) {
+    return roles.filter((role): role is string => typeof role === "string");
+  }
+
+  if (typeof roles === "string") {
+    return roles
+      .replace(/^\{/, "")
+      .replace(/\}$/, "")
+      .split(",")
+      .map((role) => role.trim().replace(/^"|"$/g, ""))
+      .filter(Boolean);
+  }
+
+  return [];
 }
 
-export function hasAnyRole(roles: string[], requiredRoles: UserRole[]) {
-  return requiredRoles.some((requiredRole) => hasRole(roles, requiredRole));
+export function hasRole(roles: unknown, required: string) {
+  return normalizeRoles(roles).includes(required);
+}
+
+export function hasAnyRole(roles: unknown, requiredRoles: UserRole[]) {
+  const normalizedRoles = normalizeRoles(roles);
+  return requiredRoles.some((requiredRole) => normalizedRoles.includes(requiredRole));
 }
 

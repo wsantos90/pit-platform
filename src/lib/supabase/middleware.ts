@@ -249,11 +249,52 @@ export async function updateSession(request: NextRequest) {
   if (user) {
     const requiredRoles = getRequiredRoles(pathname);
     if (requiredRoles && requiredRoles.length > 0) {
-      const { data: userRow } = await supabase
+      const { data: userById, error: userByIdError } = await supabase
         .from("users")
         .select("roles, is_active")
         .eq("id", user.id)
         .maybeSingle();
+      if (userByIdError) {
+        console.warn("user_profile_lookup_failed", {
+          pathname,
+          authUserId: user.id,
+          email: user.email ?? null,
+          stage: "by_id",
+          error: userByIdError.message,
+        });
+      }
+
+      let userRow = userById;
+      if (!userRow && user.email) {
+        const { data: userByEmail, error: userByEmailError } = await supabase
+          .from("users")
+          .select("id, roles, is_active")
+          .eq("email", user.email)
+          .maybeSingle();
+        if (userByEmailError) {
+          console.warn("user_profile_lookup_failed", {
+            pathname,
+            authUserId: user.id,
+            email: user.email,
+            stage: "by_email",
+            error: userByEmailError.message,
+          });
+        }
+
+        if (userByEmail) {
+          userRow = {
+            roles: userByEmail.roles,
+            is_active: userByEmail.is_active,
+          };
+          console.warn("auth_user_profile_mismatch", {
+            pathname,
+            authUserId: user.id,
+            profileUserId: userByEmail.id,
+            email: user.email,
+          });
+        }
+      }
+
       const roles = (userRow?.roles ?? []) as UserRole[];
       const active = userRow?.is_active ?? true;
       const isAllowed = hasAnyRole(roles, requiredRoles);

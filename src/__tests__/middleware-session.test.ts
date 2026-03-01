@@ -47,7 +47,7 @@ function makeRequest(
 // Configura o mock para um usuário autenticado com roles específicas
 function asAuthenticatedUser(roles: string[], isActive = true) {
   mockGetUser.mockResolvedValue({
-    data: { user: { id: "user-uuid-123" } },
+    data: { user: { id: "user-uuid-123", email: "user@example.com" } },
   });
   mockMaybeSingle.mockResolvedValue({
     data: { roles, is_active: isActive },
@@ -429,6 +429,18 @@ describe("acesso autorizado", () => {
     const res = await updateSession(makeRequest("/api/ea/fetch-matches"));
     // Não deve retornar 403 (não exige role específica)
     expect(res.status).not.toBe(403);
+    expect(res.status).toBeLessThan(300);
+  });
+
+  it("permite acesso usando fallback por email quando perfil por id não é encontrado", async () => {
+    mockGetUser.mockResolvedValue({
+      data: { user: { id: "auth-id-sem-perfil", email: "admin@example.com" } },
+    });
+    mockMaybeSingle
+      .mockResolvedValueOnce({ data: null })
+      .mockResolvedValueOnce({ data: { id: "perfil-antigo", roles: ["admin"], is_active: true } });
+
+    const res = await updateSession(makeRequest("/moderation"));
     expect(res.status).toBeLessThan(300);
   });
 });

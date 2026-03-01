@@ -10,20 +10,24 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
-import type { User } from '@/types';
+import type { User, UserRole } from '@/types';
 
 function toFallbackUser(authUser: AuthUser): User {
     const email = authUser.email ?? '';
     const metadataName = authUser.user_metadata?.display_name
         ?? authUser.user_metadata?.name
         ?? authUser.user_metadata?.gamertag;
+    const metadataRolesRaw = authUser.app_metadata?.roles;
+    const metadataRoles = Array.isArray(metadataRolesRaw)
+        ? metadataRolesRaw.filter((role): role is UserRole => typeof role === 'string')
+        : [];
 
     return {
         id: authUser.id,
         email,
         display_name: metadataName ?? (email || null),
         avatar_url: null,
-        roles: ['player'],
+        roles: metadataRoles,
         is_active: true,
         created_at: authUser.created_at ?? new Date(0).toISOString(),
         updated_at: authUser.updated_at ?? new Date(0).toISOString(),
@@ -46,14 +50,29 @@ export function useAuth() {
     useEffect(() => {
         const hydrateUserFromDatabase = async (authUser: AuthUser) => {
             try {
-                const { data } = await supabase
+                const { data: byId } = await supabase
                     .from('users')
                     .select('*')
                     .eq('id', authUser.id)
                     .maybeSingle();
 
-                if (data) {
-                    setUser(data);
+                if (byId) {
+                    setUser(byId);
+                    return;
+                }
+
+                if (!authUser.email) {
+                    return;
+                }
+
+                const { data: byEmail } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('email', authUser.email)
+                    .maybeSingle();
+
+                if (byEmail) {
+                    setUser(byEmail);
                 }
             } catch {
                 // Mantém fallback já aplicado em memória.
