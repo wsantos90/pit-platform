@@ -122,6 +122,7 @@ export function isProtectedApi(pathname: string) {
     "/api/matchmaking",
     "/api/claim/submit",
     "/api/claim/review",
+    "/api/moderation",
     "/api/tournament",
     "/api/discovery/insert-manual",
   ];
@@ -144,6 +145,7 @@ export function getRequiredRoles(pathname: string): UserRole[] | null {
     { prefix: "/profile", roles: ["player", "manager", "moderator", "admin"] },
     { prefix: "/tournaments", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/claim/review", roles: ["moderator", "admin"] },
+    { prefix: "/api/moderation", roles: ["moderator", "admin"] },
     { prefix: "/api/claim/submit", roles: ["player", "manager", "admin"] },
     { prefix: "/api/matchmaking", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/tournament/enroll", roles: ["manager", "moderator", "admin"] },

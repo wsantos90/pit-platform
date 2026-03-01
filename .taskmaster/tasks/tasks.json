@@ -620,7 +620,7 @@
           "7",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -628,7 +628,7 @@
             "description": "Implementar a funÃ§Ã£o principal em lib/discovery/engine.ts que executa o algoritmo snowball: inicia com seedClubIds, consulta API EA, extrai adversÃ¡rios e repete iteraÃ§Ãµes atÃ© maxIterations ou desaceleraÃ§Ã£o.",
             "dependencies": [],
             "details": "Usar Promise.all para parallelRequests=10. Implementar critÃ©rio de parada por repetiÃ§Ãµes (>80% clubs jÃ¡ descobertos). Retornar DiscoveryResult com discoveredClubs, iterations, newClubsCount.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com seed de 1 clubId. Verificar 1Âª iteraÃ§Ã£o descobre ~10 novos. 2Âª iteraÃ§Ã£o ~100. Confirmar parada em maxIterations=3.",
             "parentId": "undefined"
           },
@@ -640,7 +640,7 @@
               1
             ],
             "details": "Usar Set para rastrear discoveredClubIds global. ApÃ³s cada batch, await new Promise(resolve => setTimeout(resolve, 1500)). Verificar se club jÃ¡ existe em discovered_clubs antes de inserir.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular API com adversÃ¡rios duplicados. Confirmar sem duplicatas em discovered_clubs. Medir tempo entre requests >1s.",
             "parentId": "undefined"
           },
@@ -652,7 +652,7 @@
               1
             ],
             "details": "Usar Supabase client. INSERT no start com status 'running'. UPDATE no final com mÃ©tricas. Incluir erro se falhar. Armazenar seedClubIds e iterations usadas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar discovery e verificar registro em discovery_runs. Confirmar contadores clubs_scanned e clubs_new corretos. Testar status 'failed' em erro simulado.",
             "parentId": "undefined"
           },
@@ -666,7 +666,7 @@
               3
             ],
             "details": "Para n8n: HTTP Request POST para endpoint interno. Para API: Next.js API route com autenticaÃ§Ã£o admin. Seed padrÃ£o: top clubs EA. Log response do discovery.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Executar manualmente endpoint/workflow. Verificar que chama discoverClubs e discovered_clubs Ã© populado. Confirmar cron schedule correto.",
             "parentId": "undefined"
           }
@@ -686,7 +686,7 @@
           "3",
           "7"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -694,7 +694,7 @@
             "description": "Executar comandos SQL para ativar a extensÃ£o pg_trgm no banco Supabase e criar Ã­ndice GIN otimizado na coluna display_name da tabela discovered_clubs.",
             "dependencies": [],
             "details": "Executar: CREATE EXTENSION IF NOT EXISTS pg_trgm; CREATE INDEX CONCURRENTLY idx_clubs_display_name_trgm ON discovered_clubs USING gin(display_name gin_trgm_ops);. Verificar criaÃ§Ã£o com \\dx e \\di+. Testar Ã­ndice com EXPLAIN ANALYZE.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirmar extensÃ£o ativa com \\dx pg_trgm. Verificar Ã­ndice criado com \\di idx_clubs*. Testar query EXPLAIN SELECT display_name % 'Flamengo' LIMIT 1 para usar Ã­ndice GIN.",
             "parentId": "undefined"
           },
@@ -706,7 +706,7 @@
               1
             ],
             "details": "FunÃ§Ã£o: searchClubs(query: string, limit: number = 10). Query SQL com % e ILIKE, ORDER BY similarity DESC. Na pÃ¡gina claim/page.tsx: useState, useEffect com debounce, exibir lista com display_name e similarity score.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar searchClubs('Flam', 5): retorna Flamengo + similares ordenados. UI: digitar 'Flamengoo' mostra resultados fuzzy apÃ³s 300ms. Verificar score > 0.3 para matches relevantes.",
             "parentId": "undefined"
           }
@@ -728,7 +728,7 @@
           "8",
           "11"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -736,7 +736,7 @@
             "description": "Implementar componente de busca de times com algoritmo fuzzy search para permitir seleÃ§Ã£o pelo manager.",
             "dependencies": [],
             "details": "Criar SearchClubs em app/(dashboard)/team/claim/components/SearchClubs.tsx. Usar fuse.js ou similar para busca fuzzy em lista de clubes carregada via API. Incluir input de busca e lista de resultados clicÃ¡veis.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar busca com nomes parciais/exatos. Verificar que seleciona time corretamente e armazena clubId selecionado.",
             "parentId": "undefined"
           },
@@ -748,7 +748,7 @@
               1
             ],
             "details": "Criar MatchPreview.tsx. Ao selecionar time no SearchClubs, chamar API EA para Ãºltimos 10 matches. Exibir cards com data, adversÃ¡rio, placar. BotÃ£o 'Confirmar' para prosseguir.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que carrega 10 jogos corretos. Testar com time sem jogos. Confirmar botÃ£o confirma e avanÃ§a fluxo.",
             "parentId": "undefined"
           },
@@ -760,7 +760,7 @@
               2
             ],
             "details": "Criar PhotoUpload.tsx com drag&drop, validaÃ§Ã£o (JPG/PNG, <5MB), preview. ApÃ³s upload, botÃ£o 'Submit Claim' chama API. Usar Zustand ou Context para gerenciar estado do fluxo multi-step.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar upload de arquivos vÃ¡lidos/invÃ¡lidos. Verificar preview e validaÃ§Ãµes. Confirmar submit envia dados corretos.",
             "parentId": "undefined"
           },
@@ -772,7 +772,7 @@
               3
             ],
             "details": "Em app/api/claim/submit/route.ts: usar Supabase Storage para foto, inserir em tabela 'claims' (team_id, user_id, photo_url, status='pending'). Verificar se jÃ¡ existe claim active/pending. Enviar notificaÃ§Ã£o admin via Supabase edge function ou email. Atualizar pÃ¡gina principal para mostrar 'jÃ¡ reivindicado'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar submit com foto vÃ¡lida. Verificar claim criado pending. Testar segundo submit (deve falhar). Confirmar notificaÃ§Ã£o enviada e storage com foto.",
             "parentId": "undefined"
           }
@@ -793,7 +793,7 @@
           "3",
           "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -801,7 +801,7 @@
             "description": "Implementar app/(dashboard)/moderation/page.tsx com abas Claims, Tournaments, Disputes e Users usando componentes de tabs.",
             "dependencies": [],
             "details": "Usar shadcn/ui Tabs. Configurar roteamento interno das abas. Adicionar layout responsivo com header de moderaÃ§Ã£o e sidebar. Incluir loader inicial.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que abas alternam corretamente. Confirmar que pÃ¡gina carrega sem erros para usuÃ¡rio moderador.",
             "parentId": "undefined"
           },
@@ -813,7 +813,7 @@
               1
             ],
             "details": "Query Supabase para claims WHERE status='pending'. Modal para rejeiÃ§Ã£o com rejection_reason. Ao aprovar: UPDATE club SET status='active', manager_id=user_id. Enviar notificaÃ§Ã£o via Supabase realtime.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar aprovaÃ§Ã£o muda club.status para 'active'. Verificar rejeiÃ§Ã£o salva rejection_reason e notifica manager. Confirmar preview de imagem carrega.",
             "parentId": "undefined"
           },
@@ -825,7 +825,7 @@
               1
             ],
             "details": "FormulÃ¡rio para criar tournament (nome, capacidade, horÃ¡rio, formato). Tabela de inscriÃ§Ãµes. BotÃ£o gerar bracket (algoritmo round-robin). BotÃµes avanÃ§ar rodada e finalizar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criaÃ§Ã£o de corujÃ£o salva no banco. Verificar geraÃ§Ã£o de chaveamento cria matches corretos. Confirmar avanÃ§o de rodada atualiza status.",
             "parentId": "undefined"
           },
@@ -837,7 +837,7 @@
               1
             ],
             "details": "Disputes: tabela com disputes WHERE type='wo' AND status='contested'. Users: input busca por nome/email, tabela com botÃ£o excluir (DELETE com confirmaÃ§Ã£o). Usar DataTable shadcn.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar busca de usuÃ¡rios retorna resultados filtrados. Verificar exclusÃ£o remove time/jogador. Confirmar Disputes lista apenas W.O. contestados.",
             "parentId": "undefined"
           },
@@ -851,7 +851,7 @@
               4
             ],
             "details": "RLS policies: moderador pode SELECT/UPDATE em claims, tournaments, users, disputes mas NÃƒO financial tables. Exportar componentes para /components/dashboard. Adicionar proteÃ§Ãµes contra dados financeiros.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar que moderador NÃƒO vÃª dados financeiros. Testar que RLS bloqueia acesso indevido. Confirmar componentes sÃ£o reutilizÃ¡veis sem erros.",
             "parentId": "undefined"
           }
@@ -1656,9 +1656,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-02-25T06:39:41.007Z",
+      "lastModified": "2026-03-01T19:08:22.918Z",
       "taskCount": 25,
-      "completedCount": 8,
+      "completedCount": 13,
       "tags": [
         "master"
       ]

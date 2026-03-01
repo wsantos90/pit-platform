@@ -139,6 +139,10 @@ describe("isProtectedApi", () => {
     expect(isProtectedApi("/api/claim/review")).toBe(true);
   });
 
+  it("retorna true para /api/moderation/tournaments", () => {
+    expect(isProtectedApi("/api/moderation/tournaments")).toBe(true);
+  });
+
   it("retorna true para /api/tournament/create", () => {
     expect(isProtectedApi("/api/tournament/create")).toBe(true);
   });
@@ -199,6 +203,10 @@ describe("getRequiredRoles", () => {
 
   it('retorna ["moderator", "admin"] para /api/claim/review', () => {
     expect(getRequiredRoles("/api/claim/review")).toEqual(["moderator", "admin"]);
+  });
+
+  it('retorna ["moderator", "admin"] para /api/moderation/tournaments', () => {
+    expect(getRequiredRoles("/api/moderation/tournaments")).toEqual(["moderator", "admin"]);
   });
 
   it('retorna ["player", "manager", "admin"] para /api/claim/submit', () => {
