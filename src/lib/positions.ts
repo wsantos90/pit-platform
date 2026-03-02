@@ -1,17 +1,18 @@
+﻿import type { EaPositionCategory, PlayerPosition } from '@/types/database';
+
 /**
  * Player Position Resolution
  *
- * Resolver posição detalhada (7 posições PIT) a partir da
- * categoria genérica da API EA (4 categorias).
- *
- * Princípio SRP: Apenas resolução de posição.
- * Ref: FC10 — Position Resolution
+ * Resolve posicao detalhada (7 posicoes PIT) a partir da
+ * categoria generica da API EA (4 categorias).
  */
 
-type EaPositionCategory = 'goalkeeper' | 'defender' | 'midfielder' | 'forward';
-type PitPosition = 'GK' | 'ZAG' | 'VOL' | 'MC' | 'AE' | 'AD' | 'ATA';
+type PitPosition = PlayerPosition;
 
-/** Mapa de categorias EA → posições PIT válidas */
+/** Todas as posicoes PIT, em ordem de campo (SSOT) */
+export const PLAYER_POSITIONS = ['GK', 'ZAG', 'VOL', 'MC', 'AE', 'AD', 'ATA'] as const satisfies readonly PlayerPosition[];
+
+/** Mapa de categorias EA -> posicoes PIT validas */
 const POSITION_MAP: Record<EaPositionCategory, PitPosition[]> = {
     goalkeeper: ['GK'],
     defender: ['ZAG'],
@@ -20,8 +21,8 @@ const POSITION_MAP: Record<EaPositionCategory, PitPosition[]> = {
 };
 
 /**
- * Resolver posição detalhada do jogador.
- * Prioridade: posição primária → posição secundária → fallback da categoria
+ * Resolve posicao detalhada do jogador.
+ * Prioridade: posicao primaria -> posicao secundaria -> fallback da categoria.
  */
 export function resolvePosition(
     eaCategory: EaPositionCategory,
@@ -30,19 +31,17 @@ export function resolvePosition(
 ): PitPosition {
     const validPositions = POSITION_MAP[eaCategory];
 
-    // Se posição primária pertence a esta categoria → usar primária
     if (validPositions.includes(primaryPosition)) {
         return primaryPosition;
     }
 
-    // Se posição secundária pertence a esta categoria → usar secundária
     if (secondaryPosition && validPositions.includes(secondaryPosition)) {
         return secondaryPosition;
     }
 
-    // Fallback: primeira posição válida da categoria
     return validPositions[0];
 }
 
+export const mapPosition = resolvePosition;
+
 export { POSITION_MAP };
-export type { EaPositionCategory, PitPosition };
