@@ -966,7 +966,7 @@
           "5",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -974,9 +974,10 @@
             "description": "Implementar enum com posiÃ§Ãµes GK, ZAG, VOL, MC, AE, AD, ATA e lÃ³gica de mapeamento de categorias API (goalkeeper, defender, midfielder, forward) para posiÃ§Ãµes do jogador com prioridade para principal em ambiguidades.",
             "dependencies": [],
             "details": "Definir mapeamento: goalkeeperâ†’GK, defenderâ†’ZAG/VOL, midfielderâ†’VOL/MC/AE/AD, forwardâ†’ATA. Usar primary_position primeiro, fallback para secondary. Incluir fallbacks para casos sem match.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar combinaÃ§Ãµes: VOL/ZAG com 'midfielder'â†’VOL, 'defender'â†’ZAG; MC/AE com 'midfielder'â†’MC; sem matchâ†’null ou default.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-02T00:18:22.013Z"
           },
           {
             "id": 2,
@@ -986,14 +987,16 @@
               1
             ],
             "details": "Usar Supabase Auth para identificar user_id. FormulÃ¡rio com selects para posiÃ§Ãµes (opÃ§Ãµes do enum). Update players row com posiÃ§Ãµes selecionadas. ValidaÃ§Ã£o para posiÃ§Ãµes diferentes.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar seleÃ§Ã£o e salvamento no banco. Verificar que posiÃ§Ãµes sÃ£o atualizadas corretamente. Confirmar que pÃ¡gina sÃ³ acessÃ­vel para usuÃ¡rios logados.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-02T00:18:28.718Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 2,
-        "expansionPrompt": "1) Enum + lógica mapPosition() com fallbacks; 2) UI settings page + storage em players table."
+        "expansionPrompt": "1) Enum + lógica mapPosition() com fallbacks; 2) UI settings page + storage em players table.",
+        "updatedAt": "2026-03-02T00:18:28.718Z"
       },
       {
         "id": "16",
@@ -1656,9 +1659,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-01T19:08:22.918Z",
+      "lastModified": "2026-03-02T00:18:28.718Z",
       "taskCount": 25,
-      "completedCount": 13,
+      "completedCount": 15,
       "tags": [
         "master"
       ]
