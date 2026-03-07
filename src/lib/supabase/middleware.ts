@@ -132,6 +132,7 @@ export function isProtectedApi(pathname: string) {
 export function isWebhookRoute(pathname: string) {
   const webhookPrefixes = [
     "/api/ea/",
+    "/api/cron/collect",
   ];
   return webhookPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
@@ -221,8 +222,9 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Rotas webhook têm sua própria autenticação (x-webhook-secret) — bypass do middleware auth
-  const webhookSecret = request.headers.get("x-webhook-secret");
+  // Rotas webhook têm sua própria autenticação (x-webhook-secret/x-cron-secret) — bypass do middleware auth
+  const webhookSecret =
+    request.headers.get("x-webhook-secret") ?? request.headers.get("x-cron-secret");
   const expectedWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
   if (isWebhookRoute(pathname) && expectedWebhookSecret && webhookSecret === expectedWebhookSecret) {
     return applySecurityHeaders(response, request);

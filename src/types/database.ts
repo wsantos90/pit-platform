@@ -74,6 +74,7 @@ export interface Club {
     subscription_plan: SubscriptionPlan;
     created_at: string;
     updated_at: string;
+    last_scanned_at: string | null;
 }
 
 export interface ClubPlayer {
@@ -107,6 +108,20 @@ export interface DiscoveredPlayer {
     last_seen_at: string;
     matches_seen: number;
     linked_player_id: string | null;
+}
+
+export interface CollectRun {
+    id: string;
+    triggered_by: string | null;
+    ea_club_id: string | null;
+    is_cron: boolean;
+    status: 'running' | 'completed' | 'failed';
+    clubs_processed: number;
+    matches_new: number;
+    matches_skipped: number;
+    started_at: string;
+    finished_at: string | null;
+    error_message: string | null;
 }
 
 export interface Claim {

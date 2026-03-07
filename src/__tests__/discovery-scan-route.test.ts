@@ -133,6 +133,21 @@ function makeAdminClient(options?: {
         }
       }
 
+      if (table === "admin_config") {
+        return {
+          select: vi.fn().mockReturnValue({
+            in: vi.fn().mockResolvedValue({
+              data: [
+                { key: "discovery_batch_size", value: 10 },
+                { key: "discovery_max_targets", value: 20 },
+                { key: "discovery_rate_limit_ms", value: 1500 },
+              ],
+              error: null,
+            }),
+          }),
+        }
+      }
+
       return {}
     }),
     __mocks: {
