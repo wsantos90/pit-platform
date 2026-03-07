@@ -22,7 +22,7 @@ type SeedClubRow = {
   display_name: string
 }
 
-type ScanRunStatus = "running" | "completed" | "failed" | "cancelled"
+type ScanRunStatus = "running" | "completed" | "failed" | "cancelled" | "success"
 type ScanTarget = { clubId: string; name: string }
 
 const DEFAULT_MAX_TARGETS = 20
@@ -209,6 +209,12 @@ async function updateDiscoveryRun(
 
   const { error: updateError } = await attemptUpdate(payload.status)
   if (!updateError) return
+
+  if (payload.status === "completed") {
+    const { error: legacyError } = await attemptUpdate("success")
+    if (!legacyError) return
+    throw legacyError
+  }
 
   throw updateError
 }
