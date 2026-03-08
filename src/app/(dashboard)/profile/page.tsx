@@ -1,2 +1,2 @@
-﻿// TODO: Implementar pagina profile
+﻿﻿// TODO: Implementar pagina profile
 export default function Page() { return <div>profile</div>; }

@@ -22,6 +22,31 @@ type RunSummary = {
   matches_new: number
 }
 
+type ExtensionResponse = { ok?: boolean } | undefined
+
+type ExtensionMessage = {
+  type: string
+  runId: string
+  eaClubId: string
+  status?: string
+  matches_new?: number
+  error?: string
+  results?: RunSummary
+}
+
+type ChromeRuntime = {
+  lastError?: unknown
+  sendMessage: (
+    extensionId: string,
+    payload: unknown,
+    callback: (response: ExtensionResponse) => void
+  ) => void
+  onMessage: {
+    addListener: (listener: (message: ExtensionMessage) => void) => void
+    removeListener: (listener: (message: ExtensionMessage) => void) => void
+  }
+}
+
 type CollectState =
   | { phase: "idle" }
   | { phase: "starting" }
@@ -29,19 +54,21 @@ type CollectState =
   | { phase: "done"; summary: RunSummary; clubs: ClubProgress[] }
   | { phase: "error"; message: string }
 
+function getChromeRuntime(): ChromeRuntime | null {
+  const maybeChrome = (globalThis as { chrome?: { runtime?: ChromeRuntime } }).chrome
+  return maybeChrome?.runtime ?? null
+}
+
 function isExtensionAvailable(): boolean {
-  return (
-    typeof chrome !== "undefined" &&
-    typeof chrome.runtime !== "undefined" &&
-    Boolean(EXTENSION_ID)
-  )
+  return Boolean(getChromeRuntime() && EXTENSION_ID)
 }
 
 async function pingExtension(): Promise<boolean> {
-  if (!isExtensionAvailable()) return false
+  const runtime = getChromeRuntime()
+  if (!runtime || !EXTENSION_ID) return false
   return new Promise((resolve) => {
-    chrome.runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (response) => {
-      if (chrome.runtime.lastError) {
+    runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (response) => {
+      if (runtime.lastError) {
         resolve(false)
         return
       }
@@ -89,15 +116,7 @@ export default function CollectControl() {
       setState({ phase: "running", runId: run_id, clubs })
 
       // Escuta progresso da extensão
-      const progressListener = (message: {
-        type: string
-        runId: string
-        eaClubId: string
-        status?: string
-        matches_new?: number
-        error?: string
-        results?: RunSummary
-      }) => {
+      const progressListener = (message: ExtensionMessage) => {
         if (message.runId !== run_id) return
 
         if (message.type === "COLLECT_PROGRESS") {
@@ -120,7 +139,8 @@ export default function CollectControl() {
         }
 
         if (message.type === "COLLECT_DONE") {
-          chrome.runtime.onMessage.removeListener(progressListener)
+          const runtime = getChromeRuntime()
+          runtime?.onMessage.removeListener(progressListener)
           setState((prev) => ({
             phase: "done",
             summary: message.results ?? { success: 0, failed: 0, matches_new: 0 },
@@ -129,14 +149,15 @@ export default function CollectControl() {
         }
       }
 
-      if (isExtensionAvailable()) {
-        chrome.runtime.onMessage.addListener(progressListener)
-        chrome.runtime.sendMessage(
+      const runtime = getChromeRuntime()
+      if (isExtensionAvailable() && runtime) {
+        runtime.onMessage.addListener(progressListener)
+        runtime.sendMessage(
           EXTENSION_ID,
           { type: "START_COLLECT", runId: run_id, token, targets, backendBase: BACKEND_BASE },
           (response) => {
-            if (chrome.runtime.lastError || !response?.ok) {
-              chrome.runtime.onMessage.removeListener(progressListener)
+            if (runtime.lastError || !response?.ok) {
+              runtime.onMessage.removeListener(progressListener)
               setState({
                 phase: "error",
                 message: "Extensão não respondeu. Verifique se está instalada e ativa.",
@@ -166,8 +187,9 @@ export default function CollectControl() {
                 <p className="font-medium text-foreground">Extensão PIT Collect não detectada</p>
                 <p className="text-foreground-secondary">
                   Instale a extensão em{" "}
-                  <code className="rounded bg-muted px-1">chrome://extensions</code> → "Carregar
-                  sem compactação" → pasta <code className="rounded bg-muted px-1">chrome-extension/</code>
+                  <code className="rounded bg-muted px-1">chrome://extensions</code> → &quot;Carregar
+                  sem compactação&quot; → pasta{" "}
+                  <code className="rounded bg-muted px-1">chrome-extension/</code>
                 </p>
                 <p className="text-foreground-secondary">
                   Após instalar, adicione o ID da extensão em{" "}

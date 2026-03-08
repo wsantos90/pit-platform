@@ -86,14 +86,14 @@ async function finalizeRunIfComplete(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { runId: string } }
+  context: { params: Promise<{ runId: string }> }
 ) {
   const token = request.headers.get("x-collect-token") ?? ""
   if (!token) {
     return NextResponse.json({ error: "missing_token" }, { status: 401 })
   }
 
-  const { runId } = params
+  const { runId } = await context.params
   if (!runId) {
     return NextResponse.json({ error: "missing_run_id" }, { status: 400 })
   }
