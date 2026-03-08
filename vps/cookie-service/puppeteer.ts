@@ -15,6 +15,7 @@ type Cookie = {
 type Page = {
   setUserAgent: (userAgent: string) => Promise<void>;
   setExtraHTTPHeaders: (headers: Record<string, string>) => Promise<void>;
+  authenticate: (credentials: { username: string; password: string }) => Promise<void>;
   setDefaultNavigationTimeout: (timeout: number) => void;
   setDefaultTimeout: (timeout: number) => void;
   goto: (
@@ -23,6 +24,7 @@ type Page = {
   ) => Promise<void>;
   waitForSelector: (selector: string, options: { timeout: number }) => Promise<void>;
   evaluateOnNewDocument: (fn: string) => Promise<void>;
+  evaluate: <T>(fn: (...args: unknown[]) => T | Promise<T>, ...args: unknown[]) => Promise<T>;
   cookies: () => Promise<Cookie[]>;
   setCookie: (...cookies: Array<{ name: string; value: string; url: string }>) => Promise<void>;
   on: (event: 'response', listener: (response: HttpResponse) => void | Promise<void>) => void;
@@ -39,6 +41,7 @@ type PuppeteerModule = {
     args: string[];
     timeout: number;
     protocolTimeout: number;
+    ignoreHTTPSErrors?: boolean;
   }) => Promise<Browser>;
 };
 
@@ -50,7 +53,14 @@ const DEFAULT_BOOTSTRAP_URL = process.env.EA_COOKIE_BOOTSTRAP_URL ?? toOrigin(DE
 const DEFAULT_TIMEOUT_MS = toPositiveInt(process.env.PUPPETEER_TIMEOUT_MS, 60_000);
 const DEFAULT_MAX_ATTEMPTS = toPositiveInt(process.env.PUPPETEER_MAX_ATTEMPTS, 2);
 const DEFAULT_COOKIE_TTL_MINUTES = toPositiveInt(process.env.AKAMAI_COOKIE_TTL_MINUTES, 30);
+const DEFAULT_MAX_RESULT_COUNT = toPositiveInt(process.env.EA_MAX_RESULT_COUNT, 10);
+const DEFAULT_PLATFORM = process.env.EA_PLATFORM ?? 'common-gen5';
+const DEFAULT_MATCH_TYPE = process.env.EA_MATCH_TYPE ?? 'friendlyMatch';
 const POLL_INTERVAL_MS = 500;
+const RAW_PROXY_URL = (process.env.PUPPETEER_PROXY_URL ?? '').trim();
+const PROXY_USERNAME = (process.env.PUPPETEER_PROXY_USERNAME ?? '').trim();
+const PROXY_PASSWORD = process.env.PUPPETEER_PROXY_PASSWORD ?? '';
+const IGNORE_HTTPS_ERRORS = (process.env.PUPPETEER_IGNORE_HTTPS_ERRORS ?? 'false') === 'true';
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
@@ -93,6 +103,44 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function getProxyServerForLaunch(): string | null {
+  if (!RAW_PROXY_URL) return null;
+  try {
+    const normalized = RAW_PROXY_URL.includes('://') ? RAW_PROXY_URL : `http://${RAW_PROXY_URL}`;
+    const parsed = new URL(normalized);
+    return `${parsed.protocol}//${parsed.host}`;
+  } catch {
+    return RAW_PROXY_URL;
+  }
+}
+
+function getProxyCredentials():
+  | {
+      username: string;
+      password: string;
+    }
+  | null {
+  if (PROXY_USERNAME && PROXY_PASSWORD) {
+    return {
+      username: PROXY_USERNAME,
+      password: PROXY_PASSWORD,
+    };
+  }
+
+  if (!RAW_PROXY_URL) return null;
+  try {
+    const normalized = RAW_PROXY_URL.includes('://') ? RAW_PROXY_URL : `http://${RAW_PROXY_URL}`;
+    const parsed = new URL(normalized);
+    if (!parsed.username) return null;
+    return {
+      username: decodeURIComponent(parsed.username),
+      password: decodeURIComponent(parsed.password),
+    };
+  } catch {
+    return null;
+  }
+}
+
 function getLaunchArgs(): string[] {
   const args = [
     '--no-sandbox',
@@ -107,8 +155,12 @@ function getLaunchArgs(): string[] {
   if (process.env.PUPPETEER_DISABLE_DEV_SHM === 'true') {
     args.push('--disable-dev-shm-usage');
   }
-  if (process.env.PUPPETEER_PROXY_URL) {
-    args.push(`--proxy-server=${process.env.PUPPETEER_PROXY_URL}`);
+  const proxyServer = getProxyServerForLaunch();
+  if (proxyServer) {
+    args.push(`--proxy-server=${proxyServer}`);
+  }
+  if (IGNORE_HTTPS_ERRORS) {
+    args.push('--ignore-certificate-errors');
   }
   return args;
 }
@@ -129,12 +181,29 @@ async function launchBrowser(timeoutMs: number): Promise<Browser> {
     args: getLaunchArgs(),
     timeout: timeoutMs,
     protocolTimeout: timeoutMs,
+    ignoreHTTPSErrors: IGNORE_HTTPS_ERRORS,
   });
+}
+
+async function applyProxyAuth(page: Page): Promise<void> {
+  const credentials = getProxyCredentials();
+  if (!credentials) return;
+  await page.authenticate(credentials);
+}
+
+function buildEaMatchesUrl(clubId: string, maxResultCount = DEFAULT_MAX_RESULT_COUNT, matchType = DEFAULT_MATCH_TYPE): string {
+  const target = new URL(DEFAULT_TARGET_URL);
+  target.searchParams.set('platform', DEFAULT_PLATFORM);
+  target.searchParams.set('clubIds', clubId);
+  target.searchParams.set('maxResultCount', String(maxResultCount));
+  target.searchParams.set('matchType', matchType);
+  return target.toString();
 }
 
 async function gotoEa(page: Page, userAgent: string, timeoutMs: number): Promise<void> {
   // Injeta script de stealth antes de qualquer JS da pagina
   await page.evaluateOnNewDocument(STEALTH_SCRIPT);
+  await applyProxyAuth(page);
 
   await page.setUserAgent(userAgent);
   await page.setExtraHTTPHeaders({
@@ -259,6 +328,96 @@ function toBundle(cookies: Record<AkamaiCookieName, string>): AkamaiCookieBundle
     valid_until: validUntilDate.toISOString(),
     source: 'puppeteer',
   };
+}
+
+type BrowserFetchOptions = {
+  maxResultCount?: number;
+  matchType?: string;
+};
+
+export async function fetchEaMatchesViaBrowser(
+  clubId: string,
+  options: BrowserFetchOptions = {},
+): Promise<unknown> {
+  let lastError: Error | null = null;
+  const maxResultCount = options.maxResultCount ?? DEFAULT_MAX_RESULT_COUNT;
+  const matchType = options.matchType ?? DEFAULT_MATCH_TYPE;
+  const apiUrl = buildEaMatchesUrl(clubId, maxResultCount, matchType);
+
+  for (let attempt = 1; attempt <= DEFAULT_MAX_ATTEMPTS; attempt += 1) {
+    let browser: Browser | null = null;
+    const userAgent = USER_AGENTS[(attempt - 1) % USER_AGENTS.length];
+
+    try {
+      browser = await launchBrowser(DEFAULT_TIMEOUT_MS);
+      const page = await browser.newPage();
+      await gotoEa(page, userAgent, DEFAULT_TIMEOUT_MS);
+
+      type BrowserFetchResult = {
+        status: number;
+        statusText: string;
+        bodyText: string;
+      };
+
+      const result = await page.evaluate<BrowserFetchResult>(async (url) => {
+        const response = await fetch(url as string, {
+          method: 'GET',
+          headers: {
+            Accept: 'application/json',
+            'Accept-Language': 'pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7',
+          },
+          credentials: 'include',
+        });
+
+        const bodyText = await response.text();
+        return {
+          status: response.status,
+          statusText: response.statusText,
+          bodyText,
+        };
+      }, apiUrl);
+
+      if (result.status < 200 || result.status >= 300) {
+        const bodyHead = result.bodyText.slice(0, 180).replace(/\s+/g, ' ');
+        throw new Error(`EA API respondeu ${result.status} ${result.statusText}: ${bodyHead}`);
+      }
+
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(result.bodyText);
+      } catch (error) {
+        const parseMessage = error instanceof Error ? error.message : String(error);
+        throw new Error(`EA API retornou JSON invalido: ${parseMessage}`);
+      }
+
+      logger.info('puppeteer_matches_attempt_success', {
+        event: 'puppeteer_matches_attempt_success',
+        attempt,
+        max_attempts: DEFAULT_MAX_ATTEMPTS,
+        club_id: clubId,
+      });
+      return parsed;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      logger.warn('puppeteer_matches_attempt_failure', {
+        event: 'puppeteer_matches_attempt_failure',
+        attempt,
+        max_attempts: DEFAULT_MAX_ATTEMPTS,
+        club_id: clubId,
+        ...errorContext(lastError),
+      });
+    } finally {
+      if (browser) {
+        await browser.close().catch(() => {
+          logger.error('puppeteer_close_failure', {
+            event: 'puppeteer_close_failure',
+          });
+        });
+      }
+    }
+  }
+
+  throw new Error(`[cookie-service] Nao foi possivel buscar matches via browser: ${lastError?.message ?? 'erro desconhecido'}`);
 }
 
 export async function renewCookieBundle(): Promise<AkamaiCookieBundle> {

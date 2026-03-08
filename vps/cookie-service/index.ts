@@ -1,4 +1,4 @@
-import { renewCookieBundle, type AkamaiCookieBundle } from './puppeteer';
+import { fetchEaMatchesViaBrowser, renewCookieBundle, type AkamaiCookieBundle } from './puppeteer';
 import { getCookieStorageConfig, isCookieBundleValid, loadCookies, saveCookies } from './storage';
 import { fetchBrowserlessCookieBundle, isBrowserlessConfigured } from './browserless';
 import { cookieMetadata, errorContext, logger, loggerConfig } from './logger';
@@ -454,6 +454,58 @@ async function bootstrap(): Promise<void> {
       res.status(500).json({
         error: 'renewal_failed',
         message: err,
+      });
+    }
+  });
+
+  app.post('/api/ea/matches', async (req: Request, res: Response) => {
+    try {
+      const body = req.body as { clubId?: unknown; maxResultCount?: unknown; matchType?: unknown };
+      const clubId = typeof body.clubId === 'string' ? body.clubId.trim() : '';
+
+      if (!clubId) {
+        res.status(400).json({ error: 'clubId is required' });
+        return;
+      }
+
+      const maxResultCount =
+        typeof body.maxResultCount === 'number' && Number.isFinite(body.maxResultCount) && body.maxResultCount > 0
+          ? Math.floor(body.maxResultCount)
+          : undefined;
+
+      const matchType =
+        typeof body.matchType === 'string' && body.matchType.trim().length > 0 ? body.matchType.trim() : undefined;
+
+      logger.info('api_ea_matches_start', {
+        event: 'api_ea_matches_start',
+        club_id: clubId,
+        max_result_count: maxResultCount ?? null,
+        match_type: matchType ?? null,
+      });
+
+      const matches = await fetchEaMatchesViaBrowser(clubId, {
+        maxResultCount,
+        matchType,
+      });
+
+      logger.info('api_ea_matches_success', {
+        event: 'api_ea_matches_success',
+        club_id: clubId,
+      });
+
+      res.json({
+        club_id: clubId,
+        matches,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'unknown_error';
+      logger.error('api_ea_matches_failure', {
+        event: 'api_ea_matches_failure',
+        ...errorContext(error),
+      });
+      res.status(502).json({
+        error: 'ea_fetch_failed',
+        message,
       });
     }
   });
