@@ -1,4 +1,4 @@
-export const adminTabs = ["dashboard", "discovery", "manual-id", "financial", "settings", "subscriptions"] as const
+export const adminTabs = ["dashboard", "discovery", "manual-id", "financial", "settings", "subscriptions", "collect"] as const
 
 export type AdminTab = (typeof adminTabs)[number]
 
