@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "PIT Collect",
+  "version": "1.0.0",
+  "description": "Coleta partidas EA Sports para campeonatos PIT usando cookies do browser local.",
+  "permissions": [
+    "cookies"
+  ],
+  "host_permissions": [
+    "*://*.ea.com/*",
+    "https://pit-platform.vercel.app/*"
+  ],
+  "externally_connectable": {
+    "matches": [
+      "https://pit-platform.vercel.app/*"
+    ]
+  },
+  "background": {
+    "service_worker": "background.js"
+  }
+}

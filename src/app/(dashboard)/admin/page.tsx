@@ -2,7 +2,7 @@
 
 import { lazy, Suspense, useMemo, useSyncExternalStore } from "react"
 import { useSearchParams } from "next/navigation"
-import { CreditCard, DollarSign, LayoutDashboard, Radar, Search, Settings } from "lucide-react"
+import { CreditCard, DollarSign, Download, LayoutDashboard, Radar, Search, Settings } from "lucide-react"
 import { RoleGuard } from "@/components/layout/RoleGuard"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,6 +14,7 @@ const ManualIdTabPanel = lazy(() => import("./components/ManualIdTabPanel"))
 const FinancialTabPanel = lazy(() => import("./components/FinancialTabPanel"))
 const SettingsTabPanel = lazy(() => import("./components/SettingsTabPanel"))
 const SubscriptionsTabPanel = lazy(() => import("./components/SubscriptionsTabPanel"))
+const CollectTabPanel = lazy(() => import("./components/CollectTabPanel"))
 
 type TabMeta = {
   value: AdminTab
@@ -28,6 +29,7 @@ const tabMeta: TabMeta[] = [
   { value: "financial", label: "Financial", icon: DollarSign },
   { value: "settings", label: "Settings", icon: Settings },
   { value: "subscriptions", label: "Subscriptions", icon: CreditCard },
+  { value: "collect", label: "Collect", icon: Download },
 ]
 
 function setUrlTab(tab: AdminTab, replace = false) {
@@ -105,7 +107,7 @@ export default function AdminPage() {
           }}
           className="space-y-4"
         >
-          <TabsList className="grid h-auto w-full grid-cols-2 gap-2 bg-transparent p-0 md:grid-cols-6">
+          <TabsList className="grid h-auto w-full grid-cols-2 gap-2 bg-transparent p-0 md:grid-cols-7">
             {tabMeta.map((tab) => {
               const Icon = tab.icon
               return (
@@ -154,6 +156,12 @@ export default function AdminPage() {
           <TabsContent value="subscriptions">
             <Suspense fallback={<AdminTabFallback />}>
               <SubscriptionsTabPanel />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="collect">
+            <Suspense fallback={<AdminTabFallback />}>
+              <CollectTabPanel />
             </Suspense>
           </TabsContent>
         </Tabs>
