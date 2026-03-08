@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PIT Collect</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      width: 320px;
+      min-height: 180px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      background: #0f1117;
+      color: #e1e4e8;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px 10px;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+      color: #fff;
+    }
+
+    .logo span { color: #58a6ff; }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #30363d;
+      margin-left: auto;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+
+    .status-dot.idle   { background: #6e7681; }
+    .status-dot.live   { background: #3fb950; box-shadow: 0 0 6px #3fb95088; animation: pulse 1.8s infinite; }
+    .status-dot.done   { background: #3fb950; }
+    .status-dot.failed { background: #f85149; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.45; }
+    }
+
+    .status-label {
+      font-size: 11px;
+      color: #8b949e;
+      margin-left: 4px;
+    }
+    .status-label.live   { color: #3fb950; }
+    .status-label.done   { color: #3fb950; }
+    .status-label.failed { color: #f85149; }
+
+    .section {
+      padding: 10px 14px;
+      border-bottom: 1px solid #21262d;
+    }
+
+    .section:last-child { border-bottom: none; }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #8b949e;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 0;
+    }
+
+    .stat-label { color: #8b949e; }
+    .stat-value { font-weight: 600; color: #e1e4e8; font-variant-numeric: tabular-nums; }
+    .stat-value.green { color: #3fb950; }
+    .stat-value.red   { color: #f85149; }
+    .stat-value.blue  { color: #58a6ff; }
+
+    .club-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      max-height: 130px;
+      overflow-y: auto;
+    }
+
+    .club-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      background: #161b22;
+      font-size: 12px;
+    }
+
+    .club-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .club-dot.pending { background: #6e7681; animation: pulse 1.4s infinite; }
+    .club-dot.success { background: #3fb950; }
+    .club-dot.failed  { background: #f85149; }
+
+    .club-id { color: #8b949e; font-family: monospace; flex: 1; overflow: hidden; text-overflow: ellipsis; }
+    .club-new { color: #58a6ff; font-size: 11px; margin-left: auto; }
+
+    .cookie-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .cookie-row {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      padding: 2px 0;
+    }
+
+    .cookie-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .cookie-name { color: #e1e4e8; font-family: monospace; min-width: 60px; }
+    .cookie-val  { color: #8b949e; font-family: monospace; flex: 1; overflow: hidden; text-overflow: ellipsis; font-size: 10px; }
+    .cookie-exp  { color: #6e7681; font-size: 10px; margin-left: auto; white-space: nowrap; }
+
+    .raw-toggle {
+      font-size: 11px;
+      color: #58a6ff;
+      cursor: pointer;
+      background: none;
+      border: none;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .raw-box {
+      margin-top: 6px;
+      background: #0d1117;
+      border: 1px solid #21262d;
+      border-radius: 4px;
+      padding: 6px;
+      font-family: monospace;
+      font-size: 10px;
+      color: #8b949e;
+      max-height: 120px;
+      overflow-y: auto;
+      white-space: pre;
+      word-break: break-all;
+    }
+
+    .empty {
+      padding: 24px 14px;
+      text-align: center;
+      color: #6e7681;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo">P.I.T <span>Collect</span></span>
+    <div id="statusDot" class="status-dot idle"></div>
+    <span id="statusLabel" class="status-label">Aguardando</span>
+  </div>
+
+  <div id="content">
+    <div class="empty">Nenhuma coleta realizada ainda.<br/>Use o painel admin para iniciar.</div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

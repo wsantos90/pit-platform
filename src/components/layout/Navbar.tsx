@@ -1,7 +1,7 @@
 'use client';
 
-import { LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Icon } from '@/components/ui/icon';
 import { useAuth } from '@/hooks/useAuth';
 
 export function Navbar() {
@@ -9,31 +9,31 @@ export function Navbar() {
     const shouldShowEmail = Boolean(user?.email && user?.display_name && user.email !== user.display_name);
 
     return (
-        <nav className="h-14 bg-gray-900/50 border-b border-gray-800 flex items-center justify-between px-6">
-            <span className="text-sm text-gray-400">Dashboard</span>
+        <nav className="h-14 bg-card border-b border-border flex items-center justify-between px-6">
+            <span className="text-sm text-muted-foreground">Dashboard</span>
 
             <div className="flex items-center gap-3">
                 {loading ? (
-                    <span className="text-xs text-gray-500">Carregando...</span>
+                    <span className="text-xs text-muted-foreground">Carregando...</span>
                 ) : null}
 
                 {!loading && user ? (
                     <>
                         <div className="hidden sm:flex flex-col items-end leading-tight">
-                            <span className="text-sm text-gray-200">
+                            <span className="text-sm text-foreground">
                                 {user.display_name ?? user.email}
                             </span>
                             {shouldShowEmail ? (
-                                <span className="text-xs text-gray-400">{user.email}</span>
+                                <span className="text-xs text-muted-foreground">{user.email}</span>
                             ) : null}
                         </div>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={signOut}
-                            className="border-orange-500/60 text-orange-300 hover:bg-orange-500 hover:text-black"
+                            className="border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground gap-1"
                         >
-                            <LogOut className="h-4 w-4" />
+                            <Icon name="logout" size="sm" />
                             Sair
                         </Button>
                     </>

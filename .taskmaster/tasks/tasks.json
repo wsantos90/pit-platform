@@ -1010,7 +1010,7 @@
           "9",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1018,7 +1018,7 @@
             "description": "Implementar endpoint que obtÃ©m cookies vÃ¡lidos, chama fetchMatches para times ativos, armazena em matches/match_players e atualiza last_scanned_at.",
             "dependencies": [],
             "details": "Usar /api/cookies para autenticaÃ§Ã£o. Processar batch de clubs ativos. Incluir logging em collect_runs. Garantir tratamento de erros e transaÃ§Ãµes no banco.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com clubs mockados. Verificar armazenamento e atualizaÃ§Ã£o de last_scanned_at. Confirmar cookies sÃ£o usados corretamente.",
             "parentId": "undefined"
           },
@@ -1030,7 +1030,7 @@
               1
             ],
             "details": "Criar migration para UNIQUE em matches.ea_match_id. Integrar classifyMatch da Task 17. Armazenar match_type no banco durante coleta.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar inserÃ§Ã£o duplicada (deve falhar/ignorar). Validar classificaÃ§Ã£o com diferentes cenÃ¡rios de torneios/matchmaking.",
             "parentId": "undefined"
           },
@@ -1042,7 +1042,7 @@
               1
             ],
             "details": "Usar Schedule Trigger com cron expression '0 4 * * 1,2,4'. Conectar com HTTP Request para o endpoint. Publicar workflow ativo.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar trigger manual no n8n. Verificar execuÃ§Ã£o nos dias/horÃ¡rios corretos via logs. Confirmar chamada da API.",
             "parentId": "undefined"
           },
@@ -1054,7 +1054,7 @@
               1
             ],
             "details": "Usar localStorage + backend check no endpoint. Chamar /api/collect/run via fetch. Mostrar toast de sucesso/falha e progresso.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar clique mÃºltiplo (bloqueia <30min). Verificar notificaÃ§Ã£o apÃ³s conclusÃ£o. Confirmar rate limit no backend.",
             "parentId": "undefined"
           }

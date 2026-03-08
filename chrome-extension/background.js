@@ -98,12 +98,30 @@ async function ingestClubFailure(backendBase, runId, token, eaClubId, errorMsg) 
   });
 }
 
+// ─── State (popup) ────────────────────────────────────────────────────────────
+
+async function saveState(patch) {
+  const prev = await chrome.storage.local.get("pitState").then((r) => r.pitState ?? {});
+  await chrome.storage.local.set({ pitState: { ...prev, ...patch } });
+}
+
+async function loadState() {
+  const result = await chrome.storage.local.get("pitState");
+  return result.pitState ?? null;
+}
+
 // ─── Mensagem principal ───────────────────────────────────────────────────────
 
 chrome.runtime.onMessageExternal.addListener(
   async (message, _sender, sendResponse) => {
     if (message.type === "PING") {
       sendResponse({ ok: true });
+      return true;
+    }
+
+    if (message.type === "GET_STATE") {
+      const state = await loadState();
+      sendResponse({ ok: true, state });
       return true;
     }
 
@@ -124,6 +142,18 @@ chrome.runtime.onMessageExternal.addListener(
     // Responde imediatamente — processamento é assíncrono
     sendResponse({ ok: true, total: targets.length });
 
+    await saveState({
+      phase: "running",
+      runId,
+      startedAt: new Date().toISOString(),
+      total: targets.length,
+      processed: 0,
+      failed: 0,
+      matches_new: 0,
+      clubs: targets.map((id) => ({ ea_club_id: id, status: "pending" })),
+      lastRawSample: null,
+    });
+
     const cookieHeader = await getEACookieHeader();
     const results = { success: 0, failed: 0, matches_new: 0 };
 
@@ -134,6 +164,20 @@ chrome.runtime.onMessageExternal.addListener(
 
         results.success += 1;
         results.matches_new += ingestResult.matches_new ?? 0;
+
+        // Persiste estado e amostra dos dados brutos (último clube bem-sucedido)
+        const current = await loadState();
+        const clubs = (current?.clubs ?? []).map((c) =>
+          c.ea_club_id === eaClubId
+            ? { ...c, status: "success", matches_new: ingestResult.matches_new ?? 0 }
+            : c
+        );
+        await saveState({
+          processed: results.success,
+          matches_new: results.matches_new,
+          clubs,
+          lastRawSample: { ea_club_id: eaClubId, data: rawData },
+        });
 
         // Notifica a página do progresso (se ainda estiver aberta)
         chrome.runtime.sendMessage({
@@ -149,6 +193,12 @@ chrome.runtime.onMessageExternal.addListener(
 
         await ingestClubFailure(base, runId, token, eaClubId, errorMsg);
 
+        const current = await loadState();
+        const clubs = (current?.clubs ?? []).map((c) =>
+          c.ea_club_id === eaClubId ? { ...c, status: "failed", error: errorMsg } : c
+        );
+        await saveState({ failed: results.failed, clubs });
+
         chrome.runtime.sendMessage({
           type: "COLLECT_PROGRESS",
           runId,
@@ -158,6 +208,8 @@ chrome.runtime.onMessageExternal.addListener(
         }).catch(() => {});
       }
     }
+
+    await saveState({ phase: "done", finishedAt: new Date().toISOString(), results });
 
     chrome.runtime.sendMessage({
       type: "COLLECT_DONE",

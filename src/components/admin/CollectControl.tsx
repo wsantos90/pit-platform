@@ -95,8 +95,8 @@ export default function CollectControl() {
       if (!resp.ok) {
         const body = await resp.json().catch(() => ({}))
         const msg =
-          body.error === "no_active_tournaments"
-            ? "Nenhum campeonato ativo encontrado (confirmed ou in_progress)."
+          body.error === "no_active_clubs"
+            ? "Nenhum clube ativo encontrado no banco. Cadastre clubes antes de coletar."
             : `Falha ao iniciar coleta: ${body.error ?? resp.status}`
         setState({ phase: "error", message: msg })
         return
