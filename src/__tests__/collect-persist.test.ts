@@ -1,4 +1,8 @@
 import { describe, expect, it, vi } from "vitest"
+import {
+  createEmptyMatchClassificationContext,
+  normalizeMatchPairKey,
+} from "@/lib/match-classifier"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
 import type { EaParsedMatch } from "@/types/ea-api"
 
@@ -121,6 +125,43 @@ describe("persistMatchesForClub", () => {
     })
     expect(adminClient.__mocks.matchesUpsert).toHaveBeenCalledTimes(1)
     expect(adminClient.__mocks.matchPlayersUpsert).toHaveBeenCalledTimes(1)
+  })
+
+  it("preenche match_type, tournament_id e tournament_round quando o par pertence a um bracket ativo", async () => {
+    const adminClient = makeAdminClient()
+    const classificationContext = createEmptyMatchClassificationContext()
+    classificationContext.tournamentPairs[normalizeMatchPairKey("club-home", "club-away")] = {
+      tournamentId: "tournament-1",
+      tournamentRound: "quarter_final",
+    }
+
+    await persistMatchesForClub("club-home", [makeMatch("m-1")], adminClient as never, classificationContext)
+
+    const [rowsToInsert] = adminClient.__mocks.matchesUpsert.mock.calls[0]
+    expect(rowsToInsert[0]).toMatchObject({
+      match_type: "championship",
+      tournament_id: "tournament-1",
+      tournament_round: "quarter_final",
+      matchmaking_id: null,
+    })
+  })
+
+  it("preenche matchmaking_id quando o par pertence a um confronto ativo", async () => {
+    const adminClient = makeAdminClient()
+    const classificationContext = createEmptyMatchClassificationContext()
+    classificationContext.matchmakingPairs[normalizeMatchPairKey("club-home", "club-away")] = {
+      matchmakingId: "chat-1",
+    }
+
+    await persistMatchesForClub("club-home", [makeMatch("m-1")], adminClient as never, classificationContext)
+
+    const [rowsToInsert] = adminClient.__mocks.matchesUpsert.mock.calls[0]
+    expect(rowsToInsert[0]).toMatchObject({
+      match_type: "friendly_pit",
+      tournament_id: null,
+      tournament_round: null,
+      matchmaking_id: "chat-1",
+    })
   })
 
   it("conta como skipped quando nenhum match novo e evita inserir match_players", async () => {

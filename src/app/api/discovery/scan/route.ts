@@ -24,6 +24,13 @@ type SeedClubRow = {
 
 type ScanRunStatus = "running" | "completed" | "failed" | "cancelled" | "success"
 type ScanTarget = { clubId: string; name: string }
+type ScanTargetSource = "explicit" | "discovered_clubs" | "active_clubs" | "none"
+type ScanTargetLoadResult = {
+  targets: ScanTarget[]
+  source: ScanTargetSource
+  discoveredTargetsCount: number
+  seedTargetsCount: number
+}
 
 const DEFAULT_MAX_TARGETS = 20
 const DEFAULT_BATCH_SIZE = 10
@@ -70,9 +77,14 @@ async function loadScanTargets(
   adminClient: ReturnType<typeof createAdminClient>,
   explicitClubs: ScanTarget[] | undefined,
   maxTargets: number
-) {
+) : Promise<ScanTargetLoadResult> {
   if (explicitClubs && explicitClubs.length > 0) {
-    return explicitClubs
+    return {
+      targets: explicitClubs,
+      source: "explicit",
+      discoveredTargetsCount: 0,
+      seedTargetsCount: 0,
+    }
   }
 
   const { data: discoveredRows, error: discoveredError } = await adminClient
@@ -91,10 +103,22 @@ async function loadScanTargets(
   }))
 
   if (discoveredTargets.length > 0) {
-    return discoveredTargets
+    return {
+      targets: discoveredTargets,
+      source: "discovered_clubs",
+      discoveredTargetsCount: discoveredTargets.length,
+      seedTargetsCount: 0,
+    }
   }
 
-  return loadSeedClubs(adminClient)
+  const seedTargets = await loadSeedClubs(adminClient)
+
+  return {
+    targets: seedTargets,
+    source: seedTargets.length > 0 ? "active_clubs" : "none",
+    discoveredTargetsCount: 0,
+    seedTargetsCount: seedTargets.length,
+  }
 }
 
 async function countDiscoveredClubs(adminClient: ReturnType<typeof createAdminClient>) {
@@ -293,20 +317,29 @@ export async function POST(request: NextRequest) {
       DEFAULT_RATE_LIMIT_MS
     )
 
-    const scanTargets = await loadScanTargets(adminClient, parsedPayload.data.clubs, maxTargets)
+    const scanTargetsResult = await loadScanTargets(adminClient, parsedPayload.data.clubs, maxTargets)
+    const scanTargets = scanTargetsResult.targets
 
     if (scanTargets.length === 0) {
+      const zeroTargetsMessage =
+        "Nenhum alvo disponivel para a varredura. O Discovery nao encontrou clubes em discovered_clubs nem seeds suficientes em clubs com status active."
+
       await updateDiscoveryRun(adminClient, runId, {
         status: "completed",
         clubs_scanned: 0,
         clubs_new: 0,
         players_found: 0,
+        error_message: zeroTargetsMessage,
       })
 
       return NextResponse.json({
         run_id: runId,
         processed: 0,
         inserted_or_updated: 0,
+        message: zeroTargetsMessage,
+        target_source: scanTargetsResult.source,
+        discovered_targets_count: scanTargetsResult.discoveredTargetsCount,
+        seed_targets_count: scanTargetsResult.seedTargetsCount,
         failed: 0,
         failures: [],
       })

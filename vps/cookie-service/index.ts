@@ -1,4 +1,5 @@
-import { fetchEaMatchesViaBrowser, renewCookieBundle, type AkamaiCookieBundle } from './puppeteer';
+import { renewCookieBundle, type AkamaiCookieBundle } from './puppeteer';
+import { fetchEaMatchesWithCookieBundle, getEaHealthcheckClubId, type EaFetchResolvedBy, type EaFetchStage } from './ea-fetch';
 import { getCookieStorageConfig, isCookieBundleValid, loadCookies, saveCookies } from './storage';
 import { fetchBrowserlessCookieBundle, isBrowserlessConfigured } from './browserless';
 import { cookieMetadata, errorContext, logger, loggerConfig } from './logger';
@@ -62,6 +63,24 @@ type RenewalState = {
 
 type NodeCronImport = NodeCronModule | { default: NodeCronModule };
 
+type CookieResolution = {
+  bundle: AkamaiCookieBundle;
+  resolvedBy: EaFetchResolvedBy;
+};
+
+type EaFetchExecutionResult = {
+  ok: boolean;
+  stage: EaFetchStage;
+  resolvedBy: EaFetchResolvedBy | null;
+  usedCachedCookie: boolean;
+  cacheHasCookie: boolean;
+  upstreamStatus: number | null;
+  contentType: string | null;
+  bodySnippet: string | null;
+  error: string | null;
+  matches?: unknown;
+};
+
 function toPositiveInt(raw: string | undefined, fallback: number, allowZero = false): number {
   if (!raw) return fallback;
   const value = Number.parseInt(raw, 10);
@@ -75,9 +94,9 @@ function sleep(ms: number): Promise<void> {
 }
 
 function normalizeInterval(minutes: number): number {
-  if (minutes === 0) return 0; // 0 = desabilitado
+  if (minutes === 0) return 0;
   if (minutes < 15) return 15;
-  if (minutes > 1440) return 1440; // max 24h
+  if (minutes > 1440) return 1440;
   return minutes;
 }
 
@@ -91,7 +110,6 @@ const SECRET = process.env.COOKIE_SERVICE_SECRET ?? '';
 const TIMEZONE = process.env.TIMEZONE ?? process.env.TZ ?? 'America/Sao_Paulo';
 const INTERVAL_MINUTES = normalizeInterval(toPositiveInt(process.env.COOKIE_RENEW_INTERVAL_MINUTES, 15, true));
 const RAW_CRON_EXPRESSION = (process.env.COOKIE_RENEW_CRON ?? '').trim();
-// Quando INTERVAL_MINUTES=0 e sem CRON explícito, usa expressão que dispara apenas em 29/fev (nunca em anos normais)
 const CRON_DISABLED = INTERVAL_MINUTES === 0 && RAW_CRON_EXPRESSION.length === 0;
 const CRON_EXPRESSION = RAW_CRON_EXPRESSION.length > 0 ? RAW_CRON_EXPRESSION
   : CRON_DISABLED ? '0 0 29 2 *'
@@ -116,7 +134,6 @@ let latestBundle: AkamaiCookieBundle | null = null;
 
 function computeNextExecution(from = new Date()): string {
   if (CRON_DISABLED) return 'disabled';
-  // Calcula o proximo tick real do cron (proximo multiplo de INTERVAL_MINUTES na hora atual)
   const ms = from.getTime();
   const intervalMs = INTERVAL_MINUTES * 60_000;
   const nextMs = Math.ceil((ms + 1) / intervalMs) * intervalMs;
@@ -134,6 +151,30 @@ function isAuthorized(req: Request): boolean {
   return getSecretFromHeader(req) === SECRET;
 }
 
+function getCachePayload(bundle: AkamaiCookieBundle | null) {
+  return bundle
+    ? {
+        hasCookie: true,
+        extractedAt: bundle.extracted_at,
+        validUntil: bundle.valid_until,
+        source: bundle.source,
+      }
+    : {
+        hasCookie: false,
+      };
+}
+
+function rememberBundle(bundle: AkamaiCookieBundle): void {
+  latestBundle = bundle;
+  renewalState.lastSuccessAt = bundle.extracted_at;
+  renewalState.lastError = null;
+}
+
+async function persistResolvedBundle(bundle: AkamaiCookieBundle): Promise<void> {
+  await saveCookies(bundle);
+  rememberBundle(bundle);
+}
+
 async function loadValidBundleFromCacheOrStorage(): Promise<AkamaiCookieBundle | null> {
   if (latestBundle && isCookieBundleValid(latestBundle)) {
     return latestBundle;
@@ -142,9 +183,7 @@ async function loadValidBundleFromCacheOrStorage(): Promise<AkamaiCookieBundle |
   const stored = await loadCookies();
   if (!stored) return null;
 
-  latestBundle = stored;
-  renewalState.lastSuccessAt = stored.extracted_at;
-  renewalState.lastError = null;
+  rememberBundle(stored);
   return stored;
 }
 
@@ -176,9 +215,7 @@ async function runRenewal(trigger: RenewalTrigger): Promise<AkamaiCookieBundle |
     await saveCookies(bundle);
     const durationMs = Date.now() - startedAt;
 
-    latestBundle = bundle;
-    renewalState.lastSuccessAt = bundle.extracted_at;
-    renewalState.lastError = null;
+    rememberBundle(bundle);
     renewalState.successRuns += 1;
 
     logger.info('renewal_success', {
@@ -233,7 +270,7 @@ async function hydrateCacheFromStorage(): Promise<void> {
   }
 }
 
-async function getCookiesWithFallback(): Promise<{ bundle: AkamaiCookieBundle; resolvedBy: 'cache' | 'puppeteer' | 'browserless' }> {
+async function getCookiesWithFallback(): Promise<CookieResolution> {
   const cachedOrStored = await loadValidBundleFromCacheOrStorage();
   if (cachedOrStored) {
     return { bundle: cachedOrStored, resolvedBy: 'cache' };
@@ -262,17 +299,175 @@ async function getCookiesWithFallback(): Promise<{ bundle: AkamaiCookieBundle; r
   }
 
   const fallbackBundle = await fetchBrowserlessCookieBundle();
-  await saveCookies(fallbackBundle);
+  await persistResolvedBundle(fallbackBundle);
 
-  latestBundle = fallbackBundle;
-  renewalState.lastSuccessAt = fallbackBundle.extracted_at;
-  renewalState.lastError = null;
   logger.info('fallback_browserless_success', {
     event: 'fallback_browserless_success',
     cookie: cookieMetadata(fallbackBundle),
   });
 
   return { bundle: fallbackBundle, resolvedBy: 'browserless' };
+}
+
+function buildEaFetchFailure(
+  stage: EaFetchStage,
+  resolvedBy: EaFetchResolvedBy | null,
+  usedCachedCookie: boolean,
+  cacheHasCookie: boolean,
+  error: string,
+  upstreamStatus: number | null,
+  contentType: string | null,
+  bodySnippet: string | null,
+): EaFetchExecutionResult {
+  return {
+    ok: false,
+    stage,
+    resolvedBy,
+    usedCachedCookie,
+    cacheHasCookie,
+    upstreamStatus,
+    contentType,
+    bodySnippet,
+    error,
+  };
+}
+
+async function attemptFetchWithBundle(
+  clubId: string,
+  bundle: AkamaiCookieBundle | null,
+  stage: EaFetchStage,
+  resolvedBy: EaFetchResolvedBy | null,
+  usedCachedCookie: boolean,
+  cacheHasCookie: boolean,
+  options: { maxResultCount?: number; matchType?: string },
+): Promise<EaFetchExecutionResult> {
+  const result = await fetchEaMatchesWithCookieBundle(clubId, bundle, options);
+
+  if (result.ok) {
+    return {
+      ok: true,
+      stage,
+      resolvedBy,
+      usedCachedCookie,
+      cacheHasCookie,
+      upstreamStatus: result.upstreamStatus,
+      contentType: result.contentType,
+      bodySnippet: null,
+      error: null,
+      matches: result.matches,
+    };
+  }
+
+  return buildEaFetchFailure(
+    stage,
+    resolvedBy,
+    usedCachedCookie,
+    cacheHasCookie,
+    result.message,
+    result.upstreamStatus,
+    result.contentType,
+    result.bodySnippet,
+  );
+}
+
+async function executeEaFetch(
+  clubId: string,
+  options: { maxResultCount?: number; matchType?: string },
+): Promise<EaFetchExecutionResult> {
+  const initialBundle = await loadValidBundleFromCacheOrStorage();
+  const cacheHasCookie = Boolean(initialBundle);
+  let lastFailure = buildEaFetchFailure(
+    'cached_cookie',
+    null,
+    false,
+    cacheHasCookie,
+    'Nenhum bundle valido disponivel para fetch EA.',
+    null,
+    null,
+    null,
+  );
+
+  if (initialBundle) {
+    const cachedAttempt = await attemptFetchWithBundle(
+      clubId,
+      initialBundle,
+      'cached_cookie',
+      'cache',
+      true,
+      true,
+      options,
+    );
+    if (cachedAttempt.ok) return cachedAttempt;
+    lastFailure = cachedAttempt;
+  }
+
+  try {
+    const renewed = await runRenewal('api');
+    const renewalBundle = renewed ?? (await loadValidBundleFromCacheOrStorage());
+
+    if (renewalBundle) {
+      const renewedAttempt = await attemptFetchWithBundle(
+        clubId,
+        renewalBundle,
+        'puppeteer_renewal',
+        renewed ? 'puppeteer' : 'cache',
+        false,
+        cacheHasCookie,
+        options,
+      );
+      if (renewedAttempt.ok) return renewedAttempt;
+      lastFailure = renewedAttempt;
+    }
+  } catch (renewError) {
+    logger.warn('api_ea_matches_puppeteer_failed', {
+      event: 'api_ea_matches_puppeteer_failed',
+      club_id: clubId,
+      ...errorContext(renewError),
+    });
+  }
+
+  if (!isBrowserlessConfigured()) {
+    return lastFailure;
+  }
+
+  try {
+    const fallbackBundle = await fetchBrowserlessCookieBundle();
+    await persistResolvedBundle(fallbackBundle);
+
+    logger.info('fallback_browserless_success', {
+      event: 'fallback_browserless_success',
+      cookie: cookieMetadata(fallbackBundle),
+    });
+
+    const browserlessAttempt = await attemptFetchWithBundle(
+      clubId,
+      fallbackBundle,
+      'browserless_renewal',
+      'browserless',
+      false,
+      cacheHasCookie,
+      options,
+    );
+    if (browserlessAttempt.ok) return browserlessAttempt;
+    return browserlessAttempt;
+  } catch (error) {
+    const err = error instanceof Error ? error.message : String(error);
+    logger.warn('api_ea_matches_browserless_failed', {
+      event: 'api_ea_matches_browserless_failed',
+      club_id: clubId,
+      ...errorContext(error),
+    });
+    return buildEaFetchFailure(
+      'browserless_renewal',
+      'browserless',
+      false,
+      cacheHasCookie,
+      err,
+      null,
+      null,
+      null,
+    );
+  }
 }
 
 async function bootstrap(): Promise<void> {
@@ -288,8 +483,6 @@ async function bootstrap(): Promise<void> {
   const app = express();
   app.use(express.json());
 
-  // CORS — permite requests de extensoes de browser (chrome-extension://) e qualquer origem.
-  // O endpoint e protegido pelo x-secret header, entao CORS aberto e seguro aqui.
   app.use((req: Request, res: Response, next: Next) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -315,7 +508,9 @@ async function bootstrap(): Promise<void> {
     next();
   });
 
-  app.get('/health', (_req: Request, res: Response) => {
+  app.get('/health', async (_req: Request, res: Response) => {
+    const bundle = await loadValidBundleFromCacheOrStorage().catch(() => latestBundle);
+
     res.json({
       status: renewalState.lastError ? 'degraded' : 'ok',
       last_execution: renewalState.lastSuccessAt,
@@ -337,16 +532,30 @@ async function bootstrap(): Promise<void> {
       },
       logging: loggerConfig(),
       renewal: renewalState,
-      cache: latestBundle
-        ? {
-            hasCookie: true,
-            extractedAt: latestBundle.extracted_at,
-            validUntil: latestBundle.valid_until,
-            source: latestBundle.source,
-          }
-        : {
-            hasCookie: false,
-          },
+      cache: getCachePayload(bundle),
+    });
+  });
+
+  app.get('/health/ea-fetch', async (_req: Request, res: Response) => {
+    const healthcheckClubId = getEaHealthcheckClubId();
+    const result = await executeEaFetch(healthcheckClubId, {
+      maxResultCount: 1,
+      matchType: 'friendlyMatch',
+    });
+
+    res.status(result.ok ? 200 : 502).json({
+      ok: result.ok,
+      club_id: healthcheckClubId,
+      stage: result.stage,
+      resolvedBy: result.resolvedBy,
+      usedCachedCookie: result.usedCachedCookie,
+      cache: {
+        hasCookie: result.cacheHasCookie,
+      },
+      upstreamStatus: result.upstreamStatus,
+      contentType: result.contentType,
+      bodySnippet: result.bodySnippet,
+      lastError: result.error,
     });
   });
 
@@ -383,8 +592,6 @@ async function bootstrap(): Promise<void> {
   app.get('/api/cookies', handleGetCookies);
   app.get('/cookie', handleGetCookies);
 
-  // Injeta cookies obtidos externamente (browser residencial, script local, etc.)
-  // Body: { ak_bmsc: string, bm_sv: string, ttl_minutes?: number }
   app.post('/api/cookies', async (req: Request, res: Response) => {
     try {
       const body = req.body as { ak_bmsc?: unknown; bm_sv?: unknown; ttl_minutes?: unknown };
@@ -410,8 +617,7 @@ async function bootstrap(): Promise<void> {
         source: 'external',
       };
 
-      latestBundle = bundle;
-      await saveCookies(bundle);
+      await persistResolvedBundle(bundle);
 
       logger.info('cookies_injected', {
         event: 'cookies_injected',
@@ -483,19 +689,52 @@ async function bootstrap(): Promise<void> {
         match_type: matchType ?? null,
       });
 
-      const matches = await fetchEaMatchesViaBrowser(clubId, {
+      const result = await executeEaFetch(clubId, {
         maxResultCount,
         matchType,
       });
 
+      if (!result.ok) {
+        logger.error('api_ea_matches_failure', {
+          event: 'api_ea_matches_failure',
+          club_id: clubId,
+          stage: result.stage,
+          resolved_by: result.resolvedBy,
+          used_cached_cookie: result.usedCachedCookie,
+          upstream_status: result.upstreamStatus,
+          content_type: result.contentType,
+          body_snippet: result.bodySnippet,
+          error: result.error,
+        });
+        res.status(502).json({
+          error: 'ea_fetch_failed',
+          message: result.error,
+          stage: result.stage,
+          resolvedBy: result.resolvedBy,
+          usedCachedCookie: result.usedCachedCookie,
+          upstreamStatus: result.upstreamStatus,
+          contentType: result.contentType,
+          bodySnippet: result.bodySnippet,
+          cache: {
+            hasCookie: result.cacheHasCookie,
+          },
+        });
+        return;
+      }
+
       logger.info('api_ea_matches_success', {
         event: 'api_ea_matches_success',
         club_id: clubId,
+        stage: result.stage,
+        resolved_by: result.resolvedBy,
       });
 
       res.json({
         club_id: clubId,
-        matches,
+        matches: result.matches,
+        stage: result.stage,
+        resolvedBy: result.resolvedBy,
+        usedCachedCookie: result.usedCachedCookie,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : 'unknown_error';
@@ -506,6 +745,15 @@ async function bootstrap(): Promise<void> {
       res.status(502).json({
         error: 'ea_fetch_failed',
         message,
+        stage: 'cached_cookie',
+        resolvedBy: null,
+        usedCachedCookie: false,
+        upstreamStatus: null,
+        contentType: null,
+        bodySnippet: null,
+        cache: {
+          hasCookie: Boolean(latestBundle && isCookieBundleValid(latestBundle)),
+        },
       });
     }
   });
@@ -521,10 +769,6 @@ async function bootstrap(): Promise<void> {
   cronTask.start();
   renewalState.nextExecutionAt = computeNextExecution();
 
-  // Aguarda hidratacao do cache antes de decidir se renova no startup.
-  // Isso evita race condition onde hydrate e runRenewal escrevem latestBundle concorrentemente.
-  // Quando CRON_DISABLED=true (renovacao gerenciada externamente p.ex. GitHub Actions),
-  // nao dispara renovacao automatica no startup para nao desperdicar recursos.
   void (async () => {
     await hydrateCacheFromStorage();
     if (!CRON_DISABLED && (!latestBundle || !isCookieBundleValid(latestBundle))) {

@@ -1,49 +1,82 @@
-/**
- * Match Classifier
- *
- * Classifica partidas da API EA (friendlyMatch genérico) em tipos internos.
- * Ref: FC05 — Match Classification
- *
- * Princípio SRP: Apenas classificação de partidas.
- * Princípio OCP: Adicionar novos critérios sem alterar a lógica existente.
- */
+import type { MatchType } from "@/types/database"
 
-type MatchType = 'championship' | 'friendly_pit' | 'friendly_external';
-
-interface MatchClassificationInput {
-    matchId: string;
-    homeClubId: string;
-    awayClubId: string;
-    timestamp: Date;
-    activeTournamentClubIds?: string[];
-    activeMatchmakingClubIds?: string[];
+type TournamentPairMetadata = {
+  tournamentId: string
+  tournamentRound: string | null
 }
 
-/**
- * Classificar uma partida baseado nos contextos ativos.
- *
- * Ordem de prioridade:
- * 1. Ambos os times estão em um bracket de torneio ativo → 'championship'
- * 2. Ambos os times estão em confronto de matchmaking → 'friendly_pit'
- * 3. Caso contrário → 'friendly_external'
- */
-export function classifyMatch(input: MatchClassificationInput): MatchType {
-    const { homeClubId, awayClubId, activeTournamentClubIds = [], activeMatchmakingClubIds = [] } = input;
-
-    // Checar se é partida de campeonato
-    const bothInTournament =
-        activeTournamentClubIds.includes(homeClubId) &&
-        activeTournamentClubIds.includes(awayClubId);
-    if (bothInTournament) return 'championship';
-
-    // Checar se é amistoso PIT (matchmaking)
-    const bothInMatchmaking =
-        activeMatchmakingClubIds.includes(homeClubId) &&
-        activeMatchmakingClubIds.includes(awayClubId);
-    if (bothInMatchmaking) return 'friendly_pit';
-
-    // Fallback: amistoso externo
-    return 'friendly_external';
+type MatchmakingPairMetadata = {
+  matchmakingId: string
 }
 
-export type { MatchType, MatchClassificationInput };
+type MatchClassificationContext = {
+  tournamentPairs: Record<string, TournamentPairMetadata>
+  matchmakingPairs: Record<string, MatchmakingPairMetadata>
+}
+
+type MatchClassificationInput = {
+  homeClubId: string
+  awayClubId: string
+  context: MatchClassificationContext
+}
+
+type MatchClassificationResult = {
+  matchType: MatchType
+  tournamentId: string | null
+  tournamentRound: string | null
+  matchmakingId: string | null
+}
+
+const EXTERNAL_MATCH_RESULT: MatchClassificationResult = {
+  matchType: "friendly_external",
+  tournamentId: null,
+  tournamentRound: null,
+  matchmakingId: null,
+}
+
+export function normalizeMatchPairKey(clubAId: string, clubBId: string) {
+  const [firstClubId, secondClubId] = [clubAId.trim(), clubBId.trim()].sort()
+  return `${firstClubId}::${secondClubId}`
+}
+
+export function createEmptyMatchClassificationContext(): MatchClassificationContext {
+  return {
+    tournamentPairs: {},
+    matchmakingPairs: {},
+  }
+}
+
+export function classifyMatch(input: MatchClassificationInput): MatchClassificationResult {
+  const pairKey = normalizeMatchPairKey(input.homeClubId, input.awayClubId)
+  const tournamentMatch = input.context.tournamentPairs[pairKey]
+
+  if (tournamentMatch) {
+    return {
+      matchType: "championship",
+      tournamentId: tournamentMatch.tournamentId,
+      tournamentRound: tournamentMatch.tournamentRound,
+      matchmakingId: null,
+    }
+  }
+
+  const matchmakingMatch = input.context.matchmakingPairs[pairKey]
+
+  if (matchmakingMatch) {
+    return {
+      matchType: "friendly_pit",
+      tournamentId: null,
+      tournamentRound: null,
+      matchmakingId: matchmakingMatch.matchmakingId,
+    }
+  }
+
+  return EXTERNAL_MATCH_RESULT
+}
+
+export type {
+  MatchClassificationContext,
+  MatchClassificationInput,
+  MatchClassificationResult,
+  MatchmakingPairMetadata,
+  TournamentPairMetadata,
+}

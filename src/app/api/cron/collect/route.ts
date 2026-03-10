@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { fetchMatches } from "@/lib/ea/api"
 import { tryFetchAkamaiCookies } from "@/lib/ea/cookieClient"
+import { loadMatchClassificationContext } from "@/lib/collect/loadMatchClassificationContext"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
 import { createAdminClient } from "@/lib/supabase/admin"
 
@@ -115,10 +116,7 @@ async function loadCollectConfig(adminClient: AdminClient) {
 }
 
 async function loadActiveClubs(adminClient: AdminClient) {
-  const { data, error } = await adminClient
-    .from("clubs")
-    .select("ea_club_id")
-    .eq("status", "active")
+  const { data, error } = await adminClient.from("clubs").select("ea_club_id").eq("status", "active")
 
   if (error) {
     throw error
@@ -181,6 +179,7 @@ export async function POST(request: NextRequest) {
 
     const { batchSize, rateLimitMs } = await loadCollectConfig(adminClient)
     const cookieHeader = (await tryFetchAkamaiCookies()) ?? undefined
+    const classificationContext = await loadMatchClassificationContext(adminClient)
 
     const failures: Array<{ ea_club_id: string; reason: string }> = []
     let clubsProcessed = 0
@@ -197,7 +196,12 @@ export async function POST(request: NextRequest) {
         batch.map(async (clubId) => {
           try {
             const matches = await fetchMatches(clubId, cookieHeader)
-            const persisted = await persistMatchesForClub(clubId, matches, adminClient)
+            const persisted = await persistMatchesForClub(
+              clubId,
+              matches,
+              adminClient,
+              classificationContext
+            )
             return { ok: true as const, clubId, persisted }
           } catch (error) {
             return { ok: false as const, clubId, error }

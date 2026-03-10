@@ -5,11 +5,13 @@ const {
   mockCreateAdminClient,
   mockFetchMatches,
   mockTryFetchAkamaiCookies,
+  mockLoadMatchClassificationContext,
   mockPersistMatchesForClub,
 } = vi.hoisted(() => ({
   mockCreateAdminClient: vi.fn(),
   mockFetchMatches: vi.fn(),
   mockTryFetchAkamaiCookies: vi.fn(),
+  mockLoadMatchClassificationContext: vi.fn(),
   mockPersistMatchesForClub: vi.fn(),
 }))
 
@@ -23,6 +25,10 @@ vi.mock("@/lib/ea/api", () => ({
 
 vi.mock("@/lib/ea/cookieClient", () => ({
   tryFetchAkamaiCookies: mockTryFetchAkamaiCookies,
+}))
+
+vi.mock("@/lib/collect/loadMatchClassificationContext", () => ({
+  loadMatchClassificationContext: mockLoadMatchClassificationContext,
 }))
 
 vi.mock("@/lib/collect/persistMatches", () => ({
@@ -120,6 +126,10 @@ describe("POST /api/cron/collect", () => {
     vi.clearAllMocks()
     process.env.N8N_WEBHOOK_SECRET = "task16-secret"
     mockTryFetchAkamaiCookies.mockResolvedValue(null)
+    mockLoadMatchClassificationContext.mockResolvedValue({
+      tournamentPairs: {},
+      matchmakingPairs: {},
+    })
   })
 
   it("retorna 401 quando secret e invalido", async () => {
@@ -130,9 +140,21 @@ describe("POST /api/cron/collect", () => {
     expect(body.error).toBe("Unauthorized")
   })
 
-  it("processa clubes ativos e retorna metricas agregadas", async () => {
-    mockCreateAdminClient.mockReturnValue(makeAdminClient())
+  it("processa clubes ativos e retorna metricas agregadas com contexto compartilhado", async () => {
+    const adminClient = makeAdminClient()
+    const classificationContext = {
+      tournamentPairs: {
+        "100::200": {
+          tournamentId: "t-1",
+          tournamentRound: "final",
+        },
+      },
+      matchmakingPairs: {},
+    }
+
+    mockCreateAdminClient.mockReturnValue(adminClient)
     mockFetchMatches.mockResolvedValue([] as never)
+    mockLoadMatchClassificationContext.mockResolvedValue(classificationContext)
     mockPersistMatchesForClub
       .mockResolvedValueOnce({ matchesNew: 2, matchesSkipped: 1, playersLinked: 0 })
       .mockResolvedValueOnce({ matchesNew: 1, matchesSkipped: 3, playersLinked: 0 })
@@ -149,8 +171,10 @@ describe("POST /api/cron/collect", () => {
       failed: 0,
       failures: [],
     })
+    expect(mockLoadMatchClassificationContext).toHaveBeenCalledWith(adminClient)
     expect(mockFetchMatches).toHaveBeenNthCalledWith(1, "100", undefined)
     expect(mockFetchMatches).toHaveBeenNthCalledWith(2, "200", undefined)
-    expect(mockPersistMatchesForClub).toHaveBeenCalledTimes(2)
+    expect(mockPersistMatchesForClub).toHaveBeenNthCalledWith(1, "100", [], adminClient, classificationContext)
+    expect(mockPersistMatchesForClub).toHaveBeenNthCalledWith(2, "200", [], adminClient, classificationContext)
   })
 })
