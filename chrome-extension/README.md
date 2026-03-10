@@ -1,79 +1,73 @@
-# PIT Collect — Extensão Chrome
+# PIT Collect 1.1.0
 
-Extensão que coleta partidas da EA Sports usando os cookies do browser local do admin, enviando os dados brutos ao backend PIT para parsing e persistência.
+Extensao oficial do PIT para duas funcoes:
+- coletar partidas de campeonatos direto do browser local;
+- sincronizar os cookies EA/Akamai com o cookie service usado pelo Discovery.
 
-## Por que existe
+## Estrutura oficial
 
-A EA API usa Akamai para proteção anti-bot. Requests vindos de servidores (VPS/Vercel) são bloqueados com 403 quando os cookies Akamai expiram. A extensão faz as requests no contexto do browser do admin, onde os cookies são sempre frescos.
+- `chrome-extension/`: fonte oficial da extensao para Chrome/dev.
+- `dist/edge-extension/`: build gerada para o Edge.
+- `scripts/create-edge-extension.js`: gera a build do Edge a partir da mesma base oficial.
 
-## Instalação (modo desenvolvedor)
+## Instalar no Chrome ou em dev
 
 1. Abra `chrome://extensions/`
-2. Ative **"Modo do desenvolvedor"** (canto superior direito)
-3. Clique em **"Carregar sem compactação"**
-4. Selecione a pasta `chrome-extension/` deste projeto
-5. Anote o **ID da extensão** exibido (ex: `abcdefghijklmnopqrstuvwxyz123456`)
+2. Ative o modo de desenvolvedor
+3. Clique em `Carregar sem compactacao`
+4. Selecione a pasta `chrome-extension/`
+5. Copie o ID da extensao para `NEXT_PUBLIC_PIT_EXTENSION_ID`
 
-## Configuração no projeto
+Observacao: nesta fonte, o popup de cookies funciona normalmente. O sync com o cookie service depende da build gerada para Edge ou de uma versao configurada com URL/secret.
 
-Após instalar, adicione o ID ao `.env.local`:
+## Gerar build do Edge
 
-```env
-NEXT_PUBLIC_PIT_EXTENSION_ID=<id_da_extensao>
+1. Garanta que `COOKIE_SERVICE_URL` e `COOKIE_SERVICE_SECRET` estejam no `.env.local`
+2. Rode:
+
+```bash
+node scripts/create-edge-extension.js
 ```
 
-E na Vercel (Settings → Environment Variables):
-- `NEXT_PUBLIC_PIT_EXTENSION_ID` = mesmo valor
+3. Abra `edge://extensions`
+4. Ative o modo de desenvolvedor
+5. Clique em `Carregar sem compactacao`
+6. Selecione `dist/edge-extension/`
 
-Após isso, faça redeploy na Vercel.
+Essa build injeta a configuracao do cookie service e habilita o sync automatico de cookies.
 
-## Como usar
+## Popup
 
-1. Acesse o jogo EA Sports FC no browser (para ter cookies Akamai válidos)
-2. Abra o painel admin PIT: `https://pit-platform.vercel.app/admin#collect`
-3. Clique em **"Atualizar campeonatos ativos"**
-4. A extensão executa automaticamente e exibe progresso por clube
+Ao clicar na extensao, o popup mostra:
+- `ak_bmsc`
+- `bm_sv`
+- quantidade de cookies `.ea.com`
+- horario da ultima captura
+- horario/status do ultimo sync
+- erro do ultimo sync, se existir
 
-## Pré-requisitos
+Botoes:
+- `Atualizar cookies`
+- `Sincronizar agora`
 
-- Ter acessado `https://www.ea.com` ou o jogo EA FC recentemente (cookies frescos)
-- Estar logado no PIT como admin
+## Fluxos suportados
 
-## Como o fluxo funciona
+### Collect
 
-```
-Admin clica no botão
-  → POST /api/collect/tournament-run/start (sessão admin)
-  → Retorna: { run_id, token, targets: [ea_club_id, ...] }
+1. O painel admin inicia um `collect run`
+2. A pagina envia `START_COLLECT` para a extensao
+3. A extensao usa os cookies EA do browser para chamar a API da EA
+4. Os dados brutos sao enviados ao backend PIT para ingestao
 
-Admin page envia mensagem à extensão:
-  chrome.runtime.sendMessage(EXT_ID, {
-    type: 'START_COLLECT', runId, token, targets, backendBase
-  })
+### Discovery / cookie service
 
-Extensão (background.js):
-  Para cada ea_club_id:
-    1. Lê cookies Akamai do domínio .ea.com
-    2. Faz GET na EA API com esses cookies
-    3. POST /api/collect/tournament-run/{runId}/ingest (com x-collect-token)
-    4. Backend parseia + persiste matches
-
-  Envia progresso via chrome.runtime.sendMessage → página atualiza UI
-```
-
-## Permissões solicitadas
-
-| Permissão | Motivo |
-|-----------|--------|
-| `cookies` | Ler cookies Akamai do domínio .ea.com |
-| `host: *.ea.com` | Fazer requests para a EA API |
-| `host: pit-platform.vercel.app` | Enviar dados coletados ao backend |
-| `externally_connectable` | Receber mensagens da página admin do PIT |
+1. A extensao le `ak_bmsc` e `bm_sv` do browser
+2. Sincroniza esses cookies com o cookie service
+3. O Discovery usa o `browser_proxy` do cookie service para buscar partidas
 
 ## Troubleshooting
 
-**"Extensão não encontrada"**: Verifique se está instalada e se `NEXT_PUBLIC_PIT_EXTENSION_ID` está correto.
-
-**403 da EA API**: Acesse `https://www.ea.com` no browser para renovar os cookies Akamai e tente novamente.
-
-**Token expirado**: Os tokens duram 30 minutos. Clique no botão novamente para gerar um novo run.
+- `Extensao nao detectada`: confirme o ID em `NEXT_PUBLIC_PIT_EXTENSION_ID`
+- `Sem cookies no popup`: visite `https://proclubs.ea.com` e recarregue o popup
+- `Sync com erro`: confira se a build do Edge foi gerada e carregada a partir de `dist/edge-extension/`
+- `Discovery degradado`: abra o popup da extensao e clique em `Sincronizar agora`

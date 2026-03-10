@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Dashboard Layout
  * Layout compartilhado para todas as páginas autenticadas.
  * Inclui Sidebar, Navbar, e ContextSwitcher.
@@ -8,6 +8,7 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Navbar } from '@/components/layout/Navbar';
 import { ContextSwitcher } from '@/components/layout/ContextSwitcher';
+import { Sidebar } from '@/components/layout/Sidebar';
 import { AppContextProvider } from '@/hooks/useContext';
 
 export default async function DashboardLayout({
@@ -32,6 +33,7 @@ export default async function DashboardLayout({
                     </div>
                     <div className="px-4 pb-4">
                         <ContextSwitcher />
+                        <Sidebar />
                     </div>
                 </aside>
 

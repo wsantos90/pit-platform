@@ -6,12 +6,18 @@ const {
   mockCreateAdminClient,
   mockFetchMatches,
   mockTryFetchAkamaiCookies,
+  mockParseMatches,
+  mockLoadManagerCollectContext,
+  mockLoadMatchClassificationContext,
   mockPersistMatchesForClub,
 } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockCreateAdminClient: vi.fn(),
   mockFetchMatches: vi.fn(),
   mockTryFetchAkamaiCookies: vi.fn(),
+  mockParseMatches: vi.fn(),
+  mockLoadManagerCollectContext: vi.fn(),
+  mockLoadMatchClassificationContext: vi.fn(),
   mockPersistMatchesForClub: vi.fn(),
 }))
 
@@ -31,60 +37,35 @@ vi.mock("@/lib/ea/cookieClient", () => ({
   tryFetchAkamaiCookies: mockTryFetchAkamaiCookies,
 }))
 
+vi.mock("@/lib/ea/parser", () => ({
+  parseMatches: mockParseMatches,
+}))
+
+vi.mock("@/lib/collect/managerClub", () => ({
+  loadManagerCollectContext: mockLoadManagerCollectContext,
+}))
+
+vi.mock("@/lib/collect/loadMatchClassificationContext", () => ({
+  loadMatchClassificationContext: mockLoadMatchClassificationContext,
+}))
+
 vi.mock("@/lib/collect/persistMatches", () => ({
   persistMatchesForClub: mockPersistMatchesForClub,
 }))
 
 import { POST } from "@/app/api/collect/run/route"
 
-function makeRequest() {
+function makeRequest(body?: unknown) {
   return new NextRequest("http://localhost/api/collect/run", {
     method: "POST",
+    headers: {
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body ?? {}),
   })
 }
 
-function makeServerClient(options?: {
-  userId?: string | null
-  roles?: string[]
-  isActive?: boolean
-  managedClub?: { ea_club_id: string; last_scanned_at: string | null } | null
-  managedClubError?: { message: string } | null
-}) {
-  const userId = options && "userId" in options ? options.userId ?? null : "manager-1"
-  const roles = options?.roles ?? ["manager"]
-  const isActive = options?.isActive ?? true
-
-  const usersByIdMaybeSingle = vi.fn().mockResolvedValue({
-    data:
-      userId === null
-        ? null
-        : {
-            id: userId,
-            email: "manager@example.com",
-            roles,
-            is_active: isActive,
-          },
-    error: null,
-  })
-  const usersByEmailMaybeSingle = vi.fn().mockResolvedValue({
-    data: null,
-    error: null,
-  })
-
-  const usersEq = vi.fn((column: string) => {
-    if (column === "id") {
-      return { maybeSingle: usersByIdMaybeSingle }
-    }
-    return { maybeSingle: usersByEmailMaybeSingle }
-  })
-
-  const clubsMaybeSingle = vi.fn().mockResolvedValue({
-    data: options?.managedClub ?? { ea_club_id: "123", last_scanned_at: null },
-    error: options?.managedClubError ?? null,
-  })
-  const clubsEqStatus = vi.fn().mockReturnValue({ maybeSingle: clubsMaybeSingle })
-  const clubsEqManager = vi.fn().mockReturnValue({ eq: clubsEqStatus })
-
+function makeServerClient(userId: string | null = "manager-1") {
   return {
     auth: {
       getUser: vi.fn().mockResolvedValue({
@@ -99,25 +80,6 @@ function makeServerClient(options?: {
         },
       }),
     },
-    from: vi.fn((table: string) => {
-      if (table === "users") {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: usersEq,
-          }),
-        }
-      }
-
-      if (table === "clubs") {
-        return {
-          select: vi.fn().mockReturnValue({
-            eq: clubsEqManager,
-          }),
-        }
-      }
-
-      return {}
-    }),
   }
 }
 
@@ -171,11 +133,31 @@ function makeAdminClient() {
 describe("POST /api/collect/run", () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockCreateClient.mockResolvedValue(makeServerClient())
     mockTryFetchAkamaiCookies.mockResolvedValue(null)
+    mockLoadManagerCollectContext.mockResolvedValue({
+      canCollect: true,
+      managedClub: {
+        ea_club_id: "123",
+        display_name: "Pit FC",
+        last_scanned_at: null,
+      },
+      managedClubError: null,
+    })
+    mockLoadMatchClassificationContext.mockResolvedValue({
+      tournamentPairs: {},
+      matchmakingPairs: {},
+    })
+    mockParseMatches.mockReturnValue([])
+    mockPersistMatchesForClub.mockResolvedValue({
+      matchesNew: 2,
+      matchesSkipped: 1,
+      playersLinked: 4,
+    })
   })
 
   it("retorna 401 quando nao autenticado", async () => {
-    mockCreateClient.mockResolvedValue(makeServerClient({ userId: null }))
+    mockCreateClient.mockResolvedValue(makeServerClient(null))
 
     const response = await POST(makeRequest())
     const body = await response.json()
@@ -185,14 +167,15 @@ describe("POST /api/collect/run", () => {
   })
 
   it("retorna 429 quando clube esta em cooldown backend", async () => {
-    mockCreateClient.mockResolvedValue(
-      makeServerClient({
-        managedClub: {
-          ea_club_id: "123",
-          last_scanned_at: new Date().toISOString(),
-        },
-      })
-    )
+    mockLoadManagerCollectContext.mockResolvedValue({
+      canCollect: true,
+      managedClub: {
+        ea_club_id: "123",
+        display_name: "Pit FC",
+        last_scanned_at: new Date().toISOString(),
+      },
+      managedClubError: null,
+    })
 
     const response = await POST(makeRequest())
     const body = await response.json()
@@ -202,15 +185,21 @@ describe("POST /api/collect/run", () => {
     expect(typeof body.retry_after_seconds).toBe("number")
   })
 
-  it("executa coleta manual para o clube do manager", async () => {
-    mockCreateClient.mockResolvedValue(makeServerClient())
-    mockCreateAdminClient.mockReturnValue(makeAdminClient())
+  it("executa coleta manual via servidor e retorna o modo usado", async () => {
+    const adminClient = makeAdminClient()
+    const classificationContext = {
+      tournamentPairs: {
+        "123::456": {
+          tournamentId: "t-1",
+          tournamentRound: "semi_final",
+        },
+      },
+      matchmakingPairs: {},
+    }
+
+    mockCreateAdminClient.mockReturnValue(adminClient)
     mockFetchMatches.mockResolvedValue([] as never)
-    mockPersistMatchesForClub.mockResolvedValue({
-      matchesNew: 2,
-      matchesSkipped: 1,
-      playersLinked: 4,
-    })
+    mockLoadMatchClassificationContext.mockResolvedValue(classificationContext)
 
     const response = await POST(makeRequest())
     const body = await response.json()
@@ -218,11 +207,54 @@ describe("POST /api/collect/run", () => {
     expect(response.status).toBe(200)
     expect(body).toEqual({
       run_id: "run-1",
+      mode: "server",
       matches_new: 2,
       matches_skipped: 1,
       players_linked: 4,
     })
     expect(mockFetchMatches).toHaveBeenCalledWith("123", undefined)
-    expect(mockPersistMatchesForClub).toHaveBeenCalledTimes(1)
+    expect(mockLoadMatchClassificationContext).toHaveBeenCalledWith(adminClient)
+    expect(mockPersistMatchesForClub).toHaveBeenCalledWith("123", [], adminClient, classificationContext)
+  })
+
+  it("executa coleta via extensao local quando raw_data e enviado", async () => {
+    const adminClient = makeAdminClient()
+    const rawData = [{ matchId: "ea-1" }]
+    const parsedMatches = [] as unknown[]
+
+    mockCreateAdminClient.mockReturnValue(adminClient)
+    mockParseMatches.mockReturnValue(parsedMatches)
+
+    const response = await POST(
+      makeRequest({
+        mode: "local_extension",
+        ea_club_id: "123",
+        raw_data: rawData,
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.mode).toBe("local_extension")
+    expect(mockParseMatches).toHaveBeenCalledWith(rawData, "123")
+    expect(mockFetchMatches).not.toHaveBeenCalled()
+    expect(mockPersistMatchesForClub).toHaveBeenCalledWith("123", parsedMatches, adminClient, {
+      tournamentPairs: {},
+      matchmakingPairs: {},
+    })
+  })
+
+  it("bloqueia coleta local quando o clube enviado nao pertence ao manager", async () => {
+    const response = await POST(
+      makeRequest({
+        mode: "local_extension",
+        ea_club_id: "999",
+        raw_data: [],
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(403)
+    expect(body.error).toBe("managed_club_mismatch")
   })
 })

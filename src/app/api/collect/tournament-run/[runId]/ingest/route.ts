@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { parseMatches } from "@/lib/ea/parser"
+import { loadMatchClassificationContext } from "@/lib/collect/loadMatchClassificationContext"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
 
 type AdminClient = ReturnType<typeof createAdminClient>
@@ -117,7 +118,6 @@ export async function POST(
 
   const { ea_club_id, success, raw_data, error: clubError } = parsed.data
 
-  // Validate that ea_club_id is in the expected targets
   const targets = run.target_ea_club_ids ?? []
   if (!targets.includes(ea_club_id)) {
     return NextResponse.json({ error: "ea_club_id_not_in_targets" }, { status: 400 })
@@ -125,10 +125,7 @@ export async function POST(
 
   if (!success) {
     const nextFailed = run.clubs_failed + 1
-    await adminClient
-      .from("collect_runs")
-      .update({ clubs_failed: nextFailed })
-      .eq("id", run.id)
+    await adminClient.from("collect_runs").update({ clubs_failed: nextFailed }).eq("id", run.id)
 
     console.warn(
       `[TournamentRun/Ingest] Club failed: runId=${runId} ea_club_id=${ea_club_id} error=${clubError ?? "unknown"}`
@@ -139,17 +136,23 @@ export async function POST(
     return NextResponse.json({ ok: true, matches_new: 0, matches_skipped: 0 })
   }
 
-  // Parse and persist the raw EA data
   let matchesNew = 0
   let matchesSkipped = 0
 
   try {
     const matches = parseMatches(raw_data, ea_club_id)
-    const persisted = await persistMatchesForClub(ea_club_id, matches, adminClient)
+    const classificationContext = await loadMatchClassificationContext(adminClient, {
+      targetEaClubIds: run.target_ea_club_ids ?? [],
+    })
+    const persisted = await persistMatchesForClub(
+      ea_club_id,
+      matches,
+      adminClient,
+      classificationContext
+    )
     matchesNew = persisted.matchesNew
     matchesSkipped = persisted.matchesSkipped
 
-    // Update clubs.last_scanned_at
     await adminClient
       .from("clubs")
       .update({ last_scanned_at: new Date().toISOString() })
@@ -160,12 +163,8 @@ export async function POST(
       `[TournamentRun/Ingest] Persist failed: runId=${runId} ea_club_id=${ea_club_id} err=${msg}`
     )
 
-    // Count as failed if persistence throws
     const nextFailed = run.clubs_failed + 1
-    await adminClient
-      .from("collect_runs")
-      .update({ clubs_failed: nextFailed })
-      .eq("id", run.id)
+    await adminClient.from("collect_runs").update({ clubs_failed: nextFailed }).eq("id", run.id)
 
     await finalizeRunIfComplete(adminClient, run, run.clubs_processed, nextFailed)
 

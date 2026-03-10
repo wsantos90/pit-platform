@@ -1,4 +1,4 @@
-﻿type AkamaiCookieName = 'ak_bmsc' | 'bm_sv';
+type AkamaiCookieName = 'ak_bmsc' | 'bm_sv';
 
 import { errorContext, logger } from './logger';
 
@@ -191,7 +191,11 @@ async function applyProxyAuth(page: Page): Promise<void> {
   await page.authenticate(credentials);
 }
 
-function buildEaMatchesUrl(clubId: string, maxResultCount = DEFAULT_MAX_RESULT_COUNT, matchType = DEFAULT_MATCH_TYPE): string {
+export function buildEaMatchesUrl(
+  clubId: string,
+  maxResultCount = DEFAULT_MAX_RESULT_COUNT,
+  matchType = DEFAULT_MATCH_TYPE,
+): string {
   const target = new URL(DEFAULT_TARGET_URL);
   target.searchParams.set('platform', DEFAULT_PLATFORM);
   target.searchParams.set('clubIds', clubId);
@@ -474,4 +478,5 @@ export async function renewCookieBundle(): Promise<AkamaiCookieBundle> {
 
   throw new Error(`[cookie-service] Nao foi possivel renovar cookies Akamai: ${lastError?.message ?? 'erro desconhecido'}`);
 }
+
 

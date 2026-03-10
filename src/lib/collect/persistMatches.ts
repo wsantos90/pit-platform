@@ -1,4 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import {
+  classifyMatch,
+  createEmptyMatchClassificationContext,
+  type MatchClassificationContext,
+} from "@/lib/match-classifier"
 import type { EaParsedMatch } from "@/types/ea-api"
 
 type AdminClient = ReturnType<typeof createAdminClient>
@@ -55,10 +60,7 @@ async function loadClubIdsByEaClubId(adminClient: AdminClient, eaClubIds: string
   if (eaClubIds.length === 0) return byEaClubId
 
   for (const chunk of chunkArray(eaClubIds, SELECT_CHUNK_SIZE)) {
-    const { data, error } = await adminClient
-      .from("clubs")
-      .select("id,ea_club_id")
-      .in("ea_club_id", chunk)
+    const { data, error } = await adminClient.from("clubs").select("id,ea_club_id").in("ea_club_id", chunk)
 
     if (error) {
       throw error
@@ -77,10 +79,7 @@ async function loadPlayerIdsByGamertag(adminClient: AdminClient, gamertags: stri
   if (gamertags.length === 0) return byGamertag
 
   for (const chunk of chunkArray(gamertags, SELECT_CHUNK_SIZE)) {
-    const { data, error } = await adminClient
-      .from("players")
-      .select("id,ea_gamertag")
-      .in("ea_gamertag", chunk)
+    const { data, error } = await adminClient.from("players").select("id,ea_gamertag").in("ea_gamertag", chunk)
 
     if (error) {
       throw error
@@ -111,7 +110,8 @@ function buildRawMatchData(match: EaParsedMatch, sourceEaClubId: string) {
 export async function persistMatchesForClub(
   eaClubId: string,
   matches: EaParsedMatch[],
-  adminClient: AdminClient
+  adminClient: AdminClient,
+  ctx?: MatchClassificationContext
 ): Promise<PersistMatchesResult> {
   const { deduped, duplicatesSkipped } = dedupeMatchesById(matches)
 
@@ -144,20 +144,32 @@ export async function persistMatchesForClub(
     loadPlayerIdsByGamertag(adminClient, Array.from(gamertags)),
   ])
 
-  const rowsToInsert = deduped.map((match) => ({
-    ea_match_id: match.matchId,
-    match_timestamp: match.timestampUtc.toISOString(),
-    home_club_id: clubIdsByEaClubId.get(match.homeClubId) ?? null,
-    away_club_id: clubIdsByEaClubId.get(match.awayClubId) ?? null,
-    home_ea_club_id: match.homeClubId,
-    away_ea_club_id: match.awayClubId,
-    home_club_name: match.homeClubName,
-    away_club_name: match.awayClubName,
-    home_score: match.homeScore,
-    away_score: match.awayScore,
-    match_type: "friendly_external" as const,
-    raw_data: buildRawMatchData(match, eaClubId),
-  }))
+  const classificationContext = ctx ?? createEmptyMatchClassificationContext()
+  const rowsToInsert = deduped.map((match) => {
+    const classification = classifyMatch({
+      homeClubId: match.homeClubId,
+      awayClubId: match.awayClubId,
+      context: classificationContext,
+    })
+
+    return {
+      ea_match_id: match.matchId,
+      match_timestamp: match.timestampUtc.toISOString(),
+      home_club_id: clubIdsByEaClubId.get(match.homeClubId) ?? null,
+      away_club_id: clubIdsByEaClubId.get(match.awayClubId) ?? null,
+      home_ea_club_id: match.homeClubId,
+      away_ea_club_id: match.awayClubId,
+      home_club_name: match.homeClubName,
+      away_club_name: match.awayClubName,
+      home_score: match.homeScore,
+      away_score: match.awayScore,
+      match_type: classification.matchType,
+      tournament_id: classification.tournamentId,
+      tournament_round: classification.tournamentRound,
+      matchmaking_id: classification.matchmakingId,
+      raw_data: buildRawMatchData(match, eaClubId),
+    }
+  })
 
   const { data: insertedMatches, error: insertMatchesError } = await adminClient
     .from("matches")
@@ -226,10 +238,7 @@ export async function persistMatchesForClub(
       .filter((row): row is NonNullable<typeof row> => row !== null)
   })
 
-  const playersLinked = matchPlayersRows.reduce(
-    (count, row) => count + (row.player_id ? 1 : 0),
-    0
-  )
+  const playersLinked = matchPlayersRows.reduce((count, row) => count + (row.player_id ? 1 : 0), 0)
 
   if (matchPlayersRows.length === 0) {
     return {

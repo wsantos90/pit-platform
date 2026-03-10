@@ -45,11 +45,21 @@ describe('fetchMatchesRaw (browser_proxy)', () => {
     );
   });
 
-  it('lança erro quando proxy retorna status não-2xx', async () => {
+  it('formata o erro estruturado do proxy sem despejar HTML cru', async () => {
     const mockFetch = vi.fn().mockResolvedValue({
       ok: false,
       status: 502,
-      text: async () => '{"error":"ea_fetch_failed"}',
+      text: async () =>
+        JSON.stringify({
+          error: 'ea_fetch_failed',
+          message: 'EA API respondeu 403 Forbidden',
+          stage: 'cached_cookie',
+          resolvedBy: 'cache',
+          upstreamStatus: 403,
+          contentType: 'text/html',
+          bodySnippet: '<!DOCTYPE html> blocked by akamai',
+          cache: { hasCookie: true },
+        }),
     } as unknown as Response);
 
     vi.stubGlobal('fetch', mockFetch);
@@ -60,7 +70,8 @@ describe('fetchMatchesRaw (browser_proxy)', () => {
 
     const { fetchMatchesRaw } = await import('@/lib/ea/api');
 
-    await expect(fetchMatchesRaw('1136016')).rejects.toThrow(/Proxy browser respondeu 502/);
+    await expect(fetchMatchesRaw('1136016')).rejects.toThrow(
+      /Proxy browser respondeu 502: EA API respondeu 403 Forbidden \(stage=cached_cookie; resolvedBy=cache; cache=present; upstream=403; contentType=text\/html; body=<!DOCTYPE html> blocked by akamai\)/
+    );
   });
 });
-
