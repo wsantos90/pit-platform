@@ -137,8 +137,12 @@ function PreviewStep({
 
   useEffect(() => {
     let active = true
-    setLoading(true)
-    setError(null)
+    Promise.resolve().then(() => {
+      if (!active) return
+      setLoading(true)
+      setError(null)
+      setMatches([])
+    })
 
     fetch(`/api/claim/preview?eaClubId=${encodeURIComponent(club.ea_club_id)}`)
       .then(async (res) => {

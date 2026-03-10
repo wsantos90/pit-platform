@@ -1115,7 +1115,7 @@
           "16",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1123,7 +1123,7 @@
             "description": "Implementar componente PlayerHeader com gamertag, posiÃ§Ãµes e foto do jogador, e estruturar app/(dashboard)/profile/page.tsx com layout base.",
             "dependencies": [],
             "details": "Usar dados do player via params ou query. Fetch foto via EA API ou placeholder. Layout com grid responsivo para seÃ§Ãµes. Integrar com useAuth para player atual.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar renderizaÃ§Ã£o de gamertag, posiÃ§Ãµes e foto. Testar com player logado e sem foto.",
             "parentId": "undefined"
           },
@@ -1135,7 +1135,7 @@
               1
             ],
             "details": "Query SQL na view v_player_stats filtrando match_type IN ('championship', 'friendly_pit'). AgregaÃ§Ãµes: AVG(rating), SUM(gols, assists, passes, tackles). Filtros dropdown 7/30/90 dias.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validar stats agregados corretos. Testar filtros alteram valores. Confirmar exclusÃ£o de friendly_external.",
             "parentId": "undefined"
           },
@@ -1147,7 +1147,7 @@
               1
             ],
             "details": "Query matches ORDER BY date DESC LIMIT 20, WHERE match_type correto. Tabela com colunas: data, adversÃ¡rio, resultado, rating. Drill-down navega para /matches/[id]. Filtros reativos com useState.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Confirmar Ãºltimos 20 matches exibidos. Testar filtros reduzem lista. Validar drill-down redireciona corretamente.",
             "parentId": "undefined"
           },
@@ -1159,7 +1159,7 @@
               2
             ],
             "details": "LineChart Recharts para rating por match data. PositionStats: GROUP BY position na v_player_stats. Responsivo, tooltip customizado. Filtros compartilham estado via Context ou props.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar grÃ¡fico renderiza linha contÃ­nua. Confirmar PositionStats agrupa corretamente. Testar responsividade em mobile.",
             "parentId": "undefined"
           }
@@ -1661,7 +1661,7 @@
       "version": "1.0.0",
       "lastModified": "2026-03-02T00:18:28.718Z",
       "taskCount": 25,
-      "completedCount": 15,
+      "completedCount": 16,
       "tags": [
         "master"
       ]

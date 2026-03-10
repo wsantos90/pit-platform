@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
-import { CheckCircle2, Loader2, RefreshCw, Server, ShieldAlert, Zap } from "lucide-react"
+import { CheckCircle2, Loader2, RefreshCw, ShieldAlert, Zap } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -84,7 +84,7 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
   }, [])
 
   useEffect(() => {
-    void refreshExtensionStatus()
+    Promise.resolve().then(() => void refreshExtensionStatus())
   }, [refreshExtensionStatus])
 
   const runServerCollect = useCallback(async (): Promise<CollectResponse> => {

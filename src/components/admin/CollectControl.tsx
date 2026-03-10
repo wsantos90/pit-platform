@@ -89,7 +89,7 @@ export default function CollectControl() {
   }, [])
 
   useEffect(() => {
-    void refreshExtensionStatus()
+    Promise.resolve().then(() => void refreshExtensionStatus())
   }, [refreshExtensionStatus])
 
   const handleCollect = useCallback(async () => {

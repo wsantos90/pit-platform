@@ -399,7 +399,7 @@ export default function DiscoveryControl() {
                 <p>
                   O Discovery usa o proxy browser do cookie service. No Edge, carregue a build operacional em
                   <code className="mx-1 rounded bg-muted px-1">dist/edge-extension/</code>, confirme no popup que o build esta configurado,
-                  clique em "Sincronizar agora" e depois atualize este diagnostico.
+                  clique em &quot;Sincronizar agora&quot; e depois atualize este diagnostico.
                 </p>
               </div>
             </div>
