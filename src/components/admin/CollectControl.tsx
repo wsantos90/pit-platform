@@ -1,13 +1,12 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
-import { Download, Loader2, CheckCircle2, XCircle, AlertTriangle } from "lucide-react"
+import { useCallback, useEffect, useState } from "react"
+import { AlertTriangle, CheckCircle2, Download, Loader2, RefreshCw, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const EXTENSION_ID = process.env.NEXT_PUBLIC_PIT_EXTENSION_ID ?? ""
-const BACKEND_BASE =
-  process.env.NEXT_PUBLIC_APP_URL ?? "https://pit-platform.vercel.app"
+const BACKEND_BASE = process.env.NEXT_PUBLIC_APP_URL ?? "https://pit-platform.vercel.app"
 
 type ClubProgress = {
   ea_club_id: string
@@ -66,6 +65,7 @@ function isExtensionAvailable(): boolean {
 async function pingExtension(): Promise<boolean> {
   const runtime = getChromeRuntime()
   if (!runtime || !EXTENSION_ID) return false
+
   return new Promise((resolve) => {
     runtime.sendMessage(EXTENSION_ID, { type: "PING" }, (response) => {
       if (runtime.lastError) {
@@ -80,10 +80,17 @@ async function pingExtension(): Promise<boolean> {
 export default function CollectControl() {
   const [state, setState] = useState<CollectState>({ phase: "idle" })
   const [extensionOk, setExtensionOk] = useState<boolean | null>(null)
+  const [isCheckingExtension, setIsCheckingExtension] = useState(false)
+
+  const refreshExtensionStatus = useCallback(async () => {
+    setIsCheckingExtension(true)
+    setExtensionOk(await pingExtension())
+    setIsCheckingExtension(false)
+  }, [])
 
   useEffect(() => {
-    pingExtension().then(setExtensionOk)
-  }, [])
+    void refreshExtensionStatus()
+  }, [refreshExtensionStatus])
 
   const handleCollect = useCallback(async () => {
     if (state.phase === "running" || state.phase === "starting") return
@@ -115,7 +122,6 @@ export default function CollectControl() {
 
       setState({ phase: "running", runId: run_id, clubs })
 
-      // Escuta progresso da extensão
       const progressListener = (message: ExtensionMessage) => {
         if (message.runId !== run_id) return
 
@@ -124,15 +130,15 @@ export default function CollectControl() {
             if (prev.phase !== "running") return prev
             return {
               ...prev,
-              clubs: prev.clubs.map((c) =>
-                c.ea_club_id === message.eaClubId
+              clubs: prev.clubs.map((club) =>
+                club.ea_club_id === message.eaClubId
                   ? {
-                      ...c,
+                      ...club,
                       status: message.status === "success" ? "success" : "failed",
                       matches_new: message.matches_new,
                       error: message.error,
                     }
-                  : c
+                  : club
               ),
             }
           })
@@ -160,65 +166,59 @@ export default function CollectControl() {
               runtime.onMessage.removeListener(progressListener)
               setState({
                 phase: "error",
-                message: "Extensão não respondeu. Verifique se está instalada e ativa.",
+                message: "Extensao nao respondeu. Verifique se a PIT Collect 1.1.0 esta instalada e ativa.",
               })
             }
           }
         )
       }
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Erro desconhecido"
-      setState({ phase: "error", message: msg })
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Erro desconhecido"
+      setState({ phase: "error", message })
     }
   }, [state.phase])
 
-  const canCollect =
-    extensionOk === true && state.phase !== "running" && state.phase !== "starting"
+  const canCollect = extensionOk === true && state.phase !== "running" && state.phase !== "starting"
 
   return (
     <div className="space-y-4">
-      {/* Status da extensão */}
       {extensionOk === false && (
         <Card className="border-yellow-500/30 bg-yellow-500/5">
           <CardContent className="py-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-yellow-500" />
-              <div className="space-y-1 text-sm">
-                <p className="font-medium text-foreground">Extensão PIT Collect não detectada</p>
+              <div className="space-y-2 text-sm">
+                <p className="font-medium text-foreground">Extensao PIT Collect 1.1.0 nao detectada</p>
                 <p className="text-foreground-secondary">
-                  Instale a extensão em{" "}
-                  <code className="rounded bg-muted px-1">chrome://extensions</code> → &quot;Carregar
-                  sem compactação&quot; → pasta{" "}
-                  <code className="rounded bg-muted px-1">chrome-extension/</code>
+                  A extensao oficial agora faz duas coisas: coleta manual de campeonatos e sincronizacao de cookies para o proxy do Discovery.
                 </p>
                 <p className="text-foreground-secondary">
-                  Após instalar, adicione o ID da extensão em{" "}
-                  <code className="rounded bg-muted px-1">NEXT_PUBLIC_PIT_EXTENSION_ID</code>
+                  No Chrome/dev, carregue a pasta <code className="rounded bg-muted px-1">chrome-extension/</code>. No Edge,
+                  gere e carregue a build em <code className="rounded bg-muted px-1">dist/edge-extension/</code>.
                 </p>
+                <p className="text-foreground-secondary">
+                  Depois confirme que <code className="rounded bg-muted px-1">NEXT_PUBLIC_PIT_EXTENSION_ID</code> aponta para o ID da extensao instalada.
+                </p>
+                <Button variant="outline" size="sm" className="gap-2" disabled={isCheckingExtension} onClick={() => void refreshExtensionStatus()}>
+                  {isCheckingExtension ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                  Verificar novamente
+                </Button>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
 
-      {/* Botão de coleta */}
       <Card className="border-border bg-card">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold">Campeonatos Ativos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-foreground-secondary">
-            Coleta partidas recentes de todos os clubes em campeonatos com status{" "}
-            <span className="font-mono text-xs">confirmed</span> ou{" "}
-            <span className="font-mono text-xs">in_progress</span>, usando os cookies EA do seu
-            browser.
+            Coleta partidas recentes de clubes em campeonatos ativos usando os cookies EA do seu browser. A build operacional da extensao tambem sincroniza esses cookies com o cookie service usado pelo Discovery.
           </p>
 
-          <Button
-            onClick={handleCollect}
-            disabled={!canCollect}
-            className="gap-2"
-          >
+          <Button onClick={handleCollect} disabled={!canCollect} className="gap-2">
             {state.phase === "starting" || state.phase === "running" ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
@@ -233,7 +233,6 @@ export default function CollectControl() {
         </CardContent>
       </Card>
 
-      {/* Progresso por clube */}
       {(state.phase === "running" || state.phase === "done") && (
         <Card className="border-border bg-card">
           <CardHeader className="pb-3">
@@ -249,15 +248,9 @@ export default function CollectControl() {
                   className="flex items-center justify-between rounded-lg border border-border bg-background/50 px-3 py-2 text-sm"
                 >
                   <div className="flex items-center gap-2">
-                    {club.status === "pending" && (
-                      <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
-                    )}
-                    {club.status === "success" && (
-                      <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-                    )}
-                    {club.status === "failed" && (
-                      <XCircle className="h-3.5 w-3.5 text-red-500" />
-                    )}
+                    {club.status === "pending" && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+                    {club.status === "success" && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
+                    {club.status === "failed" && <XCircle className="h-3.5 w-3.5 text-red-500" />}
                     <span className="font-mono text-xs text-foreground">{club.ea_club_id}</span>
                   </div>
                   <div className="text-xs text-foreground-secondary">
@@ -275,13 +268,7 @@ export default function CollectControl() {
             {state.phase === "done" && (
               <div className="mt-4 rounded-lg border border-border bg-background/50 px-3 py-2 text-sm">
                 <p className="text-foreground-secondary">
-                  <span className="font-medium text-green-500">{state.summary.success}</span>{" "}
-                  clubes coletados ·{" "}
-                  <span className="font-medium text-primary">{state.summary.matches_new}</span>{" "}
-                  partidas novas ·{" "}
-                  {state.summary.failed > 0 && (
-                    <span className="font-medium text-red-500">{state.summary.failed} falhos</span>
-                  )}
+                  <span className="font-medium text-green-500">{state.summary.success}</span> clubes coletados - <span className="font-medium text-primary">{state.summary.matches_new}</span> partidas novas - {state.summary.failed > 0 && <span className="font-medium text-red-500">{state.summary.failed} falhos</span>}
                 </p>
               </div>
             )}
@@ -289,7 +276,6 @@ export default function CollectControl() {
         </Card>
       )}
 
-      {/* Erro */}
       {state.phase === "error" && (
         <Card className="border-red-500/30 bg-red-500/5">
           <CardContent className="py-4">
@@ -303,3 +289,6 @@ export default function CollectControl() {
     </div>
   )
 }
+
+
+

@@ -1010,7 +1010,7 @@
           "9",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1018,7 +1018,7 @@
             "description": "Implementar endpoint que obtÃ©m cookies vÃ¡lidos, chama fetchMatches para times ativos, armazena em matches/match_players e atualiza last_scanned_at.",
             "dependencies": [],
             "details": "Usar /api/cookies para autenticaÃ§Ã£o. Processar batch de clubs ativos. Incluir logging em collect_runs. Garantir tratamento de erros e transaÃ§Ãµes no banco.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar com clubs mockados. Verificar armazenamento e atualizaÃ§Ã£o de last_scanned_at. Confirmar cookies sÃ£o usados corretamente.",
             "parentId": "undefined"
           },
@@ -1030,7 +1030,7 @@
               1
             ],
             "details": "Criar migration para UNIQUE em matches.ea_match_id. Integrar classifyMatch da Task 17. Armazenar match_type no banco durante coleta.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar inserÃ§Ã£o duplicada (deve falhar/ignorar). Validar classificaÃ§Ã£o com diferentes cenÃ¡rios de torneios/matchmaking.",
             "parentId": "undefined"
           },
@@ -1074,7 +1074,7 @@
           "16",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1082,7 +1082,7 @@
             "description": "Implementar a lÃ³gica de classificaÃ§Ã£o de partidas conforme as regras: verificar torneios agendados, matchmaking queue com status 'matched', e fallback para Friendly External usando timestamp do match.",
             "dependencies": [],
             "details": "Definir interface MatchType (Championship | FriendlyPIT | FriendlyExternal). Implementar regras sequenciais: 1) Buscar torneios por clubIds, scheduled_date e start_time prÃ³ximos ao match.timestamp (Â±5min tolerÃ¢ncia). 2) Verificar matchmakingQueue por clubIds com status 'matched' no horÃ¡rio. 3) Retornar default FriendlyExternal. Adicionar type guards e logging.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Criar testes unitÃ¡rios com Jest: mock de match com torneio agendado (espera Championship), mock de matchmaking matched (FriendlyPIT), sem contexto (FriendlyExternal). Testar edge cases como timestamp exato/fora de janela, clubIds ausentes.",
             "parentId": "undefined"
           },
@@ -1094,7 +1094,7 @@
               1
             ],
             "details": "No handler de POST /api/collect/run: apÃ³s insert match, query Supabase para tournaments[] e matchmakingQueue[] filtrados por data/horÃ¡rio. Chamar classifyMatch(match, tournaments, queues). Fazer UPDATE em matches SET match_type = result. Para cada match_player, UPDATE match_type. Tratar erros com rollback se classificaÃ§Ã£o falhar.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testes E2E com Supabase mocks: simular collect/run com payload de championship (verificar DB atualizado Championship), friendly PIT (FriendlyPIT), external (FriendlyExternal). Validar que nÃ£o conta stats para External. Testar performance com 100 matches paralelos.",
             "parentId": "undefined"
           }

@@ -253,4 +253,26 @@ describe("POST /api/discovery/scan", () => {
     expect(response.status).toBe(200)
     expect(body.failed).toBe(0)
   })
+
+  it("retorna mensagem explicita quando nao ha alvos para varrer", async () => {
+    const adminClient = makeAdminClient({ discoveredCounts: [0, 0], scanTargets: [] })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+
+    const response = await POST(makeRequest({}))
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body).toEqual({
+      run_id: "run-1",
+      processed: 0,
+      inserted_or_updated: 0,
+      message:
+        "Nenhum alvo disponivel para a varredura. O Discovery nao encontrou clubes em discovered_clubs nem seeds suficientes em clubs com status active.",
+      target_source: "none",
+      discovered_targets_count: 0,
+      seed_targets_count: 0,
+      failed: 0,
+      failures: [],
+    })
+  })
 })

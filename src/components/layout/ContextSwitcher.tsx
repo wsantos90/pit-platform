@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { useRole } from '@/hooks/useRole';
 import { useContext } from '@/hooks/useContext';
@@ -11,6 +12,8 @@ interface ManagedClub {
 }
 
 export function ContextSwitcher() {
+    const router = useRouter();
+    const pathname = usePathname();
     const supabase = useMemo(() => createClient(), []);
     const { user, availableContexts, loading: rolesLoading } = useRole();
     const { context, teamId, setContext, hydrated } = useContext();
@@ -75,6 +78,13 @@ export function ContextSwitcher() {
     }, [context, hasAdminContext, hasModerationContext, teamId, teams]);
 
     const disabled = rolesLoading || loadingTeams || !hydrated;
+    const navigateTo = (targetPath: string) => {
+        if (pathname !== targetPath) {
+            router.push(targetPath);
+            return;
+        }
+        router.refresh();
+    };
 
     return (
         <div className="space-y-2">
@@ -89,22 +99,26 @@ export function ContextSwitcher() {
                     const nextValue = event.target.value;
                     if (nextValue === 'profile') {
                         setContext('profile');
+                        navigateTo('/profile');
                         return;
                     }
 
                     if (nextValue.startsWith('team:')) {
                         const nextTeamId = nextValue.replace('team:', '');
                         setContext('team_id', nextTeamId || null);
+                        navigateTo('/team');
                         return;
                     }
 
                     if (nextValue === 'moderation') {
                         setContext('moderation');
+                        navigateTo('/moderation');
                         return;
                     }
 
                     if (nextValue === 'admin') {
                         setContext('admin');
+                        navigateTo('/admin');
                     }
                 }}
                 disabled={disabled}
@@ -123,7 +137,9 @@ export function ContextSwitcher() {
                 ) : null}
             </select>
             {hasTeamContext && !loadingTeams && teams.length === 0 ? (
-                <p className="text-xs text-gray-500">Nenhum time associado a este usuário.</p>
+                <a href="/team/claim" className="text-xs text-orange-400 hover:underline">
+                    Reivindicar um time →
+                </a>
             ) : null}
         </div>
     );

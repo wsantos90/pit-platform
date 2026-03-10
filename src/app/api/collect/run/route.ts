@@ -1,47 +1,53 @@
 import { NextRequest, NextResponse } from "next/server"
+import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchMatches } from "@/lib/ea/api"
 import { tryFetchAkamaiCookies } from "@/lib/ea/cookieClient"
+import { parseMatches } from "@/lib/ea/parser"
+import { upsertDiscoveredClub } from "@/lib/ea/discovery"
+import { loadMatchClassificationContext } from "@/lib/collect/loadMatchClassificationContext"
+import { loadManagerCollectContext } from "@/lib/collect/managerClub"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
-import { hasAnyRole } from "@/lib/auth/roles"
-import type { UserRole } from "@/types"
 
-type ServerClient = Awaited<ReturnType<typeof createClient>>
 type AdminClient = ReturnType<typeof createAdminClient>
 type CollectRunStatus = "running" | "completed" | "failed"
 
-type UserProfileRow = {
-  id: string
-  email: string | null
-  roles: unknown
-  is_active: boolean | null
-}
+type CollectMode = "server" | "local_extension"
 
-type ManagedClubRow = {
-  ea_club_id: string
-  last_scanned_at: string | null
-}
+const collectRunPayloadSchema = z
+  .object({
+    mode: z.enum(["local_extension"]).optional(),
+    ea_club_id: z.string().trim().min(1).optional(),
+    raw_data: z.unknown().optional(),
+  })
+  .superRefine((payload, context) => {
+    if (payload.mode === "local_extension") {
+      if (!payload.ea_club_id) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["ea_club_id"],
+          message: "ea_club_id is required for local_extension mode",
+        })
+      }
 
-const BACKEND_RATE_LIMIT_MS = 30 * 60 * 1000
+      if (payload.raw_data === undefined) {
+        context.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["raw_data"],
+          message: "raw_data is required for local_extension mode",
+        })
+      }
+    }
+  })
 
-async function loadProfileByIdOrEmail(supabase: ServerClient, userId: string, email: string | null) {
-  const { data: byId } = await supabase
-    .from("users")
-    .select("id,email,roles,is_active")
-    .eq("id", userId)
-    .maybeSingle<UserProfileRow>()
+const MANUAL_COLLECT_RATE_LIMIT_MS = parsePositiveInt(process.env.MANUAL_COLLECT_RATE_LIMIT_MS, 120_000)
 
-  if (byId) return byId
-  if (!email) return null
-
-  const { data: byEmail } = await supabase
-    .from("users")
-    .select("id,email,roles,is_active")
-    .eq("email", email)
-    .maybeSingle<UserProfileRow>()
-
-  return byEmail
+function parsePositiveInt(value: string | undefined, fallback: number): number {
+  if (!value) return fallback
+  const parsed = Number.parseInt(value, 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  return parsed
 }
 
 async function updateCollectRun(
@@ -79,18 +85,61 @@ function buildRateLimitPayload(lastScannedAt: string) {
   }
 
   const elapsedMs = Date.now() - lastScannedMs
-  if (elapsedMs >= BACKEND_RATE_LIMIT_MS) {
+  if (elapsedMs >= MANUAL_COLLECT_RATE_LIMIT_MS) {
     return null
   }
 
-  const retryAfterSeconds = Math.max(1, Math.ceil((BACKEND_RATE_LIMIT_MS - elapsedMs) / 1000))
+  const retryAfterSeconds = Math.max(1, Math.ceil((MANUAL_COLLECT_RATE_LIMIT_MS - elapsedMs) / 1000))
   return {
     error: "rate_limited",
     retry_after_seconds: retryAfterSeconds,
   }
 }
 
-export async function POST(_request: NextRequest) {
+async function upsertDiscoveryClubsFromMatches(matches: ReturnType<typeof parseMatches>, adminClient: AdminClient) {
+  const uniqueClubs = new Map<string, { clubId: string; name: string }>()
+
+  for (const match of matches) {
+    for (const [clubIdKey, club] of Object.entries(match.clubs)) {
+      if (!uniqueClubs.has(clubIdKey)) {
+        uniqueClubs.set(clubIdKey, {
+          clubId: clubIdKey,
+          name: club.nameRaw,
+        })
+      }
+    }
+  }
+
+  if (uniqueClubs.size === 0) return
+
+  const results = await Promise.allSettled(
+    Array.from(uniqueClubs.values()).map((club) => upsertDiscoveredClub(club, adminClient))
+  )
+
+  results.forEach((result) => {
+    if (result.status === "rejected") {
+      console.error(`[Collect/Manual] Falha ao persistir clube no Discovery: ${result.reason}`)
+    }
+  })
+}
+
+async function resolveMatchesForManualCollect(
+  mode: CollectMode,
+  eaClubId: string,
+  rawData: unknown,
+  adminClient: AdminClient
+) {
+  if (mode === "local_extension") {
+    const matches = parseMatches(rawData, eaClubId)
+    await upsertDiscoveryClubsFromMatches(matches, adminClient)
+    return matches
+  }
+
+  const cookieHeader = (await tryFetchAkamaiCookies()) ?? undefined
+  return fetchMatches(eaClubId, cookieHeader)
+}
+
+export async function POST(request: NextRequest) {
   const supabase = await createClient()
   const {
     data: { user },
@@ -100,20 +149,25 @@ export async function POST(_request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
   }
 
-  const profile = await loadProfileByIdOrEmail(supabase, user.id, user.email ?? null)
-  const roles = (profile?.roles ?? []) as UserRole[]
-  const isActive = profile?.is_active ?? true
+  const payloadJson = await request.json().catch(() => ({}))
+  const payload = collectRunPayloadSchema.safeParse(payloadJson ?? {})
 
-  if (!isActive || !hasAnyRole(roles, ["manager", "admin"])) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  if (!payload.success) {
+    return NextResponse.json(
+      { error: "Invalid payload", details: payload.error.flatten() },
+      { status: 400 }
+    )
   }
 
-  const { data: managedClub, error: managedClubError } = await supabase
-    .from("clubs")
-    .select("ea_club_id,last_scanned_at")
-    .eq("manager_id", user.id)
-    .eq("status", "active")
-    .maybeSingle<ManagedClubRow>()
+  const { canCollect, managedClub, managedClubError } = await loadManagerCollectContext(
+    supabase,
+    user.id,
+    user.email ?? null
+  )
+
+  if (!canCollect) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 })
+  }
 
   if (managedClubError) {
     return NextResponse.json({ error: "failed_to_load_managed_club" }, { status: 500 })
@@ -121,6 +175,12 @@ export async function POST(_request: NextRequest) {
 
   if (!managedClub?.ea_club_id) {
     return NextResponse.json({ error: "managed_club_not_found" }, { status: 404 })
+  }
+
+  const mode: CollectMode = payload.data.mode === "local_extension" ? "local_extension" : "server"
+
+  if (mode === "local_extension" && payload.data.ea_club_id !== managedClub.ea_club_id) {
+    return NextResponse.json({ error: "managed_club_mismatch" }, { status: 403 })
   }
 
   if (managedClub.last_scanned_at) {
@@ -151,9 +211,19 @@ export async function POST(_request: NextRequest) {
 
     runId = runData.id as string
 
-    const cookieHeader = (await tryFetchAkamaiCookies()) ?? undefined
-    const matches = await fetchMatches(managedClub.ea_club_id, cookieHeader)
-    const persisted = await persistMatchesForClub(managedClub.ea_club_id, matches, adminClient)
+    const matches = await resolveMatchesForManualCollect(
+      mode,
+      managedClub.ea_club_id,
+      payload.data.raw_data,
+      adminClient
+    )
+    const classificationContext = await loadMatchClassificationContext(adminClient)
+    const persisted = await persistMatchesForClub(
+      managedClub.ea_club_id,
+      matches,
+      adminClient,
+      classificationContext
+    )
 
     const { error: updateScanAtError } = await adminClient
       .from("clubs")
@@ -173,6 +243,7 @@ export async function POST(_request: NextRequest) {
 
     return NextResponse.json({
       run_id: runId,
+      mode,
       matches_new: persisted.matchesNew,
       matches_skipped: persisted.matchesSkipped,
       players_linked: persisted.playersLinked,
