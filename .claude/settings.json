@@ -1,30 +1,31 @@
 {
   "permissions": {
     "allow": [
-      "Bash(gh:*)",
-      "Bash(git --version:*)",
-      "Bash(git branch:*)",
-      "Bash(git add:*)",
-      "Bash(git commit:*)",
-      "Bash(where:*)",
-      "Bash(powershell -Command:*)",
-      "Bash(\"/c/Program Files/GitHub CLI/gh.exe\" repo create pit-platform --private --source=. --remote=origin --push --description \"P.I.T — Performance Intelligence Tracking | FIFA Pro Clubs 11v11 competitive management platform\")",
-      "Read(//c/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/**)",
-      "Bash(powershell -ExecutionPolicy Bypass -File \"C:\\\\Users\\\\wdsan\\\\AppData\\\\Local\\\\Temp\\\\fix-routes.ps1\")",
-      "Bash(git push:*)",
-      "Bash(npx tsc:*)",
-      "Bash(node -e:*)",
-      "Bash(npx task-master:*)",
-      "Bash(del \"C:\\\\Users\\\\wdsan\\\\OneDrive\\\\Documentos\\\\Projetos Coding\\\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING\\\\pit-platform\\\\.taskmaster\\\\tasks\\\\tasks.json\")",
-      "Read(//c/Users/wdsan/**)",
-      "Bash(dir:*)",
-      "Bash(cd:*)",
-      "Bash(npm install:*)",
-      "Bash(npm test)",
-      "Bash(npx vitest:*)"
+      "Bash(npm install sql.js --save-dev)",
+      "Bash(curl -si --max-time 10 https://cookie.menteembeta.com.br/health)",
+      "Bash(curl -si --max-time 10 -X OPTIONS https://cookie.menteembeta.com.br/api/cookies -H \"Origin: chrome-extension://abc123\" -H \"Access-Control-Request-Method: POST\" -H \"Access-Control-Request-Headers: content-type,x-secret\")",
+      "Bash(curl -s https://cookie.menteembeta.com.br/health)",
+      "Bash(netstat -ano)",
+      "Read(//c/Users/wdsan/.claude/projects/c--Users-wdsan-OneDrive-Documentos-Projetos-Coding-P-I-T---PERFORMANCE---INTELIGENCE---TRACKING/memory/**)",
+      "Bash(npm run typecheck)",
+      "Bash(ls \"c:\\\\Users\\\\wdsan\\\\OneDrive\\\\Documentos\\\\Projetos Coding\\\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING\\\\pit-platform\\\\src\\\\app\\\\\\(dashboard\\)\\\\team\\\\claim\"\")",
+      "Bash(cat \"src/app/\\(dashboard\\)/layout.tsx\")",
+      "Bash(git checkout -b refactor/codebase-cleanup)",
+      "Bash(npm run lint)",
+      "Bash(ls -la \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/\")",
+      "Bash(ls -la \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/admin/\")",
+      "Bash(find \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation\" -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(find \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/admin\" -type f -name \"*.tsx\" -o -name \"*.ts\")",
+      "Bash(ls -la \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/\")",
+      "Bash(ls -la \"c:\\\\Users\\\\wdsan\\\\OneDrive\\\\Documentos\\\\Projetos Coding\\\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING\\\\pit-platform\\\\src\\\\app\\\\\\(dashboard\\)\\\\moderation\"\" 2>/dev/null || echo \"Directory check failed \")",
+      "Bash(ls -la \"/c/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/\")",
+      "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/\")",
+      "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/components/\")",
+      "Bash(find \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation\" -type f \\\\\\( -name \"*.tsx\" -o -name \"*.ts\" \\\\\\))"
     ],
     "additionalDirectories": [
-      "C:\\Users\\wdsan\\AppData\\Local\\Temp"
+      "c:\\Users\\wdsan\\.claude\\projects\\c--Users-wdsan-OneDrive-Documentos-Projetos-Coding-P-I-T---PERFORMANCE---INTELIGENCE---TRACKING\\memory",
+      "c:\\Users\\wdsan\\OneDrive\\Documentos\\Projetos Coding\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING\\pit-platform\\src\\app\\api\\ea\\cookie"
     ]
   }
 }

@@ -1,235 +1,130 @@
-"use client"
+import { createClient } from '@/lib/supabase/server'
+import { redirect } from 'next/navigation'
+import { TeamManagementClient } from '@/components/team/TeamManagementClient'
+import type { Club, PlayerPosition, MatchType, PlayerStatsView } from '@/types/database'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import { Loader2, RefreshCw } from "lucide-react"
-import { RoleGuard } from "@/components/layout/RoleGuard"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useTeam } from "@/hooks/useTeam"
-
-type CollectRunResponse = {
-  run_id: string
-  matches_new: number
-  matches_skipped: number
-  players_linked: number
+export type ClubPlayerRow = {
+  id: string
+  club_id: string
+  player_id: string
+  joined_at: string
+  left_at: string | null
+  is_active: boolean
+  role_in_club: 'player' | 'captain' | 'manager'
+  player: {
+    id: string
+    ea_gamertag: string
+    primary_position: PlayerPosition
+    secondary_position: PlayerPosition | null
+    user_id: string
+  } | null
 }
 
-type CollectErrorResponse = {
-  error?: string
-  retry_after_seconds?: number
+export type MatchRow = {
+  id: string
+  match_timestamp: string
+  home_club_id: string | null
+  away_club_id: string | null
+  home_club_name: string
+  away_club_name: string
+  home_score: number
+  away_score: number
+  match_type: MatchType
 }
 
-type ToastState = {
-  id: number
-  variant: "success" | "error"
-  message: string
+export type ClubStats = {
+  activeCount: number
+  pendingCount: number
+  avgRating: number | null
+  avgGoalsPerMatch: number | null
+  totalMatches: number
 }
 
-const MANUAL_COOLDOWN_MS = 30 * 60 * 1000
+export default async function TeamPage() {
+  const supabase = await createClient()
 
-function formatCountdown(remainingMs: number) {
-  const totalSeconds = Math.ceil(remainingMs / 1000)
-  const minutes = Math.floor(totalSeconds / 60)
-  const seconds = totalSeconds % 60
-  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`
-}
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) redirect('/login')
 
-function formatDateTime(value: string | null | undefined) {
-  if (!value) return "-"
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return "-"
-  return parsed.toLocaleString("pt-BR")
-}
+  const { data: club } = await supabase
+    .from('clubs')
+    .select('id, display_name, ea_club_id, ea_name_raw, manager_id, logo_url, status, subscription_plan, last_scanned_at, created_at, updated_at')
+    .eq('manager_id', user.id)
+    .eq('status', 'active')
+    .single()
 
-export default function TeamPage() {
-  const { team, loading } = useTeam()
-  const [isCollecting, setIsCollecting] = useState(false)
-  const [lastClickAt, setLastClickAt] = useState<number | null>(null)
-  const [currentTime, setCurrentTime] = useState(() => Date.now())
-  const [toast, setToast] = useState<ToastState | null>(null)
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  if (!club) {
+    return (
+      <div className="flex flex-1 items-center justify-center py-20 text-muted-foreground">
+        <p>Nenhum clube ativo associado a esta conta de manager.</p>
+      </div>
+    )
+  }
 
-  const storageKey = useMemo(
-    () => (team?.ea_club_id ? `pit_collect_${team.ea_club_id}_last` : null),
-    [team?.ea_club_id]
-  )
+  const { data: rawClubPlayers } = await supabase
+    .from('club_players')
+    .select(`
+      id, club_id, player_id, joined_at, left_at, is_active, role_in_club,
+      player:players(id, ea_gamertag, primary_position, secondary_position, user_id)
+    `)
+    .eq('club_id', club.id)
+    .is('left_at', null)
+    .order('is_active', { ascending: false })
+    .order('joined_at', { ascending: true })
 
-  const showToast = useCallback((variant: ToastState["variant"], message: string) => {
-    setToast({
-      id: Date.now(),
-      variant,
-      message,
-    })
+  const clubPlayers = (rawClubPlayers ?? []) as unknown as ClubPlayerRow[]
 
-    if (toastTimeoutRef.current) {
-      clearTimeout(toastTimeoutRef.current)
-    }
+  const activePlayerIds = clubPlayers
+    .filter(cp => cp.is_active && cp.player)
+    .map(cp => cp.player!.id)
 
-    toastTimeoutRef.current = setTimeout(() => {
-      setToast(null)
-    }, 4500)
-  }, [])
-
-  useEffect(() => {
-    if (!storageKey) {
-      setLastClickAt(null)
-      return
-    }
-
-    const rawValue = window.localStorage.getItem(storageKey)
-    const parsed = rawValue ? Number(rawValue) : Number.NaN
-    setLastClickAt(Number.isFinite(parsed) ? parsed : null)
-  }, [storageKey])
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(Date.now())
-    }, 1000)
-
-    return () => {
-      clearInterval(timer)
-    }
-  }, [])
-
-  useEffect(() => {
-    return () => {
-      if (toastTimeoutRef.current) {
-        clearTimeout(toastTimeoutRef.current)
-      }
-    }
-  }, [])
-
-  const cooldownRemainingMs = useMemo(() => {
-    if (!lastClickAt) return 0
-    const elapsedMs = currentTime - lastClickAt
-    return Math.max(0, MANUAL_COOLDOWN_MS - elapsedMs)
-  }, [currentTime, lastClickAt])
-
-  const isCooldownActive = cooldownRemainingMs > 0
-  const isButtonDisabled = loading || !team || isCollecting || isCooldownActive
-
-  const updateLocalCooldown = useCallback(
-    (timestampMs: number) => {
-      setLastClickAt(timestampMs)
-      if (storageKey) {
-        window.localStorage.setItem(storageKey, String(timestampMs))
-      }
-    },
-    [storageKey]
-  )
-
-  const handleCollect = useCallback(async () => {
-    if (!team?.ea_club_id || isCollecting) return
-
-    const now = Date.now()
-    updateLocalCooldown(now)
-    setIsCollecting(true)
-
-    try {
-      const response = await fetch("/api/collect/run", {
-        method: "POST",
-        cache: "no-store",
-      })
-
-      const body = (await response.json().catch(() => null)) as
-        | CollectRunResponse
-        | CollectErrorResponse
-        | null
-
-      if (!response.ok) {
-        const errorBody = (body ?? {}) as CollectErrorResponse
-        const retryAfterSeconds =
-          typeof errorBody.retry_after_seconds === "number"
-            ? errorBody.retry_after_seconds
-            : null
-
-        if (response.status === 429 && retryAfterSeconds !== null) {
-          const timestampFromRetry = Date.now() - MANUAL_COOLDOWN_MS + retryAfterSeconds * 1000
-          updateLocalCooldown(timestampFromRetry)
-        }
-
-        if (errorBody.error === "rate_limited" && retryAfterSeconds !== null) {
-          showToast(
-            "error",
-            `Limite de coleta atingido. Tente novamente em ${Math.ceil(retryAfterSeconds / 60)} min.`
-          )
-          return
-        }
-
-        showToast("error", "Nao foi possivel atualizar os dados do time.")
-        return
-      }
-
-      const payload = body as CollectRunResponse
-      showToast(
-        "success",
-        `Coleta concluida. Novas: ${payload.matches_new}. Ignoradas: ${payload.matches_skipped}.`
+  // TODO: Verify actual view name — CLAUDE.md lists v_player_stats but types reference player_stats_view
+  let statsMap: Record<string, PlayerStatsView> = {}
+  if (activePlayerIds.length > 0) {
+    const { data: stats } = await supabase
+      .from('player_stats_view')
+      .select('player_id, avg_rating, total_goals, total_assists, total_matches, total_saves, total_tackles, total_clean_sheets, total_passes, ea_gamertag, primary_position, user_id, total_mom, total_reds, total_yellows, best_rating, total_minutes')
+      .in('player_id', activePlayerIds)
+    if (stats) {
+      statsMap = stats.reduce(
+        (acc, s) => ({ ...acc, [s.player_id]: s }),
+        {} as Record<string, PlayerStatsView>
       )
-    } catch {
-      showToast("error", "Falha de rede ao executar a coleta manual.")
-    } finally {
-      setIsCollecting(false)
     }
-  }, [isCollecting, showToast, team?.ea_club_id, updateLocalCooldown])
+  }
+
+  const { data: rawMatches } = await supabase
+    .from('matches')
+    .select('id, match_timestamp, home_club_id, away_club_id, home_club_name, away_club_name, home_score, away_score, match_type')
+    .or(`home_club_id.eq.${club.id},away_club_id.eq.${club.id}`)
+    .order('match_timestamp', { ascending: false })
+    .limit(20)
+
+  const matches = (rawMatches ?? []) as MatchRow[]
+
+  const activeCount = clubPlayers.filter(cp => cp.is_active).length
+  const pendingCount = clubPlayers.filter(cp => !cp.is_active).length
+
+  const ratingValues = Object.values(statsMap)
+    .map(s => s.avg_rating)
+    .filter((r): r is number => r !== null)
+  const avgRating = ratingValues.length > 0
+    ? ratingValues.reduce((a, b) => a + b, 0) / ratingValues.length
+    : null
+
+  const totalGoalsScored = matches.reduce((sum, m) => {
+    return sum + (m.home_club_id === club.id ? m.home_score : m.away_score)
+  }, 0)
+  const avgGoalsPerMatch = matches.length > 0 ? totalGoalsScored / matches.length : null
 
   return (
-    <RoleGuard requiredRoles={["manager", "moderator", "admin"]}>
-      <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-4 md:px-6 md:py-8">
-        <header className="space-y-1">
-          <h1 className="text-2xl font-semibold text-foreground md:text-3xl">Time</h1>
-          <p className="text-sm text-foreground-secondary">
-            Execute uma coleta manual para atualizar os dados de partidas.
-          </p>
-        </header>
-
-        <Card className="rounded-xl border border-border bg-card">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-base font-semibold">Coleta de Partidas</CardTitle>
-            <p className="text-sm text-foreground-secondary">
-              {team
-                ? `Clube ativo: ${team.display_name} (EA ID ${team.ea_club_id})`
-                : "Nenhum clube ativo encontrado para este usuario."}
-            </p>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <Button onClick={() => void handleCollect()} disabled={isButtonDisabled}>
-                {isCollecting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="h-4 w-4" />
-                )}
-                {isCollecting
-                  ? "Atualizando..."
-                  : isCooldownActive
-                    ? `Aguardar ${formatCountdown(cooldownRemainingMs)}`
-                    : "Atualizar Dados"}
-              </Button>
-            </div>
-
-            <div className="space-y-1 text-sm text-foreground-secondary">
-              <p>Ultima coleta do clube: {formatDateTime(team?.last_scanned_at)}</p>
-              <p>Cooldown local: {isCooldownActive ? formatCountdown(cooldownRemainingMs) : "disponivel"}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {toast ? (
-        <div className="pointer-events-none fixed right-4 top-4 z-50">
-          <div
-            className={`rounded-md border px-4 py-3 text-sm shadow-lg ${
-              toast.variant === "success"
-                ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-700"
-                : "border-destructive/40 bg-destructive/10 text-destructive"
-            }`}
-            key={toast.id}
-          >
-            {toast.message}
-          </div>
-        </div>
-      ) : null}
-    </RoleGuard>
+    <TeamManagementClient
+      club={club as Club}
+      clubPlayers={clubPlayers}
+      statsMap={statsMap}
+      matches={matches}
+      clubStats={{ activeCount, pendingCount, avgRating, avgGoalsPerMatch, totalMatches: matches.length }}
+      currentUserId={user.id}
+    />
   )
 }
-

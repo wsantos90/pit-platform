@@ -1,3 +1,5 @@
+@import 'material-symbols/outlined.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,6 +8,30 @@
   .text-balance {
     text-wrap: balance;
   }
+}
+
+/* Sidebar glassmorphism — Stitch design */
+.glass-sidebar {
+  background: rgba(16, 25, 34, 0.8);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-item-active {
+  background: rgba(13, 127, 242, 0.15);
+  border-left: 3px solid #0d7ff2;
+  color: #0d7ff2;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
 }
 
 @layer base {
