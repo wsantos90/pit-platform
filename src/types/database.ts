@@ -122,6 +122,12 @@ export interface CollectRun {
     started_at: string;
     finished_at: string | null;
     error_message: string | null;
+    scope: 'cron' | 'tournament' | 'club';
+    collect_token: string | null;
+    collect_token_expires_at: string | null;
+    clubs_total: number;
+    clubs_failed: number;
+    target_ea_club_ids: unknown;
 }
 
 export interface Claim {
@@ -183,6 +189,27 @@ export interface MatchPlayer {
     minutes_played: number;
     interceptions: number;
     possession: number | null;
+}
+
+export interface Lineup {
+    id: string;
+    club_id: string;
+    match_id: string | null;
+    name: string;
+    formation: string;
+    is_default: boolean;
+    created_by: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface LineupPlayer {
+    id: string;
+    lineup_id: string;
+    player_id: string;
+    position: PlayerPosition;
+    is_starter: boolean;
+    sort_order: number;
 }
 
 export interface PlayerStatsView {
@@ -272,6 +299,8 @@ export interface Payment {
     pix_qr_code: string | null;
     pix_copy_paste: string | null;
     pix_expiration: string | null;
+    subscription_id: string | null;
+    is_recurring: boolean;
     created_at: string;
     updated_at: string;
 }
@@ -285,6 +314,22 @@ export interface TrustScore {
     banned_until: string | null;
     last_strike_at: string | null;
     notes: string | null;
+    updated_at: string;
+}
+
+export interface Subscription {
+    id: string;
+    user_id: string | null;
+    club_id: string | null;
+    plan: SubscriptionPlan;
+    status: SubscriptionStatus;
+    gateway: string;
+    gateway_subscription_id: string | null;
+    amount: number;
+    current_period_start: string;
+    current_period_end: string;
+    cancelled_at: string | null;
+    created_at: string;
     updated_at: string;
 }
 

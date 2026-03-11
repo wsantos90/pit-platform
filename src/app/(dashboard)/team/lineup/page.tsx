@@ -1,2 +1,5 @@
-﻿// TODO: Implementar pagina lineup
-export default function Page() { return <div>lineup</div>; }
+import { redirect } from 'next/navigation'
+
+export default function Page() {
+  redirect('/team')
+}

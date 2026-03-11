@@ -1,2 +1,5 @@
-﻿// TODO: Implementar pagina roster
-export default function Page() { return <div>roster</div>; }
+import { redirect } from 'next/navigation'
+
+export default function Page() {
+  redirect('/team')
+}

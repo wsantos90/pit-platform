@@ -1181,7 +1181,7 @@
           "3",
           "16"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1189,7 +1189,7 @@
             "description": "Criar tabela de jogadores do time mostrando gamertag, posiÃ§Ãµes, stats e data de entrada. Incluir botÃ£o 'Convidar Jogador' com modal de busca fuzzy e botÃ£o 'Remover' restrito a manager.",
             "dependencies": [],
             "details": "Usar TanStack Table para tabela responsiva. Modal com React Hook Form e debounce na busca fuzzy por ea_gamertag. Verificar role 'manager' via Supabase auth para botÃ£o remover. Integrar com API club_players.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar exibiÃ§Ã£o correta do elenco. Verificar busca fuzzy retorna jogadores relevantes. Confirmar botÃ£o remover sÃ³ visÃ­vel para manager. Validar tabela responsiva em mobile.",
             "parentId": "undefined"
           },
@@ -1201,7 +1201,7 @@
               1
             ],
             "details": "Criar mutation para POST /api/clubs/invite com insert em club_players e notificaÃ§Ãµes. WebSocket ou polling para atualizar status em tempo real. NotificaÃ§Ã£o com botÃµes aceita/rejeita chamando PATCH /api/club_players/{id}.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criaÃ§Ã£o de registro pending ao convidar. Verificar notificaÃ§Ã£o enviada e recebida. Confirmar aceitaÃ§Ã£o ativa jogador e rejeiÃ§Ã£o deleta registro. Testar fluxo end-to-end.",
             "parentId": "undefined"
           },
@@ -1211,7 +1211,7 @@
             "description": "Criar tabela mostrando histÃ³rico de partidas do time: data, adversÃ¡rio, placar e jogadores participantes.",
             "dependencies": [],
             "details": "Query matches por club_id ordenado por data desc. Usar match-classifier para tipos (Championship/Friendly). Colunas: data, adversÃ¡rio (club_name), placar (home_score-away_score), lista jogadores.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar tabela carrega matches corretos do time. Confirmar classificaÃ§Ã£o de match_type. Testar paginaÃ§Ã£o para >20 matches. Validar formataÃ§Ã£o de placar.",
             "parentId": "undefined"
           },
@@ -1225,7 +1225,7 @@
               3
             ],
             "details": "Usar shadcn/ui Tabs. Layout com header do time (nome, manager, stats). Responsivo com mobile tabs. Stubs para Matchmaking (fila) e EscalaÃ§Ã£o (grid 3-5-2) com TODOs. ProteÃ§Ã£o por auth manager.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar navegaÃ§Ã£o entre abas. Verificar layout responsivo. Confirmar proteÃ§Ã£o de rota (sÃ³ manager acessa). Validar stubs renderizam sem erros.",
             "parentId": "undefined"
           }

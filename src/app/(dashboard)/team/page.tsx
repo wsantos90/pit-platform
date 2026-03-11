@@ -78,11 +78,10 @@ export default async function TeamPage() {
     .filter(cp => cp.is_active && cp.player)
     .map(cp => cp.player!.id)
 
-  // TODO: Verify actual view name — CLAUDE.md lists v_player_stats but types reference player_stats_view
   let statsMap: Record<string, PlayerStatsView> = {}
   if (activePlayerIds.length > 0) {
     const { data: stats } = await supabase
-      .from('player_stats_view')
+      .from('v_player_stats')
       .select('player_id, avg_rating, total_goals, total_assists, total_matches, total_saves, total_tackles, total_clean_sheets, total_passes, ea_gamertag, primary_position, user_id, total_mom, total_reds, total_yellows, best_rating, total_minutes')
       .in('player_id', activePlayerIds)
     if (stats) {

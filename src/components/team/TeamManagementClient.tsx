@@ -23,6 +23,7 @@ type Props = {
 }
 
 type PlayerSearchResult = Pick<Player, 'id' | 'ea_gamertag' | 'primary_position' | 'secondary_position'>
+type FeedbackState = { type: 'success' | 'error'; message: string } | null
 
 export function TeamManagementClient({
   club,
@@ -39,11 +40,12 @@ export function TeamManagementClient({
   const [searchResults, setSearchResults] = useState<PlayerSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [invitingId, setInvitingId] = useState<string | null>(null)
+  const [feedback, setFeedback] = useState<FeedbackState>(null)
+  const [inviteError, setInviteError] = useState<string | null>(null)
   const supabase = createClient()
 
-  // IDs of players already in club (active or pending)
   const existingPlayerIds = new Set(
-    clubPlayers.filter(cp => cp.player).map(cp => cp.player!.id)
+    clubPlayers.filter((cp) => cp.player).map((cp) => cp.player!.id)
   )
 
   async function handleSearch(query: string) {
@@ -52,14 +54,16 @@ export function TeamManagementClient({
       setSearchResults([])
       return
     }
+
     setIsSearching(true)
     const { data } = await supabase
       .from('players')
       .select('id, ea_gamertag, primary_position, secondary_position')
       .ilike('ea_gamertag', `%${query}%`)
       .limit(8)
+
     setSearchResults(
-      ((data ?? []) as PlayerSearchResult[]).filter(p => !existingPlayerIds.has(p.id))
+      ((data ?? []) as PlayerSearchResult[]).filter((player) => !existingPlayerIds.has(player.id))
     )
     setIsSearching(false)
   }
@@ -67,43 +71,51 @@ export function TeamManagementClient({
   async function handleInvite(playerId: string) {
     setInvitingId(playerId)
 
-    // Create pending club_player record
-    await supabase.from('club_players').insert({
-      club_id: club.id,
-      player_id: playerId,
-      is_active: false,
-      role_in_club: 'player',
-      joined_at: new Date().toISOString(),
-    })
+    try {
+      const res = await fetch('/api/clubs/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clubId: club.id, playerId }),
+      })
 
-    // TODO: Create roster_invite notification for the invited player
-    // await supabase.from('notifications').insert({ user_id: player.user_id, type: 'roster_invite', ... })
-
-    setInvitingId(null)
-    setShowInviteModal(false)
-    setSearchQuery('')
-    setSearchResults([])
-    startTransition(() => router.refresh())
+      if (!res.ok) {
+        const error = await res.json()
+        alert(error.message || 'Erro ao enviar convite') // Simple alert for now, could be a toast
+      } else {
+        // Success
+        setShowInviteModal(false)
+        setSearchQuery('')
+        setSearchResults([])
+        startTransition(() => router.refresh())
+      }
+    } catch (e) {
+      console.error(e)
+      alert('Erro de conexão ao enviar convite')
+    } finally {
+      setInvitingId(null)
+    }
   }
 
   return (
     <div className="flex flex-col gap-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
-            Gestão de Elenco
+            Gestao de Elenco
           </h1>
-          <p className="text-muted-foreground text-sm">
+          <p className="text-sm text-muted-foreground">
             {club.display_name}
             <span className="mx-1.5 text-muted-foreground/40">·</span>
             EA ID: {club.ea_club_id}
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             size="sm"
-            onClick={() => setShowInviteModal(true)}
+            onClick={() => {
+              setShowInviteModal(true)
+              setInviteError(null)
+            }}
             className="gap-1.5"
           >
             <span className="material-symbols-outlined text-base">person_add</span>
@@ -112,80 +124,86 @@ export function TeamManagementClient({
         </div>
       </div>
 
-      {/* Tabs */}
+      {feedback ? (
+        <div
+          className={`rounded-xl border px-4 py-3 text-sm ${
+            feedback.type === 'success'
+              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-300'
+              : 'border-destructive/30 bg-destructive/10 text-destructive'
+          }`}
+        >
+          {feedback.message}
+        </div>
+      ) : null}
+
       <Tabs defaultValue="elenco" className="w-full">
-        <TabsList className="w-full justify-start border-b border-border rounded-none bg-transparent gap-1 h-auto pb-0 mb-6">
+        <TabsList className="mb-6 h-auto w-full justify-start gap-1 rounded-none border-b border-border bg-transparent pb-0">
           <TabsTrigger
             value="elenco"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-0 text-sm font-semibold"
+            className="rounded-none border-b-2 border-transparent px-4 pb-3 pt-0 text-sm font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
           >
             Elenco
             {clubStats.activeCount > 0 && (
-              <span className="ml-1.5 text-[10px] bg-primary/15 text-primary px-1.5 py-0.5 rounded-full font-bold">
+              <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[10px] font-bold text-primary">
                 {clubStats.activeCount}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger
             value="historico"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-0 text-sm font-semibold"
+            className="rounded-none border-b-2 border-transparent px-4 pb-3 pt-0 text-sm font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
           >
-            Histórico
+            Historico
           </TabsTrigger>
           <TabsTrigger
             value="matchmaking"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-0 text-sm font-semibold"
+            className="rounded-none border-b-2 border-transparent px-4 pb-3 pt-0 text-sm font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
           >
             Matchmaking
           </TabsTrigger>
           <TabsTrigger
             value="escalacao"
-            className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent px-4 pb-3 pt-0 text-sm font-semibold"
+            className="rounded-none border-b-2 border-transparent px-4 pb-3 pt-0 text-sm font-semibold data-[state=active]:border-primary data-[state=active]:bg-transparent"
           >
-            Escalação
+            Escalacao
           </TabsTrigger>
         </TabsList>
 
-        {/* Elenco Tab */}
         <TabsContent value="elenco" className="mt-0">
           <TeamDashboard stats={clubStats} />
           <RosterTable
             clubPlayers={clubPlayers}
             statsMap={statsMap}
-            clubId={club.id}
             currentUserId={currentUserId}
           />
         </TabsContent>
 
-        {/* Histórico Tab */}
         <TabsContent value="historico" className="mt-0">
           <MatchHistoryTable matches={matches} clubId={club.id} />
         </TabsContent>
 
-        {/* Matchmaking Tab — stub */}
         <TabsContent value="matchmaking" className="mt-0">
-          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-            <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
               <span className="material-symbols-outlined text-3xl text-primary">sports_esports</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground mb-1">Matchmaking em breve</h3>
-              <p className="text-muted-foreground text-sm max-w-xs">
-                Fila de busca por adversários em tempo real. Esta funcionalidade está sendo desenvolvida.
+              <h3 className="mb-1 text-lg font-bold text-foreground">Matchmaking em breve</h3>
+              <p className="max-w-xs text-sm text-muted-foreground">
+                Fila de busca por adversarios em tempo real. Esta funcionalidade esta sendo desenvolvida.
               </p>
             </div>
           </div>
         </TabsContent>
 
-        {/* Escalação Tab — stub */}
         <TabsContent value="escalacao" className="mt-0">
-          <div className="flex flex-col items-center justify-center py-20 gap-4 text-center">
-            <div className="size-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
               <span className="material-symbols-outlined text-3xl text-primary">grid_view</span>
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground mb-1">Escalação em breve</h3>
-              <p className="text-muted-foreground text-sm max-w-xs">
+              <h3 className="mb-1 text-lg font-bold text-foreground">Escalacao em breve</h3>
+              <p className="max-w-xs text-sm text-muted-foreground">
                 Grid visual de campo no esquema 3-5-2 com jogadores posicionados.
               </p>
             </div>
@@ -194,17 +212,21 @@ export function TeamManagementClient({
         </TabsContent>
       </Tabs>
 
-      {/* Invite Modal */}
       {showInviteModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm"
-          onClick={(e) => { if (e.target === e.currentTarget) setShowInviteModal(false) }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) {
+              setShowInviteModal(false)
+              setInviteError(null)
+            }
+          }}
         >
           <div
             className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl"
             style={{ backdropFilter: 'blur(16px)' }}
           >
-            <div className="flex items-center justify-between mb-5">
+            <div className="mb-5 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-foreground">Convidar Atleta</h3>
                 <p className="text-sm text-muted-foreground">Busque pelo gamertag EA do jogador</p>
@@ -213,48 +235,51 @@ export function TeamManagementClient({
                 variant="ghost"
                 size="sm"
                 className="size-8 p-0"
-                onClick={() => setShowInviteModal(false)}
+                onClick={() => {
+                  setShowInviteModal(false)
+                  setInviteError(null)
+                }}
               >
                 <span className="material-symbols-outlined text-base">close</span>
               </Button>
             </div>
 
             <div className="relative mb-4">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-base">
+              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-base text-muted-foreground">
                 search
               </span>
               <Input
                 placeholder="Buscar gamertag..."
                 className="pl-9"
                 value={searchQuery}
-                onChange={(e) => void handleSearch(e.target.value)}
+                onChange={(event) => void handleSearch(event.target.value)}
                 autoFocus
               />
             </div>
 
             {isSearching && (
-              <p className="text-sm text-muted-foreground text-center py-4">Buscando...</p>
+              <p className="py-4 text-center text-sm text-muted-foreground">Buscando...</p>
             )}
 
             {!isSearching && searchResults.length === 0 && searchQuery.length >= 2 && (
-              <p className="text-sm text-muted-foreground text-center py-4">
+              <p className="py-4 text-center text-sm text-muted-foreground">
                 Nenhum jogador encontrado.
               </p>
             )}
 
             {searchResults.length > 0 && (
-              <ul className="divide-y divide-border rounded-xl border border-border overflow-hidden">
+              <ul className="overflow-hidden rounded-xl border border-border">
                 {searchResults.map((player) => (
                   <li
                     key={player.id}
-                    className="flex items-center justify-between px-4 py-3 hover:bg-muted/40 transition-colors"
+                    className="flex items-center justify-between border-b border-border px-4 py-3 transition-colors last:border-b-0 hover:bg-muted/40"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="size-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-sm font-bold text-primary">
+                      <div className="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary/10 text-sm font-bold text-primary">
                         {player.ea_gamertag.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="font-semibold text-foreground text-sm">{player.ea_gamertag}</p>
+                        <p className="text-sm font-semibold text-foreground">{player.ea_gamertag}</p>
                         <p className="text-xs text-muted-foreground">{player.primary_position}</p>
                       </div>
                     </div>
@@ -270,6 +295,10 @@ export function TeamManagementClient({
                 ))}
               </ul>
             )}
+
+            {inviteError ? (
+              <p className="mt-4 text-sm text-destructive">{inviteError}</p>
+            ) : null}
           </div>
         </div>
       )}

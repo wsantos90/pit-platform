@@ -1,2 +1,5 @@
-﻿// TODO: Implementar pagina matches
-export default function Page() { return <div>matches</div>; }
+import { redirect } from 'next/navigation'
+
+export default function Page() {
+  redirect('/team')
+}

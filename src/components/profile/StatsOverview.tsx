@@ -11,6 +11,7 @@ import {
   formatNumber,
   formatRating,
   getPeriodCutoff,
+  parseNumeric,
   type ProfilePeriod,
 } from "@/lib/profile/dashboard"
 
@@ -33,19 +34,6 @@ type MatchPlayerAggregateRow = {
   rating: number | string | null
   passes_completed: number | string | null
   tackles_made: number | string | null
-}
-
-function toNumber(value: number | string | null | undefined) {
-  if (typeof value === "number") {
-    return value
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : 0
-  }
-
-  return 0
 }
 
 const EMPTY_STATS: OverviewStats = {
@@ -90,14 +78,14 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         }
 
         const rows = (data ?? []) as MatchPlayerAggregateRow[]
-        const ratings = rows.map((row) => toNumber(row.rating)).filter((value) => value > 0)
+        const ratings = rows.map((row) => parseNumeric(row.rating)).filter((value): value is number => value !== null && value > 0)
         const nextStats = rows.reduce<OverviewStats>(
           (accumulator, row) => ({
-            goals: accumulator.goals + toNumber(row.goals),
-            assists: accumulator.assists + toNumber(row.assists),
+            goals: accumulator.goals + (parseNumeric(row.goals) ?? 0),
+            assists: accumulator.assists + (parseNumeric(row.assists) ?? 0),
             avgRating: accumulator.avgRating,
-            passesCompleted: accumulator.passesCompleted + toNumber(row.passes_completed),
-            tacklesMade: accumulator.tacklesMade + toNumber(row.tackles_made),
+            passesCompleted: accumulator.passesCompleted + (parseNumeric(row.passes_completed) ?? 0),
+            tacklesMade: accumulator.tacklesMade + (parseNumeric(row.tackles_made) ?? 0),
             matchCount: accumulator.matchCount + 1,
           }),
           { ...EMPTY_STATS }
@@ -112,7 +100,7 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         }
       } catch {
         if (isMounted) {
-          setError("Nao foi possivel carregar o resumo do jogador.")
+          setError("Não foi possível carregar o resumo do jogador.")
           setStats(EMPTY_STATS)
         }
       } finally {
@@ -138,13 +126,13 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
       <CardHeader className="gap-4 pb-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">Resumo de performance</CardTitle>
-          <p className="text-sm text-foreground-secondary">
-            Estatisticas filtradas apenas por championship e friendly_pit.
+          <p className="text-sm text-muted-foreground">
+            Estatísticas filtradas apenas por championship e friendly_pit.
           </p>
         </div>
 
         <div className="w-full md:max-w-[180px]">
-          <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Periodo">
+          <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Período">
             {PROFILE_PERIOD_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -159,8 +147,8 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatsCard label="Gols" value={loading ? "..." : formatNumber(stats.goals)} helper={helper} />
-          <StatsCard label="Assistencias" value={loading ? "..." : formatNumber(stats.assists)} helper={helper} />
-          <StatsCard label="Nota media" value={loading ? "..." : formatRating(stats.avgRating)} helper={helper} />
+          <StatsCard label="Assistências" value={loading ? "..." : formatNumber(stats.assists)} helper={helper} />
+          <StatsCard label="Nota média" value={loading ? "..." : formatRating(stats.avgRating)} helper={helper} />
           <StatsCard label="Passes" value={loading ? "..." : formatNumber(stats.passesCompleted)} helper={helper} />
           <StatsCard label="Desarmes" value={loading ? "..." : formatNumber(stats.tacklesMade)} helper={helper} />
         </div>

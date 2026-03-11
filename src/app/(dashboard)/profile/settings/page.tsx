@@ -1,4 +1,5 @@
-﻿import { redirect } from "next/navigation";
+import { redirect } from "next/navigation";
+import { PlayerIdentityForm } from "@/components/player/PlayerIdentityForm";
 import { PositionSettingsForm } from "@/components/player/PositionSettingsForm";
 import {
   Card,
@@ -27,7 +28,7 @@ export default async function Page() {
 
   const { data: player, error } = await supabase
     .from("players")
-    .select("primary_position, secondary_position")
+    .select("ea_gamertag, primary_position, secondary_position")
     .eq("user_id", user.id)
     .maybeSingle();
 
@@ -36,9 +37,9 @@ export default async function Page() {
       <div className="mx-auto max-w-2xl">
         <Card>
           <CardHeader>
-            <CardTitle>Configuracao de posicoes</CardTitle>
+            <CardTitle>Configuracoes do jogador</CardTitle>
             <CardDescription>
-              Nao foi possivel carregar seus dados de posicao agora.
+              Nao foi possivel carregar seus dados de jogador agora.
             </CardDescription>
           </CardHeader>
         </Card>
@@ -52,9 +53,23 @@ export default async function Page() {
   const initialSecondary = isPlayerPosition(player?.secondary_position)
     ? player.secondary_position
     : null;
+  const initialGamertag = typeof player?.ea_gamertag === "string" ? player.ea_gamertag : "";
+  const hasPlayerProfile = initialGamertag.trim().length >= 3;
 
   return (
-    <div className="mx-auto max-w-2xl">
+    <div className="mx-auto flex max-w-2xl flex-col gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Identificacao do jogador</CardTitle>
+          <CardDescription>
+            Informe sua EA Gamertag para conectar seu atleta ao elenco, convites e estatisticas.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PlayerIdentityForm initialGamertag={initialGamertag} />
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>Configuracao de posicoes</CardTitle>
@@ -66,6 +81,11 @@ export default async function Page() {
           <PositionSettingsForm
             initialPrimary={initialPrimary}
             initialSecondary={initialSecondary}
+            disabledReason={
+              hasPlayerProfile
+                ? null
+                : "Salve primeiro sua EA Gamertag para criar o perfil de jogador."
+            }
           />
         </CardContent>
       </Card>

@@ -65,11 +65,10 @@ function getContextIcon(context: string): string {
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function MSIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
+function MSIcon({ name, className }: { name: string; className?: string }) {
     return (
         <span
             className={`material-symbols-outlined select-none ${className ?? ''}`}
-            style={style}
             aria-hidden="true"
         >
             {name}
@@ -81,20 +80,10 @@ function UserAvatar({ name }: { name: string }) {
     const initial = (name ?? '?').charAt(0).toUpperCase();
     return (
         <div className="relative shrink-0">
-            <div
-                className="w-10 h-10 rounded-full border-2 flex items-center justify-center font-bold text-sm"
-                style={{
-                    borderColor: 'rgba(13, 127, 242, 0.5)',
-                    background: 'rgba(13, 127, 242, 0.15)',
-                    color: '#0d7ff2',
-                }}
-            >
+            <div className="w-10 h-10 rounded-full border-2 border-primary/50 bg-primary/15 text-primary flex items-center justify-center font-bold text-sm">
                 {initial}
             </div>
-            <span
-                className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2"
-                style={{ borderColor: '#101922' }}
-            />
+            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
         </div>
     );
 }
@@ -115,6 +104,7 @@ export function SidebarShell() {
     const [teams, setTeams] = useState<ManagedClub[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [contextOpen, setContextOpen] = useState(false);
+    const [notificationRefreshKey, setNotificationRefreshKey] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const hasTeamContext = availableContexts.includes('team');
@@ -124,10 +114,7 @@ export function SidebarShell() {
 
     // Load managed clubs
     useEffect(() => {
-        if (!hasTeamContext || !user?.id) {
-            setTeams([]);
-            return;
-        }
+        if (!hasTeamContext || !user?.id) return;
         let isMounted = true;
         supabase
             .from('clubs')
@@ -143,6 +130,7 @@ export function SidebarShell() {
     // Load unread notifications
     useEffect(() => {
         if (!user?.id) return;
+
         let isMounted = true;
         supabase
             .from('notifications')
@@ -152,8 +140,20 @@ export function SidebarShell() {
             .then(({ count }) => {
                 if (isMounted) setUnreadCount(count ?? 0);
             });
-        return () => { isMounted = false; };
-    }, [supabase, user?.id]);
+
+        return () => {
+            isMounted = false;
+        };
+    }, [notificationRefreshKey, supabase, user?.id]);
+
+    useEffect(() => {
+        const handler = () => {
+            setNotificationRefreshKey((current) => current + 1);
+        };
+
+        window.addEventListener('pit:notifications-refresh', handler);
+        return () => window.removeEventListener('pit:notifications-refresh', handler);
+    }, []);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -248,12 +248,25 @@ export function SidebarShell() {
         ];
     }, [normalizedContext, isAdmin]);
 
+    const activeContextValue = useMemo(() => {
+        if (normalizedContext === 'team_id' && teamId) return `team:${teamId}`;
+        if (normalizedContext === 'moderation') return 'moderation';
+        if (normalizedContext === 'admin') return 'admin';
+        return 'profile';
+    }, [normalizedContext, teamId]);
+
+    const visibleTeams = useMemo(
+        () => (hasTeamContext && user?.id ? teams : []),
+        [hasTeamContext, teams, user?.id]
+    );
+    const displayedUnreadCount = user?.id ? unreadCount : 0;
+
     // Available context options for the dropdown
     const contextOptions = useMemo(() => {
         const options: Array<{ value: string; label: string; icon: string }> = [
             { value: 'profile', label: 'Meu Perfil', icon: 'person' },
         ];
-        for (const team of teams) {
+        for (const team of visibleTeams) {
             options.push({ value: `team:${team.id}`, label: team.display_name, icon: 'groups' });
         }
         if (hasModerationContext) {
@@ -263,14 +276,7 @@ export function SidebarShell() {
             options.push({ value: 'admin', label: 'Admin', icon: 'shield_person' });
         }
         return options;
-    }, [teams, hasModerationContext, hasAdminContext]);
-
-    const activeContextValue = useMemo(() => {
-        if (normalizedContext === 'team_id' && teamId) return `team:${teamId}`;
-        if (normalizedContext === 'moderation') return 'moderation';
-        if (normalizedContext === 'admin') return 'admin';
-        return 'profile';
-    }, [normalizedContext, teamId]);
+    }, [visibleTeams, hasModerationContext, hasAdminContext]);
 
     function handleContextSelect(value: string) {
         setContextOpen(false);
@@ -292,7 +298,7 @@ export function SidebarShell() {
 
     const displayName = user?.display_name ?? user?.email ?? '?';
     const roleLabel = getRoleLabel(roles);
-    const contextLabel = getContextLabel(normalizedContext, teamId, teams);
+    const contextLabel = getContextLabel(normalizedContext, teamId, visibleTeams);
     const contextIcon = getContextIcon(normalizedContext);
     const disabled = rolesLoading || !hydrated;
 
@@ -301,10 +307,7 @@ export function SidebarShell() {
             {/* Brand */}
             <div className="p-6 flex flex-col gap-1">
                 <div className="flex items-center gap-3">
-                    <div
-                        className="rounded-lg p-1.5 flex items-center justify-center"
-                        style={{ background: '#0d7ff2' }}
-                    >
+                    <div className="rounded-lg p-1.5 bg-primary flex items-center justify-center">
                         <MSIcon name="insights" className="text-white text-2xl" />
                     </div>
                     <h1 className="text-2xl font-black tracking-tighter text-slate-100">P.I.T</h1>
@@ -315,7 +318,7 @@ export function SidebarShell() {
             </div>
 
             {/* User profile card */}
-            <div className="mx-4 mb-6 p-3 rounded-xl border border-slate-700/50 flex items-center gap-3" style={{ background: 'rgba(30,41,59,0.4)' }}>
+            <div className="mx-4 mb-6 p-3 rounded-xl border border-slate-700/50 bg-slate-800/40 flex items-center gap-3">
                 <UserAvatar name={displayName} />
                 <div className="flex flex-col min-w-0">
                     <span className="text-sm font-bold text-slate-100 leading-tight truncate">
@@ -334,35 +337,26 @@ export function SidebarShell() {
                     <button
                         disabled={disabled}
                         onClick={() => setContextOpen((o) => !o)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-slate-700 transition-colors disabled:opacity-50"
-                        style={{ background: 'rgba(30,41,59,0.6)' }}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800/60 transition-colors disabled:opacity-50"
                     >
                         <div className="flex items-center gap-2">
-                            <MSIcon name={contextIcon} style={{ color: '#0d7ff2' }} className="text-xl" />
+                            <MSIcon name={contextIcon} className="text-primary text-xl" />
                             <span className="text-sm font-semibold text-slate-100">{contextLabel}</span>
                         </div>
                         <MSIcon name="unfold_more" className="text-slate-500 text-xl" />
                     </button>
 
                     {contextOpen && contextOptions.length > 1 && (
-                        <div
-                            className="absolute top-full left-0 w-full mt-1 rounded-lg border border-slate-700 shadow-xl overflow-hidden z-10"
-                            style={{ background: 'rgba(16, 25, 34, 0.97)' }}
-                        >
+                        <div className="absolute top-full left-0 w-full mt-1 rounded-lg border border-slate-700 bg-[hsl(210_36%_6%)] shadow-xl overflow-hidden z-10">
                             {contextOptions.map((opt) => (
                                 <button
                                     key={opt.value}
                                     onClick={() => handleContextSelect(opt.value)}
                                     className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors text-left ${
                                         activeContextValue === opt.value
-                                            ? 'text-[#0d7ff2]'
+                                            ? 'text-primary bg-primary/15'
                                             : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
                                     }`}
-                                    style={
-                                        activeContextValue === opt.value
-                                            ? { background: 'rgba(13,127,242,0.15)' }
-                                            : undefined
-                                    }
                                 >
                                     <MSIcon name={opt.icon} className="text-lg text-slate-400" />
                                     {opt.label}
@@ -398,17 +392,14 @@ export function SidebarShell() {
                                         <div className="flex items-center gap-3">
                                             <MSIcon
                                                 name={item.icon}
-                                                className={`text-[22px] ${isActive ? '' : 'group-hover:text-[#0d7ff2]'}`}
+                                                className={`text-[22px] ${isActive ? '' : 'group-hover:text-primary'}`}
                                             />
                                             <span className={`text-sm ${isActive ? 'font-bold' : 'font-medium'}`}>
                                                 {item.label}
                                             </span>
                                         </div>
                                         {item.badge != null && item.badge > 0 && (
-                                            <span
-                                                className="text-white text-[10px] font-black px-1.5 py-0.5 rounded-full"
-                                                style={{ background: '#0d7ff2' }}
-                                            >
+                                            <span className="bg-primary text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
                                                 {item.badge}
                                             </span>
                                         )}
@@ -424,17 +415,14 @@ export function SidebarShell() {
             <div className="p-4 border-t border-slate-800/50 flex flex-col gap-2">
                 <button className="flex items-center justify-between w-full px-4 py-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-all group">
                     <div className="flex items-center gap-3">
-                        <MSIcon name="notifications" className="text-[22px] group-hover:text-[#0d7ff2]" />
+                        <MSIcon name="notifications" className="text-[22px] group-hover:text-primary" />
                         <span className="text-sm font-medium">Notificações</span>
                     </div>
-                    {unreadCount > 0 && (
-                        <span
-                            className="text-white text-[10px] font-black px-2 py-0.5 rounded-full"
-                            style={{ background: '#0d7ff2' }}
-                        >
-                            {unreadCount}
-                        </span>
-                    )}
+                        {displayedUnreadCount > 0 && (
+                            <span className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full">
+                                {displayedUnreadCount}
+                            </span>
+                        )}
                 </button>
 
                 <button

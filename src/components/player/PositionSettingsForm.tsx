@@ -22,6 +22,7 @@ const POSITION_LABELS: Record<PlayerPosition, string> = {
 type PositionSettingsFormProps = {
   initialPrimary: PlayerPosition;
   initialSecondary: PlayerPosition | null;
+  disabledReason?: string | null;
 };
 
 type ToastState = {
@@ -49,6 +50,7 @@ function parseApiError(payload: unknown): string {
 export function PositionSettingsForm({
   initialPrimary,
   initialSecondary,
+  disabledReason = null,
 }: PositionSettingsFormProps) {
   const [primaryPosition, setPrimaryPosition] = useState<PlayerPosition>(initialPrimary);
   const [secondaryPosition, setSecondaryPosition] = useState<PlayerPosition | "">(
@@ -71,6 +73,7 @@ export function PositionSettingsForm({
 
   const secondaryEqualsPrimary =
     secondaryPosition !== "" && secondaryPosition === primaryPosition;
+  const isDisabled = isSaving || Boolean(disabledReason);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -127,7 +130,7 @@ export function PositionSettingsForm({
             name="primary_position"
             value={primaryPosition}
             onChange={(event) => setPrimaryPosition(event.target.value as PlayerPosition)}
-            disabled={isSaving}
+            disabled={isDisabled}
           >
             {PLAYER_POSITIONS.map((position) => (
               <option key={position} value={position}>
@@ -144,7 +147,7 @@ export function PositionSettingsForm({
             name="secondary_position"
             value={secondaryPosition}
             onChange={(event) => setSecondaryPosition(event.target.value as PlayerPosition | "")}
-            disabled={isSaving}
+            disabled={isDisabled}
           >
             <option value="">Nenhuma</option>
             {PLAYER_POSITIONS.map((position) => (
@@ -161,6 +164,10 @@ export function PositionSettingsForm({
           </p>
         ) : null}
 
+        {disabledReason ? (
+          <p className="text-sm text-muted-foreground">{disabledReason}</p>
+        ) : null}
+
         <div className="space-y-2">
           <p className="text-sm font-medium">Previa</p>
           <div className="flex flex-wrap items-center gap-2">
@@ -173,7 +180,7 @@ export function PositionSettingsForm({
           </div>
         </div>
 
-        <Button type="submit" disabled={isSaving || secondaryEqualsPrimary}>
+        <Button type="submit" disabled={isDisabled || secondaryEqualsPrimary}>
           {isSaving ? "Salvando..." : "Salvar posicoes"}
         </Button>
       </form>

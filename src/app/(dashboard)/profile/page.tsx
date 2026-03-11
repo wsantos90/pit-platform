@@ -1,6 +1,7 @@
 import { Suspense } from "react"
 import EvolutionChart from "@/components/profile/EvolutionChart"
 import MatchHistory from "@/components/profile/MatchHistory"
+import { PendingInvitesCard } from "@/components/profile/PendingInvitesCard"
 import PlayerHeader from "@/components/profile/PlayerHeader"
 import PositionStats from "@/components/profile/PositionStats"
 import QuickClubRefreshCard from "@/components/profile/QuickClubRefreshCard"
@@ -9,6 +10,17 @@ import { Card, CardContent } from "@/components/ui/card"
 import { loadManagerCollectContext } from "@/lib/collect/managerClub"
 import { createClient } from "@/lib/supabase/server"
 import type { Player } from "@/types/database"
+
+type PendingInviteRow = {
+  id: string
+  club_id: string
+  joined_at: string
+  club: {
+    id: string
+    display_name: string
+    ea_club_id: string
+  } | null
+}
 
 function SectionFallback({ label }: { label: string }) {
   return (
@@ -32,6 +44,27 @@ export default async function Page() {
     supabase.from("players").select("*").eq("user_id", user.id).maybeSingle<Player>(),
     loadManagerCollectContext(supabase, user.id, user.email ?? null),
   ])
+
+  let pendingInvites: PendingInviteRow[] = []
+  if (player) {
+    const { data: inviteRows } = await supabase
+      .from("club_players")
+      .select(`
+        id, club_id, joined_at,
+        club:clubs(id, display_name, ea_club_id)
+      `)
+      .eq("player_id", player.id)
+      .eq("is_active", false)
+      .is("left_at", null)
+      .order("joined_at", { ascending: false })
+
+    pendingInvites = (inviteRows ?? []).map((invite) => ({
+      id: invite.id,
+      club_id: invite.club_id,
+      joined_at: invite.joined_at,
+      club: Array.isArray(invite.club) ? invite.club[0] ?? null : invite.club,
+    }))
+  }
 
   const showManagerSection = context.canCollect || context.roles.includes("manager") || context.roles.includes("admin")
 
@@ -73,6 +106,8 @@ export default async function Page() {
           </Card>
         )
       ) : null}
+
+      {player ? <PendingInvitesCard invites={pendingInvites} /> : null}
 
       {player ? (
         <>
