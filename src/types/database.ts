@@ -191,6 +191,7 @@ export interface MatchPlayer {
     possession: number | null;
 }
 
+<<<<<<< HEAD
 export interface Lineup {
     id: string;
     club_id: string;
@@ -212,6 +213,8 @@ export interface LineupPlayer {
     sort_order: number;
 }
 
+=======
+>>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 export interface PlayerStatsView {
     player_id: string;
     ea_gamertag: string;
@@ -343,3 +346,36 @@ export interface Notification {
     is_read: boolean;
     created_at: string;
 }
+
+export type PlayerStatsView = {
+    player_id: string
+    ea_gamertag: string
+    primary_position: PlayerPosition
+    secondary_position: PlayerPosition | null
+    user_id: string
+    total_matches: number
+    total_goals: number
+    total_assists: number
+    avg_rating: number | null
+    total_mom: number
+    total_clean_sheets: number
+    total_saves: number
+    total_tackles: number
+    total_passes: number
+    total_yellows: number
+    total_reds: number
+    best_rating: number | null
+    total_minutes: number
+  }
+  
+  export type PlayerStatsByPositionView = {
+    player_id: string
+    resolved_position: PlayerPosition
+    matches_at_position: number
+    goals: number
+    assists: number
+    avg_rating: number | null
+    tackles: number
+    saves: number
+    clean_sheets: number
+  }
