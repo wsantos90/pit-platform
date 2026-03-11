@@ -90,16 +90,6 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         }
 
         const rows = (data ?? []) as MatchPlayerAggregateRow[]
-<<<<<<< HEAD
-        const ratings = rows.map((row) => parseNumeric(row.rating)).filter((value): value is number => value !== null && value > 0)
-        const nextStats = rows.reduce<OverviewStats>(
-          (accumulator, row) => ({
-            goals: accumulator.goals + (parseNumeric(row.goals) ?? 0),
-            assists: accumulator.assists + (parseNumeric(row.assists) ?? 0),
-            avgRating: accumulator.avgRating,
-            passesCompleted: accumulator.passesCompleted + (parseNumeric(row.passes_completed) ?? 0),
-            tacklesMade: accumulator.tacklesMade + (parseNumeric(row.tackles_made) ?? 0),
-=======
         const ratings = rows.map((row) => toNumber(row.rating)).filter((value) => value > 0)
         const nextStats = rows.reduce<OverviewStats>(
           (accumulator, row) => ({
@@ -108,7 +98,6 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
             avgRating: accumulator.avgRating,
             passesCompleted: accumulator.passesCompleted + toNumber(row.passes_completed),
             tacklesMade: accumulator.tacklesMade + toNumber(row.tackles_made),
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
             matchCount: accumulator.matchCount + 1,
           }),
           { ...EMPTY_STATS }
@@ -123,11 +112,7 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         }
       } catch {
         if (isMounted) {
-<<<<<<< HEAD
-          setError("Não foi possível carregar o resumo do jogador.")
-=======
           setError("Nao foi possivel carregar o resumo do jogador.")
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           setStats(EMPTY_STATS)
         }
       } finally {
@@ -153,22 +138,13 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
       <CardHeader className="gap-4 pb-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">Resumo de performance</CardTitle>
-<<<<<<< HEAD
-          <p className="text-sm text-muted-foreground">
-            Estatísticas filtradas apenas por championship e friendly_pit.
-=======
           <p className="text-sm text-foreground-secondary">
             Estatisticas filtradas apenas por championship e friendly_pit.
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           </p>
         </div>
 
         <div className="w-full md:max-w-[180px]">
-<<<<<<< HEAD
-          <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Período">
-=======
           <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Periodo">
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
             {PROFILE_PERIOD_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -183,13 +159,8 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatsCard label="Gols" value={loading ? "..." : formatNumber(stats.goals)} helper={helper} />
-<<<<<<< HEAD
-          <StatsCard label="Assistências" value={loading ? "..." : formatNumber(stats.assists)} helper={helper} />
-          <StatsCard label="Nota média" value={loading ? "..." : formatRating(stats.avgRating)} helper={helper} />
-=======
           <StatsCard label="Assistencias" value={loading ? "..." : formatNumber(stats.assists)} helper={helper} />
           <StatsCard label="Nota media" value={loading ? "..." : formatRating(stats.avgRating)} helper={helper} />
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           <StatsCard label="Passes" value={loading ? "..." : formatNumber(stats.passesCompleted)} helper={helper} />
           <StatsCard label="Desarmes" value={loading ? "..." : formatNumber(stats.tacklesMade)} helper={helper} />
         </div>
