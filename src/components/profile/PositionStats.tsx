@@ -5,7 +5,7 @@ import { PositionBadge } from "@/components/player/PositionBadge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { createClient } from "@/lib/supabase/client"
-import { PROFILE_MATCH_TYPES, formatNumber, formatRating } from "@/lib/profile/dashboard"
+import { PROFILE_MATCH_TYPES, formatNumber, formatRating, parseNumeric } from "@/lib/profile/dashboard"
 import type { PlayerPosition, PlayerStatsByPositionView } from "@/types/database"
 
 type PositionStatsProps = {
@@ -24,19 +24,6 @@ type PositionStatsRow = {
 type AggregatedPositionStats = PlayerStatsByPositionView & {
   ratingTotal: number
   ratingCount: number
-}
-
-function toNumber(value: number | string | null | undefined) {
-  if (typeof value === "number") {
-    return value
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : 0
-  }
-
-  return 0
 }
 
 export default function PositionStats({ playerId }: PositionStatsProps) {
@@ -93,19 +80,11 @@ export default function PositionStats({ playerId }: PositionStatsProps) {
           aggregated.set(row.resolved_position, {
             ...current,
             matches_at_position: nextMatchCount,
-<<<<<<< HEAD
             goals: current.goals + (parseNumeric(row.goals) ?? 0),
             assists: current.assists + (parseNumeric(row.assists) ?? 0),
             avg_rating: nextRatingCount ? Number((nextRatingTotal / nextRatingCount).toFixed(2)) : null,
             tackles: current.tackles + (parseNumeric(row.tackles_made) ?? 0),
             saves: current.saves + (parseNumeric(row.saves) ?? 0),
-=======
-            goals: current.goals + toNumber(row.goals),
-            assists: current.assists + toNumber(row.assists),
-            avg_rating: nextRatingCount ? Number((nextRatingTotal / nextRatingCount).toFixed(2)) : null,
-            tackles: current.tackles + toNumber(row.tackles_made),
-            saves: current.saves + toNumber(row.saves),
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
             ratingTotal: nextRatingTotal,
             ratingCount: nextRatingCount,
           })
@@ -120,11 +99,7 @@ export default function PositionStats({ playerId }: PositionStatsProps) {
         }
       } catch {
         if (isMounted) {
-<<<<<<< HEAD
-          setError("Não foi possível carregar as stats por posição.")
-=======
           setError("Nao foi possivel carregar as stats por posicao.")
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           setRows([])
         }
       } finally {
@@ -144,13 +119,8 @@ export default function PositionStats({ playerId }: PositionStatsProps) {
   return (
     <Card className="border-border bg-card">
       <CardHeader className="space-y-1">
-<<<<<<< HEAD
-        <CardTitle className="text-base font-semibold">Stats por posição</CardTitle>
-        <p className="text-sm text-muted-foreground">Agrupamento por resolved_position nas partidas competitivas.</p>
-=======
         <CardTitle className="text-base font-semibold">Stats por posicao</CardTitle>
         <p className="text-sm text-foreground-secondary">Agrupamento por resolved_position nas partidas competitivas.</p>
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
       </CardHeader>
 
       <CardContent className="space-y-4">
@@ -160,19 +130,11 @@ export default function PositionStats({ playerId }: PositionStatsProps) {
           <Table>
             <TableHeader>
               <TableRow>
-<<<<<<< HEAD
-                <TableHead>Posição</TableHead>
-                <TableHead>Partidas</TableHead>
-                <TableHead>Gols</TableHead>
-                <TableHead>Assistências</TableHead>
-                <TableHead>Rating médio</TableHead>
-=======
                 <TableHead>Posicao</TableHead>
                 <TableHead>Partidas</TableHead>
                 <TableHead>Gols</TableHead>
                 <TableHead>Assistencias</TableHead>
                 <TableHead>Rating medio</TableHead>
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
                 <TableHead>Tackles</TableHead>
                 <TableHead>Saves</TableHead>
               </TableRow>
@@ -180,13 +142,8 @@ export default function PositionStats({ playerId }: PositionStatsProps) {
             <TableBody>
               {loading ? (
                 <TableRow>
-<<<<<<< HEAD
-                  <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                    Carregando stats por posição...
-=======
                   <TableCell colSpan={7} className="py-6 text-center text-sm text-foreground-secondary">
                     Carregando stats por posicao...
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
                   </TableCell>
                 </TableRow>
               ) : rows.length ? (
@@ -203,13 +160,8 @@ export default function PositionStats({ playerId }: PositionStatsProps) {
                 ))
               ) : (
                 <TableRow>
-<<<<<<< HEAD
-                  <TableCell colSpan={7} className="py-6 text-center text-sm text-muted-foreground">
-                    Nenhuma estatística por posição encontrada.
-=======
                   <TableCell colSpan={7} className="py-6 text-center text-sm text-foreground-secondary">
                     Nenhuma estatistica por posicao encontrada.
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
                   </TableCell>
                 </TableRow>
               )}

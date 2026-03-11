@@ -6,7 +6,7 @@ export const PROFILE_PERIOD_OPTIONS = [
   { value: "7d", label: "7 dias" },
   { value: "30d", label: "30 dias" },
   { value: "90d", label: "90 dias" },
-  { value: "all", label: "Todo período" },
+  { value: "all", label: "Todo periodo" },
 ] as const
 
 export type ProfilePeriod = (typeof PROFILE_PERIOD_OPTIONS)[number]["value"]
@@ -52,7 +52,7 @@ export type NormalizedProfileMatchRow = Omit<ProfileMatchRow, "matches" | "clubs
 }
 
 export const PLAYER_POSITION_OPTIONS: Array<{ value: PlayerPosition | "all"; label: string }> = [
-  { value: "all", label: "Todas posições" },
+  { value: "all", label: "Todas posicoes" },
   { value: "GK", label: "GK" },
   { value: "ZAG", label: "ZAG" },
   { value: "VOL", label: "VOL" },
@@ -100,21 +100,19 @@ export function formatDateTime(value: string, options?: Intl.DateTimeFormatOptio
   }).format(parsed)
 }
 
-<<<<<<< HEAD
-/** Converte valor numérico do banco (pode chegar como string). Retorna null para null/inválido. */
 export function parseNumeric(value: number | string | null | undefined): number | null {
   if (typeof value === "number") {
     return Number.isFinite(value) ? value : null
   }
+
   if (typeof value === "string") {
     const parsed = Number(value)
     return Number.isFinite(parsed) ? parsed : null
   }
+
   return null
 }
 
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 export function normalizeProfileMatchRow(row: ProfileMatchRow): NormalizedProfileMatchRow | null {
   const match = Array.isArray(row.matches) ? row.matches[0] : row.matches
   const club = Array.isArray(row.clubs) ? row.clubs[0] : row.clubs ?? null
@@ -201,11 +199,7 @@ export function getResultBadgeClass(result: "W" | "D" | "L") {
 
 export function getRatingClass(rating: number | null) {
   if (rating === null || rating === undefined) {
-<<<<<<< HEAD
-    return "text-muted-foreground"
-=======
     return "text-foreground-secondary"
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
   }
 
   if (rating >= 8) {
