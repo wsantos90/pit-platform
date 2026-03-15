@@ -8,6 +8,17 @@
 
 ---
 
+## Project State (atualizar a cada task)
+- **Task atual:** 20 — Escalação visual (grid 3-5-2 com drag & drop)
+- **Tasks pendentes:** 20, 21, 22, 23, 24, 25
+- **Tasks concluídas:** 1–19
+- **Migrations:** 23 arquivos em `supabase/migrations/`
+- **Design:** NÃO aplicar redesign visual durante tasks 20–25. Redesign Stitch completo após task 25.
+- **Fluxo:** Claude (plano) → Codex (impl) → Claude (revisão) → Codex (fix) → Claude (aprovação)
+- **Branch:** criar branch nova por task, merge na main só após aprovação do Claude
+
+---
+
 ## Execution & Validation (Highest Priority)
 
 1. **[2026-03-10] Middleware NÃO protege páginas — só `/api/*`**
@@ -63,3 +74,6 @@
 
 2. **[2026-03-10] Respostas diretas e técnicas**
    Do instead: ir direto ao ponto, sem rodeios ou introduções desnecessárias.
+
+3. **[2026-03-15] Design congelado até task 25**
+   Do instead: NÃO alterar visual, layout ou components de UI durante tasks 20–25. Qualquer melhoria visual fica para o redesign Stitch pós-task 25.

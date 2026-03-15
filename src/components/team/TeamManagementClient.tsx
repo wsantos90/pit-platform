@@ -40,7 +40,7 @@ export function TeamManagementClient({
   const [searchResults, setSearchResults] = useState<PlayerSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [invitingId, setInvitingId] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<FeedbackState>(null)
+  const [feedback] = useState<FeedbackState>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const supabase = createClient()
 

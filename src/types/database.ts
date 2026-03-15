@@ -208,6 +208,7 @@ export interface LineupPlayer {
     lineup_id: string;
     player_id: string;
     position: PlayerPosition;
+    slot_id: string;
     is_starter: boolean;
     sort_order: number;
 }
