@@ -241,6 +241,7 @@ export interface TournamentEntry {
     club_id: string;
     enrolled_by: string;
     payment_status: PaymentStatus;
+    trust_deadline: string | null;
     seed: number | null;
     group_letter: string | null;
     eliminated_at: string | null;

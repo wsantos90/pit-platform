@@ -228,11 +228,16 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Rotas webhook têm sua própria autenticação (x-webhook-secret/x-cron-secret) — bypass do middleware auth
-  const webhookSecret =
-    request.headers.get("x-webhook-secret") ?? request.headers.get("x-cron-secret");
-  const expectedWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
-  if (isWebhookRoute(pathname) && expectedWebhookSecret && webhookSecret === expectedWebhookSecret) {
-    return applySecurityHeaders(response, request);
+  if (isWebhookRoute(pathname)) {
+    const cronSecret = request.headers.get("x-cron-secret");
+    const webhookSecret = request.headers.get("x-webhook-secret");
+    const expectedCronSecret = process.env.CRON_SECRET;
+    const expectedWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
+    const cronValid = expectedCronSecret && cronSecret === expectedCronSecret;
+    const webhookValid = expectedWebhookSecret && webhookSecret === expectedWebhookSecret;
+    if (cronValid || webhookValid) {
+      return applySecurityHeaders(response, request);
+    }
   }
 
   const publicRoute = isPublicRoute(pathname) || (!isProtectedApi(pathname) && !pathname.startsWith("/api"));

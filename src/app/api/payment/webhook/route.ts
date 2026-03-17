@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
             .eq('gateway_payment_id', payment.id);
     }
 
-    // Sync tournament_entries when payment is tournament-related
+    // Sync tournament_entries when payment is tournament-related.
     if (externalReference) {
         const { data: paymentRow } = await admin
             .from('payments')
@@ -89,13 +89,19 @@ export async function POST(request: NextRequest) {
             .maybeSingle();
 
         if (paymentRow?.tournament_id && paymentRow.club_id) {
-            await admin
+            const entryUpdate = admin
                 .from('tournament_entries')
                 .update({ payment_status: status })
                 .eq('tournament_id', paymentRow.tournament_id)
                 .eq('club_id', paymentRow.club_id);
 
-            // Auto-confirm tournament when paid entries >= capacity_min
+            if (status === 'paid') {
+                entryUpdate.neq('payment_status', 'cancelled');
+            }
+
+            await entryUpdate;
+
+            // Auto-confirm tournament when paid entries >= capacity_min.
             if (status === 'paid') {
                 const [{ count }, { data: tournament }] = await Promise.all([
                     admin
@@ -122,6 +128,19 @@ export async function POST(request: NextRequest) {
                         paidCount: count,
                     });
                 }
+
+                await admin
+                    .from('trust_scores')
+                    .upsert(
+                        {
+                            club_id: paymentRow.club_id,
+                            is_trusted: true,
+                            strikes: 0,
+                            suspended_until: null,
+                            updated_at: new Date().toISOString(),
+                        },
+                        { onConflict: 'club_id', ignoreDuplicates: false }
+                    );
             }
         }
     }
