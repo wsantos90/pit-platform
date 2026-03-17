@@ -15,6 +15,10 @@ type QueueEntry = {
   pit_rating: number;
 };
 
+type ClubRatingRelation = {
+  pit_rating: number | null;
+};
+
 /**
  * Executa o matching para todos os slots com 2+ entries em 'waiting',
  * ou somente para um slot específico se `slotTime` for fornecido.
@@ -51,7 +55,8 @@ export async function runMatching(slotTime?: string): Promise<number> {
   // Group by slot_time
   const bySlot = new Map<string, QueueEntry[]>();
   for (const entry of waitingEntries) {
-    const clubRating = (entry.clubs as { pit_rating: number | null } | null)?.pit_rating;
+    const clubRelation = Array.isArray(entry.clubs) ? entry.clubs[0] : entry.clubs;
+    const clubRating = (clubRelation as ClubRatingRelation | null)?.pit_rating;
     const e: QueueEntry = {
       id: entry.id,
       club_id: entry.club_id,
