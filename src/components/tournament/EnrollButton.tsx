@@ -18,8 +18,9 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
   const [error, setError] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [pixCopy, setPixCopy] = useState<string | null>(null);
+  const [pixQrCode, setPixQrCode] = useState<string | null>(null);
   const [initPoint, setInitPoint] = useState<string | null>(null);
-  const [secondsLeft, setSecondsLeft] = useState(600); // 10 min
+  const [secondsLeft, setSecondsLeft] = useState(600);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const supabase = createClient();
 
@@ -37,7 +38,7 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
       setSecondsLeft((prev) => {
         if (prev <= 1) {
           clearTimer();
-          setState((s) => (s === 'awaiting_payment' ? 'error' : s));
+          setState((currentState) => (currentState === 'awaiting_payment' ? 'error' : currentState));
           setError('Tempo de pagamento expirado. Tente novamente.');
           return 0;
         }
@@ -46,7 +47,6 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
     }, 1000);
   }, [clearTimer]);
 
-  // Supabase Realtime: watch payment status
   useEffect(() => {
     if (!paymentId || state !== 'awaiting_payment') return;
 
@@ -92,10 +92,11 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
 
       if (!res.ok) {
         const msg: Record<string, string> = {
-          already_enrolled: 'Seu clube já está inscrito.',
+          already_enrolled: 'Seu clube ja esta inscrito.',
           tournament_full: 'Torneio lotado.',
-          tournament_not_open: 'Inscrições encerradas.',
+          tournament_not_open: 'Inscricoes encerradas.',
           not_club_manager: 'Apenas o manager pode se inscrever.',
+          club_banned: 'Seu clube esta temporariamente impedido de se inscrever.',
         };
         setState('error');
         setError(msg[data.error] ?? 'Erro ao inscrever. Tente novamente.');
@@ -104,21 +105,22 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
 
       setPaymentId(data.paymentId);
       setPixCopy(data.pixCopyPaste ?? null);
+      setPixQrCode(data.pixQrCode ?? null);
       setInitPoint(data.initPoint ?? null);
       setState('awaiting_payment');
       startTimer();
     } catch {
       setState('error');
-      setError('Erro de conexão. Tente novamente.');
+      setError('Erro de conexao. Tente novamente.');
     }
   };
 
-  const formatTime = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+  const formatTime = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 
   if (state === 'paid') {
     return (
-      <div className="rounded-lg bg-green-500/10 border border-green-500/30 p-3 text-center">
-        <p className="text-green-400 text-sm font-semibold">✓ Inscrito com sucesso!</p>
+      <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-center">
+        <p className="text-sm font-semibold text-green-400">Inscrito com sucesso!</p>
       </div>
     );
   }
@@ -126,20 +128,42 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
   if (state === 'awaiting_payment') {
     return (
       <div className="flex flex-col gap-2">
-        <div className="rounded-lg bg-muted/50 border border-border p-3 text-center space-y-1">
+        <div className="space-y-1 rounded-lg border border-border bg-muted/50 p-3 text-center">
           <p className="text-xs text-muted-foreground">Aguardando pagamento PIX</p>
-          <p className="text-primary font-mono text-sm font-semibold">{formatTime(secondsLeft)}</p>
+          <p className="font-mono text-sm font-semibold text-primary">{formatTime(secondsLeft)}</p>
         </div>
+        {pixQrCode ? (
+          <img
+            src={`data:image/png;base64,${pixQrCode}`}
+            alt="QR Code PIX"
+            className="mx-auto h-40 w-40 rounded"
+          />
+        ) : null}
         {pixCopy ? (
           <div className="flex gap-2">
-            <code className="flex-1 rounded bg-muted p-2 text-xs break-all text-muted-foreground line-clamp-2">
+            <code className="line-clamp-2 flex-1 break-all rounded bg-muted p-2 text-xs text-muted-foreground">
               {pixCopy}
             </code>
             <Button
               size="sm"
               variant="outline"
               className="shrink-0 text-xs"
-              onClick={() => navigator.clipboard.writeText(pixCopy)}
+              onClick={() => {
+                const copyText = (text: string) => {
+                  const el = document.createElement('textarea');
+                  el.value = text;
+                  document.body.appendChild(el);
+                  el.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(el);
+                };
+
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(pixCopy).catch(() => copyText(pixCopy));
+                } else {
+                  copyText(pixCopy);
+                }
+              }}
             >
               Copiar
             </Button>
@@ -152,14 +176,18 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
             rel="noopener noreferrer"
             className="text-center text-xs text-primary hover:underline"
           >
-            Abrir no Mercado Pago →
+            Abrir no Mercado Pago
           </a>
         ) : null}
         <Button
           size="sm"
           variant="ghost"
           className="text-xs text-muted-foreground"
-          onClick={() => { clearTimer(); setState('idle'); setPaymentId(null); }}
+          onClick={() => {
+            clearTimer();
+            setState('idle');
+            setPaymentId(null);
+          }}
         >
           Cancelar
         </Button>
@@ -173,11 +201,11 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
         size="sm"
         onClick={handleEnroll}
         disabled={state === 'loading'}
-        className="w-full bg-primary text-primary-foreground hover:bg-primary/90 text-xs"
+        className="w-full bg-primary text-xs text-primary-foreground hover:bg-primary/90"
       >
-        {state === 'loading' ? 'Processando...' : `Inscrever via PIX — R$ ${entryFee.toFixed(2)}`}
+        {state === 'loading' ? 'Processando...' : `Inscrever via PIX - R$ ${entryFee.toFixed(2)}`}
       </Button>
-      {error ? <p className="text-xs text-red-400 text-center">{error}</p> : null}
+      {error ? <p className="text-center text-xs text-red-400">{error}</p> : null}
     </div>
   );
 }

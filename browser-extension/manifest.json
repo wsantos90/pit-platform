@@ -11,13 +11,14 @@
   "host_permissions": [
     "*://*.ea.com/*",
     "https://pit.gg/*",
+    "https://*.vercel.app/*",
     "https://pit-platform.vercel.app/*",
-    "http://localhost:3000/*",
-    "https://cookie.menteembeta.com.br/*"
+    "http://localhost:3000/*"
   ],
   "externally_connectable": {
     "matches": [
       "https://pit.gg/*",
+      "https://*.vercel.app/*",
       "https://pit-platform.vercel.app/*",
       "http://localhost:3000/*"
     ]

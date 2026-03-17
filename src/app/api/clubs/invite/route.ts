@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { createNotification } from "@/lib/notifications"
 
 const inviteSchema = z.object({
   clubId: z.string().uuid("clubId deve ser um UUID valido"),
@@ -169,20 +170,23 @@ export async function POST(request: NextRequest) {
     )
   }
 
-  const { error: notificationError } = await adminClient.from("notifications").insert({
-    user_id: player.user_id,
-    type: "roster_invite",
-    title: "Convite para elenco",
-    message: `${club.display_name} convidou voce para entrar no elenco.`,
-    data: {
-      club_id: club.id,
-      club_name: club.display_name,
-      club_player_id: invite.id,
-      player_id: player.id,
-      player_gamertag: player.ea_gamertag,
-      invited_at: invitedAt,
+  const { error: notificationError } = await createNotification(
+    {
+      userId: player.user_id,
+      type: "roster_invite",
+      title: "Convite para elenco",
+      message: `${club.display_name} convidou voce para entrar no elenco.`,
+      data: {
+        club_id: club.id,
+        club_name: club.display_name,
+        club_player_id: invite.id,
+        player_id: player.id,
+        player_gamertag: player.ea_gamertag,
+        invited_at: invitedAt,
+      },
     },
-  })
+    adminClient
+  )
 
   if (notificationError) {
     await adminClient.from("club_players").delete().eq("id", invite.id)

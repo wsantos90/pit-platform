@@ -131,6 +131,7 @@ export function isProtectedApi(pathname: string) {
 
 export function isWebhookRoute(pathname: string) {
   const webhookPrefixes = [
+    "/api/payment/webhook",
     "/api/ea/",
     "/api/cron/",
     "/api/admin/seed-players",
@@ -155,7 +156,7 @@ export function getRequiredRoles(pathname: string): UserRole[] | null {
     { prefix: "/api/claim/submit", roles: ["player", "manager", "admin"] },
     { prefix: "/api/matchmaking", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/tournament/enroll", roles: ["manager", "moderator", "admin"] },
-    { prefix: "/api/tournament", roles: ["moderator", "admin"] },
+    { prefix: "/api/tournament", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/discovery/insert-manual", roles: ["admin"] },
   ];
   const match = rules.find((rule) => pathname.startsWith(rule.prefix));
@@ -227,12 +228,22 @@ export async function updateSession(request: NextRequest) {
 
   const pathname = request.nextUrl.pathname;
 
-  // Rotas webhook têm sua própria autenticação (x-webhook-secret/x-cron-secret) — bypass do middleware auth
-  const webhookSecret =
-    request.headers.get("x-webhook-secret") ?? request.headers.get("x-cron-secret");
-  const expectedWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
-  if (isWebhookRoute(pathname) && expectedWebhookSecret && webhookSecret === expectedWebhookSecret) {
+  // Payment webhook uses its own HMAC-SHA256 auth — bypass middleware entirely
+  if (pathname === "/api/payment/webhook") {
     return applySecurityHeaders(response, request);
+  }
+
+  // Outras rotas webhook têm sua própria autenticação (x-webhook-secret/x-cron-secret)
+  if (isWebhookRoute(pathname)) {
+    const cronSecret = request.headers.get("x-cron-secret");
+    const webhookSecret = request.headers.get("x-webhook-secret");
+    const expectedCronSecret = process.env.CRON_SECRET;
+    const expectedWebhookSecret = process.env.N8N_WEBHOOK_SECRET;
+    const cronValid = expectedCronSecret && cronSecret === expectedCronSecret;
+    const webhookValid = expectedWebhookSecret && webhookSecret === expectedWebhookSecret;
+    if (cronValid || webhookValid) {
+      return applySecurityHeaders(response, request);
+    }
   }
 
   const publicRoute = isPublicRoute(pathname) || (!isProtectedApi(pathname) && !pathname.startsWith("/api"));

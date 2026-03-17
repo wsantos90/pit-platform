@@ -397,8 +397,8 @@ export default function DiscoveryControl() {
               <div className="flex items-start gap-2">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
                 <p>
-                  O Discovery usa o proxy browser do cookie service. No Edge, carregue a build operacional em
-                  <code className="mx-1 rounded bg-muted px-1">dist/edge-extension/</code>, confirme no popup que o build esta configurado,
+                  O Discovery usa o proxy browser do cookie service. Carregue a build operacional em
+                  <code className="mx-1 rounded bg-muted px-1">dist/browser-extension/</code>, confirme no popup que o build esta configurado,
                   clique em &quot;Sincronizar agora&quot; e depois atualize este diagnostico.
                 </p>
               </div>

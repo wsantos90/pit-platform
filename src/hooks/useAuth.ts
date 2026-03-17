@@ -2,11 +2,11 @@
 
 /**
  * useAuth Hook
- * Gerencia estado de autenticação do Supabase.
- * Princípio SRP: Apenas autenticação.
+ * Gerencia estado de autenticacao do Supabase.
+ * Principio SRP: Apenas autenticacao.
  */
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { User as AuthUser } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/client';
@@ -39,15 +39,23 @@ export function useAuth() {
     const [loading, setLoading] = useState(true);
     const router = useRouter();
     const supabase = useMemo(() => createClient(), []);
+    const hydratedUserIdRef = useRef<string | null>(null);
 
     const signOut = async () => {
         await supabase.auth.signOut();
+        hydratedUserIdRef.current = null;
         setUser(null);
         router.replace('/login');
     };
 
     useEffect(() => {
         const hydrateUserFromDatabase = async (authUser: AuthUser) => {
+            if (hydratedUserIdRef.current === authUser.id) {
+                return;
+            }
+
+            hydratedUserIdRef.current = authUser.id;
+
             try {
                 const { data: byId } = await supabase
                     .from('users')
@@ -74,7 +82,8 @@ export function useAuth() {
                     setUser(byEmail);
                 }
             } catch {
-                // Mantém fallback já aplicado em memória.
+                hydratedUserIdRef.current = null;
+                // Mantem fallback ja aplicado em memoria.
             }
         };
 
@@ -84,6 +93,7 @@ export function useAuth() {
                 const { data: { session } } = await supabase.auth.getSession();
 
                 if (!session?.user) {
+                    hydratedUserIdRef.current = null;
                     setUser(null);
                     return;
                 }
@@ -91,24 +101,31 @@ export function useAuth() {
                 setUser(toFallbackUser(session.user));
                 void hydrateUserFromDatabase(session.user);
             } catch {
+                hydratedUserIdRef.current = null;
                 setUser(null);
             } finally {
                 setLoading(false);
             }
         };
 
-        syncUser();
+        void syncUser();
 
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
             if (!session?.user) {
+                hydratedUserIdRef.current = null;
                 setUser(null);
                 setLoading(false);
                 return;
             }
 
-            // Importante: não aguardar query Supabase aqui para não segurar auth lock.
+            // Importante: nao aguardar query Supabase aqui para nao segurar auth lock.
             setUser(toFallbackUser(session.user));
             setLoading(false);
+
+            if (event === 'INITIAL_SESSION' && hydratedUserIdRef.current === session.user.id) {
+                return;
+            }
+
             void hydrateUserFromDatabase(session.user);
         });
 

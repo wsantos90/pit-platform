@@ -1,4 +1,18 @@
 {
+  "enabledMcpjsonServers": ["mercadopago-pagamento-unico", "supabase"],
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cat \".claude/napkin.md\""
+          }
+        ]
+      }
+    ]
+  },
   "permissions": {
     "allow": [
       "Bash(npm install sql.js --save-dev)",

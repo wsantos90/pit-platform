@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { markNotificationsAsRead } from "@/lib/notifications"
 
 const respondSchema = z.object({
   inviteId: z.string().uuid("inviteId deve ser um UUID valido"),
@@ -39,13 +40,14 @@ async function markInviteNotificationAsRead(
   userId: string,
   inviteId: string
 ) {
-  await adminClient
-    .from("notifications")
-    .update({ is_read: true })
-    .eq("user_id", userId)
-    .eq("type", "roster_invite")
-    .eq("is_read", false)
-    .contains("data", { club_player_id: inviteId })
+  await markNotificationsAsRead(
+    {
+      userId,
+      type: "roster_invite",
+      dataFilter: { club_player_id: inviteId },
+    },
+    adminClient
+  )
 }
 
 export async function POST(request: NextRequest) {

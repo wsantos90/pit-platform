@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import { createPaymentPreference } from '@/lib/payment/mercadopago';
+import { createPixPayment } from '@/lib/payment/mercadopago';
 
 const schema = z.object({
   tournament_id: z.string().uuid(),
@@ -20,7 +20,9 @@ function getBaseUrl(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json().catch(() => null);
@@ -32,7 +34,6 @@ export async function POST(request: NextRequest) {
   const { tournament_id, club_id } = parsed.data;
   const admin = createAdminClient();
 
-  // Verify user is manager of this club
   const { data: club } = await admin
     .from('clubs')
     .select('id, display_name, manager_id')
@@ -44,7 +45,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'not_club_manager' }, { status: 403 });
   }
 
-  // Load tournament
   const { data: tournament } = await admin
     .from('tournaments')
     .select('id, name, status, capacity_min, capacity_max, entry_fee')
@@ -54,7 +54,6 @@ export async function POST(request: NextRequest) {
   if (!tournament) return NextResponse.json({ error: 'tournament_not_found' }, { status: 404 });
   if (tournament.status !== 'open') return NextResponse.json({ error: 'tournament_not_open' }, { status: 409 });
 
-  // Check capacity
   const { count: paidCount } = await admin
     .from('tournament_entries')
     .select('id', { count: 'exact', head: true })
@@ -65,10 +64,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'tournament_full' }, { status: 409 });
   }
 
-  // Check for existing paid entry
   const { data: existingEntry } = await admin
     .from('tournament_entries')
-    .select('id, payment_status')
+    .select('id, payment_status, trust_deadline')
     .eq('tournament_id', tournament_id)
     .eq('club_id', club_id)
     .maybeSingle();
@@ -77,7 +75,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'already_enrolled' }, { status: 409 });
   }
 
-  // Get payer email
+  const { data: trustScore } = await admin
+    .from('trust_scores')
+    .select('is_trusted, banned_until')
+    .eq('club_id', club_id)
+    .maybeSingle();
+
+  if (trustScore?.banned_until) {
+    const bannedUntil = new Date(trustScore.banned_until);
+    if (!Number.isNaN(bannedUntil.getTime()) && bannedUntil > new Date()) {
+      return NextResponse.json({ error: 'club_banned', until: trustScore.banned_until }, { status: 403 });
+    }
+  }
+
+  const isTrusted = trustScore?.is_trusted ?? false;
+  const trustDeadline = isTrusted
+    ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+    : null;
+
   const { data: userProfile } = await admin
     .from('users')
     .select('email')
@@ -87,7 +102,6 @@ export async function POST(request: NextRequest) {
   const payerEmail = userProfile?.email ?? user.email ?? 'noreply@pit.gg';
   const baseUrl = getBaseUrl(request);
 
-  // Create payment row
   const { data: payment, error: paymentError } = await admin
     .from('payments')
     .insert({
@@ -96,7 +110,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       amount: tournament.entry_fee,
       currency: 'BRL',
-      description: `Inscrição — ${tournament.name}`,
+      description: `Inscricao - ${tournament.name}`,
       status: 'pending',
       gateway: 'mercadopago',
       is_recurring: false,
@@ -108,31 +122,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'payment_creation_failed' }, { status: 500 });
   }
 
-  // Create MercadoPago preference
-  let preference;
+  let pixPayment;
   try {
-    preference = await createPaymentPreference({
+    pixPayment = await createPixPayment({
       amount: tournament.entry_fee,
-      currency: 'BRL',
-      description: `Inscrição — ${tournament.name}`,
+      description: `Inscricao - ${tournament.name}`,
       payerEmail,
       externalReference: payment.id,
       notificationUrl: `${baseUrl}/api/payment/webhook`,
-      successUrl: `${baseUrl}/tournaments/${tournament_id}?payment=success`,
-      failureUrl: `${baseUrl}/tournaments/${tournament_id}?payment=failure`,
-      pendingUrl: `${baseUrl}/tournaments/${tournament_id}?payment=pending`,
     });
   } catch (err) {
     await admin.from('payments').delete().eq('id', payment.id);
-    console.error('[enroll] preference creation failed', err);
+    console.error('[enroll] pix creation failed', err);
     return NextResponse.json({ error: 'mercadopago_error' }, { status: 502 });
   }
 
-  // Upsert tournament entry (enrolled_by is NOT NULL)
+  const { error: paymentSyncError } = await admin
+    .from('payments')
+    .update({
+      gateway_payment_id: pixPayment.id,
+      gateway_status: pixPayment.status ?? 'pending',
+      status: 'pending',
+      pix_qr_code: pixPayment.qr_code_base64,
+      pix_copy_paste: pixPayment.qr_code,
+      pix_expiration: pixPayment.expiration,
+    })
+    .eq('id', payment.id);
+
+  if (paymentSyncError) {
+    console.error('[enroll] failed to sync pix data on payment row', paymentSyncError);
+  }
+
   const { data: entry, error: entryError } = await admin
     .from('tournament_entries')
     .upsert(
-      { tournament_id, club_id, payment_status: 'pending', enrolled_by: user.id },
+      {
+        tournament_id,
+        club_id,
+        payment_status: 'pending',
+        enrolled_by: user.id,
+        trust_deadline: trustDeadline,
+      },
       { onConflict: 'tournament_id,club_id' }
     )
     .select('id')
@@ -145,8 +175,8 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({
     entryId: entry.id,
     paymentId: payment.id,
-    preferenceId: preference.id,
-    initPoint: preference.init_point,
-    sandboxInitPoint: preference.sandbox_init_point,
+    pixQrCode: pixPayment.qr_code_base64,
+    pixCopyPaste: pixPayment.qr_code,
+    pixExpiration: pixPayment.expiration,
   });
 }

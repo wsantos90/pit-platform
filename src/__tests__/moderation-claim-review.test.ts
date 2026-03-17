@@ -67,13 +67,42 @@ function makeServerClient(options: { userId?: string | null; roles?: string[]; i
 function makeAdminClient(options?: {
   rpcData?: unknown;
   rpcError?: { message: string } | null;
+  notificationError?: { message: string } | null;
 }) {
   const rpc = vi.fn().mockResolvedValue({
     data: options?.rpcData ?? { club_id: "club-1", user_id: "claimant-1", club_name: "Pit FC" },
     error: options?.rpcError ?? null,
   });
-  const insert = vi.fn().mockResolvedValue({ error: null });
+  const maybeSingle = vi.fn().mockResolvedValue({ data: null, error: null });
+  const notificationSingle = vi.fn().mockResolvedValue({
+    data: options?.notificationError
+      ? null
+      : {
+          id: "notif-1",
+          user_id: "claimant-1",
+          type: "claim_approved",
+          title: "Reivindicacao aprovada",
+          message: "Sua reivindicacao foi aprovada.",
+          data: null,
+          is_read: false,
+          created_at: "2026-03-17T00:00:00.000Z",
+        },
+    error: options?.notificationError ?? null,
+  });
+  const notificationSelect = vi.fn().mockReturnValue({ single: notificationSingle });
+  const insert = vi.fn().mockReturnValue({ select: notificationSelect });
   const from = vi.fn((table: string) => {
+    if (table === "user_notification_prefs") {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle,
+            }),
+          }),
+        }),
+      };
+    }
     if (table === "notifications") {
       return { insert };
     }
@@ -83,13 +112,40 @@ function makeAdminClient(options?: {
   return {
     rpc,
     from,
-    __mocks: { rpc, from, insert },
+    __mocks: { rpc, from, insert, maybeSingle, notificationSingle },
   };
 }
 
 describe("POST /api/claim/review", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("mantem review com sucesso mesmo se a notificacao falhar", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+    mockCreateClient.mockResolvedValue(makeServerClient({ userId: "moderator-1" }));
+    const adminClient = makeAdminClient({
+      notificationError: { message: "insert failed" },
+    });
+    mockCreateAdminClient.mockReturnValue(adminClient);
+
+    const response = await POST(
+      makeRequest({ claimId: "11111111-1111-1111-1111-111111111111", action: "approve" })
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.success).toBe(true);
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "[Claim/Review] failed to notify claimant about approval",
+      expect.objectContaining({
+        claimId: "11111111-1111-1111-1111-111111111111",
+        userId: "claimant-1",
+        error: "insert failed",
+      })
+    );
+
+    consoleErrorSpy.mockRestore();
   });
 
   it("retorna 401 quando não autenticado", async () => {

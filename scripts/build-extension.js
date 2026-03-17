@@ -7,8 +7,8 @@ const path = require("path")
 
 const repoRoot = path.join(__dirname, "..")
 const envPath = path.join(repoRoot, ".env.local")
-const sourceDir = path.join(repoRoot, "chrome-extension")
-const outputDir = path.join(repoRoot, "dist", "edge-extension")
+const sourceDir = path.join(repoRoot, "browser-extension")
+const outputDir = path.join(repoRoot, "dist", "browser-extension")
 
 if (fs.existsSync(envPath)) {
   const lines = fs.readFileSync(envPath, "utf8").split("\n")
@@ -55,4 +55,4 @@ fs.writeFileSync(backgroundPath, background)
 
 console.log("PIT Collect 1.1.0 gerada em:", outputDir)
 console.log("Cookie service:", cookieServiceUrl)
-console.log("Carregue esta pasta em edge://extensions com Modo de desenvolvedor ativado.")
+console.log("Carregue esta pasta em chrome://extensions ou edge://extensions com Modo de desenvolvedor ativado.")

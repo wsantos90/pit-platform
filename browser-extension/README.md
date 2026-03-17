@@ -6,35 +6,46 @@ Extensao oficial do PIT para duas funcoes:
 
 ## Estrutura oficial
 
-- `chrome-extension/`: fonte oficial da extensao para Chrome/dev.
-- `dist/edge-extension/`: build gerada para o Edge.
-- `scripts/create-edge-extension.js`: gera a build do Edge a partir da mesma base oficial.
+- `browser-extension/`: fonte oficial unica da extensao.
+- `dist/browser-extension/`: build operacional unica para carregar no navegador.
+- `scripts/build-extension.js`: gera a build operacional a partir da mesma base oficial.
 
-## Instalar no Chrome ou em dev
+## Fluxo padrao recomendado
 
-1. Abra `chrome://extensions/`
-2. Ative o modo de desenvolvedor
-3. Clique em `Carregar sem compactacao`
-4. Selecione a pasta `chrome-extension/`
-5. Copie o ID da extensao para `NEXT_PUBLIC_PIT_EXTENSION_ID`
-
-Observacao: nesta fonte, o popup de cookies funciona normalmente. O sync com o cookie service depende da build gerada para Edge ou de uma versao configurada com URL/secret.
-
-## Gerar build do Edge
+Use sempre a build gerada em `dist/browser-extension/`.
+Assim voce evita diferenca entre ambientes e mantem o mesmo comportamento em local, preview e producao.
 
 1. Garanta que `COOKIE_SERVICE_URL` e `COOKIE_SERVICE_SECRET` estejam no `.env.local`
 2. Rode:
 
 ```bash
-node scripts/create-edge-extension.js
+npm run build:extension
 ```
 
-3. Abra `edge://extensions`
+3. Abra `chrome://extensions/` ou `edge://extensions`
 4. Ative o modo de desenvolvedor
 5. Clique em `Carregar sem compactacao`
-6. Selecione `dist/edge-extension/`
+6. Selecione `dist/browser-extension/`
+7. Copie o ID da extensao para `NEXT_PUBLIC_PIT_EXTENSION_ID`
+
+Observacao: a extensao agora aceita `localhost`, `pit.gg` e subdominios `*.vercel.app`, incluindo URLs de preview/deploy da Vercel.
+
+## Gerar build operacional
+
+1. Garanta que `COOKIE_SERVICE_URL` e `COOKIE_SERVICE_SECRET` estejam no `.env.local`
+2. Rode:
+
+```bash
+npm run build:extension
+```
+
+3. Abra `edge://extensions` ou `chrome://extensions`
+4. Ative o modo de desenvolvedor
+5. Clique em `Carregar sem compactacao`
+6. Selecione `dist/browser-extension/`
 
 Essa build injeta a configuracao do cookie service e habilita o sync automatico de cookies.
+Ela e a build canonica para uso no PIT.
 
 ## Popup
 
@@ -68,6 +79,8 @@ Botoes:
 ## Troubleshooting
 
 - `Extensao nao detectada`: confirme o ID em `NEXT_PUBLIC_PIT_EXTENSION_ID`
+- `Preview da Vercel nao detecta a extensao`: recarregue a extensao depois de atualizar o `manifest` e confirme que a URL atual termina em `.vercel.app`
+- `Dois folders diferentes`: prefira sempre `dist/browser-extension/` e gere novamente com `npm run build:extension`
 - `Sem cookies no popup`: visite `https://proclubs.ea.com` e recarregue o popup
-- `Sync com erro`: confira se a build do Edge foi gerada e carregada a partir de `dist/edge-extension/`
+- `Sync com erro`: confira se a build operacional foi gerada e carregada a partir de `dist/browser-extension/`
 - `Discovery degradado`: abra o popup da extensao e clique em `Sincronizar agora`
