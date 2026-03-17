@@ -1245,7 +1245,7 @@
           "19",
           "15"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1253,7 +1253,7 @@
             "description": "Implementar components/team/LineupVisual.tsx com campo de futebol SVG representando formaÃ§Ã£o 3-5-2 (1 GK, 3 ZAG, 2 VOL, 1 MC, 1 AE, 1 AD, 2 ATA) com posiÃ§Ãµes detalhadas e marcadores vazios.",
             "dependencies": [],
             "details": "Criar SVG com proporÃ§Ãµes realistas de campo. Definir 11 posiÃ§Ãµes exatas com coordenadas (x,y). Incluir labels das posiÃ§Ãµes (GK, ZAG1-3, VOL1-2, MC, AE, AD, ATA1-2). Preparar estrutura para receber jogadores via props. Exportar tipos PositionId e PlayerInPosition.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar renderizaÃ§Ã£o correta do grid 3-5-2. Confirmar 11 posiÃ§Ãµes com coordenadas precisas. Testar responsividade em diferentes tamanhos de tela.",
             "parentId": "undefined"
           },
@@ -1265,7 +1265,7 @@
               1
             ],
             "details": "Instalar @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities. Usar DndContext com useDraggable para jogadores e useDroppable para posiÃ§Ãµes. No onDragEnd validar player.positions inclui targetPosition. Exibir toast de erro se invÃ¡lido. Manter estado local da escalaÃ§Ã£o.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar drag jogador VOL para posiÃ§Ã£o ZAG (erro). Testar drag jogador ZAG para ZAG (sucesso). Verificar toast de validaÃ§Ã£o. Confirmar estado atualiza apenas com drags vÃ¡lidos.",
             "parentId": "undefined"
           },
@@ -1278,7 +1278,7 @@
               2
             ],
             "details": "Usar Supabase para tabela lineups. Implementar createLineup, updateLineup, setDefaultLineup, listLineups. Integrar LineupVisual com dados do lineup selecionado. BotÃ£o salvar captura estado atual do grid. Carregar escalaÃ§Ã£o padrÃ£o automaticamente. Permitir mÃºltiplas escalaÃ§Ãµes nomeadas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criar escalaÃ§Ã£o 'Ofensiva'. Verificar salvamento no Supabase. Testar 'Usar como PadrÃ£o' define is_default=true. Confirmar carregamento automÃ¡tico da padrÃ£o. Validar listagem de mÃºltiplas escalaÃ§Ãµes.",
             "parentId": "undefined"
           }

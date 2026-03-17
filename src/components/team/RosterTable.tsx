@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
@@ -213,12 +214,12 @@ export function RosterTable({ clubPlayers, statsMap, currentUserId }: Props) {
               const secondary = stats ? getSecondaryStat(player.primary_position, stats) : null
 
               return (
-                <tr key={cp.id} className="transition-colors hover:bg-muted/30">
+                <tr key={cp.id} className="transition-colors hover:bg-muted/30 cursor-pointer">
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
+                    <Link href={`/players/${cp.player_id}`} className="flex items-center gap-3 group">
                       <PlayerAvatar gamertag={player.ea_gamertag} />
                       <div>
-                        <p className="font-bold text-foreground">{player.ea_gamertag}</p>
+                        <p className="font-bold text-foreground group-hover:text-primary transition-colors">{player.ea_gamertag}</p>
                         <p className="text-xs text-muted-foreground">
                           {cp.role_in_club === 'manager'
                             ? 'Manager'
@@ -233,7 +234,7 @@ export function RosterTable({ clubPlayers, statsMap, currentUserId }: Props) {
                           })}
                         </p>
                       </div>
-                    </div>
+                    </Link>
                   </td>
 
                   <td className="px-5 py-4">

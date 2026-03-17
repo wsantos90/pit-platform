@@ -44,7 +44,6 @@ export function useAuth() {
         await supabase.auth.signOut();
         setUser(null);
         router.replace('/login');
-        router.refresh();
     };
 
     useEffect(() => {

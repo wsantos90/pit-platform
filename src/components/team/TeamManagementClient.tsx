@@ -10,6 +10,7 @@ import { TeamDashboard } from '@/components/team/TeamDashboard'
 import { RosterTable } from '@/components/team/RosterTable'
 import { MatchHistoryTable } from '@/components/team/MatchHistoryTable'
 import { LineupVisual } from '@/components/team/LineupVisual'
+import { MatchmakingWrapper } from '@/components/matchmaking/MatchmakingWrapper'
 import type { Club, PlayerStatsView, Player } from '@/types/database'
 import type { ClubPlayerRow, MatchRow, ClubStats } from '@/app/(dashboard)/team/page'
 
@@ -183,17 +184,7 @@ export function TeamManagementClient({
         </TabsContent>
 
         <TabsContent value="matchmaking" className="mt-0">
-          <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
-            <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-              <span className="material-symbols-outlined text-3xl text-primary">sports_esports</span>
-            </div>
-            <div>
-              <h3 className="mb-1 text-lg font-bold text-foreground">Matchmaking em breve</h3>
-              <p className="max-w-xs text-sm text-muted-foreground">
-                Fila de busca por adversarios em tempo real. Esta funcionalidade esta sendo desenvolvida.
-              </p>
-            </div>
-          </div>
+          <MatchmakingWrapper clubId={club.id} />
         </TabsContent>
 
         <TabsContent value="escalacao" className="mt-0">
