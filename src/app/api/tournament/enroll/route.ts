@@ -34,7 +34,6 @@ export async function POST(request: NextRequest) {
   const { tournament_id, club_id } = parsed.data;
   const admin = createAdminClient();
 
-  // Verify user is manager of this club
   const { data: club } = await admin
     .from('clubs')
     .select('id, display_name, manager_id')
@@ -46,7 +45,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'not_club_manager' }, { status: 403 });
   }
 
-  // Load tournament
   const { data: tournament } = await admin
     .from('tournaments')
     .select('id, name, status, capacity_min, capacity_max, entry_fee')
@@ -56,7 +54,6 @@ export async function POST(request: NextRequest) {
   if (!tournament) return NextResponse.json({ error: 'tournament_not_found' }, { status: 404 });
   if (tournament.status !== 'open') return NextResponse.json({ error: 'tournament_not_open' }, { status: 409 });
 
-  // Check capacity
   const { count: paidCount } = await admin
     .from('tournament_entries')
     .select('id', { count: 'exact', head: true })
@@ -67,7 +64,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'tournament_full' }, { status: 409 });
   }
 
-  // Check for existing paid entry
   const { data: existingEntry } = await admin
     .from('tournament_entries')
     .select('id, payment_status, trust_deadline')
@@ -97,7 +93,6 @@ export async function POST(request: NextRequest) {
     ? new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     : null;
 
-  // Get payer email
   const { data: userProfile } = await admin
     .from('users')
     .select('email')
@@ -107,7 +102,6 @@ export async function POST(request: NextRequest) {
   const payerEmail = userProfile?.email ?? user.email ?? 'noreply@pit.gg';
   const baseUrl = getBaseUrl(request);
 
-  // Create payment row
   const { data: payment, error: paymentError } = await admin
     .from('payments')
     .insert({
@@ -116,7 +110,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       amount: tournament.entry_fee,
       currency: 'BRL',
-      description: `Inscrição - ${tournament.name}`,
+      description: `Inscricao - ${tournament.name}`,
       status: 'pending',
       gateway: 'mercadopago',
       is_recurring: false,
@@ -128,12 +122,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'payment_creation_failed' }, { status: 500 });
   }
 
-  // Create Mercado Pago PIX payment and return QR code immediately
   let pixPayment;
   try {
     pixPayment = await createPixPayment({
       amount: tournament.entry_fee,
-      description: `Inscrição - ${tournament.name}`,
+      description: `Inscricao - ${tournament.name}`,
       payerEmail,
       externalReference: payment.id,
       notificationUrl: `${baseUrl}/api/payment/webhook`,
@@ -160,7 +153,6 @@ export async function POST(request: NextRequest) {
     console.error('[enroll] failed to sync pix data on payment row', paymentSyncError);
   }
 
-  // Upsert tournament entry (enrolled_by is NOT NULL)
   const { data: entry, error: entryError } = await admin
     .from('tournament_entries')
     .upsert(

@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!signatureValid) {
-        return NextResponse.json({ error: 'assinatura inválida' }, { status: 401 });
+        return NextResponse.json({ error: 'assinatura invalida' }, { status: 401 });
     }
 
     if (!dataId) {
@@ -80,7 +80,6 @@ export async function POST(request: NextRequest) {
             .eq('gateway_payment_id', payment.id);
     }
 
-    // Sync tournament_entries when payment is tournament-related.
     if (externalReference) {
         const { data: paymentRow } = await admin
             .from('payments')
@@ -101,7 +100,6 @@ export async function POST(request: NextRequest) {
 
             await entryUpdate;
 
-            // Auto-confirm tournament when paid entries >= capacity_min.
             if (status === 'paid') {
                 const [{ count }, { data: tournament }] = await Promise.all([
                     admin
