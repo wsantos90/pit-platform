@@ -56,7 +56,13 @@
       "Bash(gh run view 22474134066 --log-failed --repo wsantos90/pit-platform)",
       "Bash(ls -la \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/admin/components/\")",
       "Bash(find \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/admin/\" -type f)",
-      "Bash(grep -l \"discovered_players\" \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/supabase/migrations\"/*.sql)"
+      "Bash(grep -l \"discovered_players\" \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/supabase/migrations\"/*.sql)",
+      "Bash(for d:*)",
+      "Bash(do echo:*)",
+      "Read(//c/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/api/tournament/$d/**)",
+      "Bash(done)",
+      "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation\")",
+      "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/components\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\wdsan\\OneDrive\\Documentos\\Projetos Coding\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING",
