@@ -19,6 +19,22 @@ type PreferenceResult = {
     sandbox_init_point?: string;
 };
 
+type PixPaymentInput = {
+    amount: number;
+    description: string;
+    payerEmail: string;
+    externalReference: string;
+    notificationUrl: string;
+};
+
+type PixPaymentResult = {
+    id: string;
+    status?: string;
+    qr_code: string;
+    qr_code_base64: string;
+    expiration: string;
+};
+
 type PurchaseType = 'one_time' | 'recurring';
 
 type PaymentResult = {
@@ -81,6 +97,13 @@ function getClientByType(type: PurchaseType) {
     return new MercadoPagoConfig({ accessToken: token });
 }
 
+function getOneTimeAccessToken() {
+    if (!accessTokenOneTime) {
+        throw new Error('MP_ACCESS_TOKEN is not set');
+    }
+    return accessTokenOneTime;
+}
+
 export async function createPaymentPreference(input: PreferenceInput): Promise<PreferenceResult> {
     const client = getClientByType('one_time');
     const preference = new Preference(client);
@@ -113,6 +136,53 @@ export async function createPaymentPreference(input: PreferenceInput): Promise<P
         id: result.id as string,
         init_point: result.init_point as string,
         sandbox_init_point: result.sandbox_init_point as string | undefined,
+    };
+}
+
+export async function createPixPayment(input: PixPaymentInput): Promise<PixPaymentResult> {
+    const response = await fetch('https://api.mercadopago.com/v1/payments', {
+        method: 'POST',
+        headers: {
+            Authorization: `Bearer ${getOneTimeAccessToken()}`,
+            'Content-Type': 'application/json',
+            'X-Idempotency-Key': input.externalReference,
+        },
+        body: JSON.stringify({
+            transaction_amount: input.amount,
+            payment_method_id: 'pix',
+            payer: {
+                email: input.payerEmail,
+            },
+            external_reference: input.externalReference,
+            notification_url: input.notificationUrl,
+            description: input.description,
+        }),
+    });
+
+    const payload = (await response.json().catch(() => null)) as (PaymentResult & {
+        message?: string;
+        error?: string;
+    }) | null;
+
+    if (!response.ok || !payload?.id) {
+        const reason = payload?.message || payload?.error || `Mercado Pago request failed with status ${response.status}`;
+        throw new Error(reason);
+    }
+
+    const qrCode = payload.point_of_interaction?.transaction_data?.qr_code;
+    const qrCodeBase64 = payload.point_of_interaction?.transaction_data?.qr_code_base64;
+    const expiration = payload.date_of_expiration;
+
+    if (!qrCode || !qrCodeBase64 || !expiration) {
+        throw new Error('Mercado Pago PIX response missing QR code data');
+    }
+
+    return {
+        id: payload.id,
+        status: payload.status,
+        qr_code: qrCode,
+        qr_code_base64: qrCodeBase64,
+        expiration,
     };
 }
 
