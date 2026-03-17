@@ -102,9 +102,7 @@ export function SidebarShell() {
     const { context, teamId, setContext, hydrated } = useContext();
 
     const [teams, setTeams] = useState<ManagedClub[]>([]);
-    const [unreadCount, setUnreadCount] = useState(0);
     const [contextOpen, setContextOpen] = useState(false);
-    const [notificationRefreshKey, setNotificationRefreshKey] = useState(0);
     const dropdownRef = useRef<HTMLDivElement>(null);
 
     const hasTeamContext = availableContexts.includes('team');
@@ -126,34 +124,6 @@ export function SidebarShell() {
             });
         return () => { isMounted = false; };
     }, [hasTeamContext, supabase, user?.id]);
-
-    // Load unread notifications
-    useEffect(() => {
-        if (!user?.id) return;
-
-        let isMounted = true;
-        supabase
-            .from('notifications')
-            .select('id', { count: 'exact', head: true })
-            .eq('user_id', user.id)
-            .eq('is_read', false)
-            .then(({ count }) => {
-                if (isMounted) setUnreadCount(count ?? 0);
-            });
-
-        return () => {
-            isMounted = false;
-        };
-    }, [notificationRefreshKey, supabase, user?.id]);
-
-    useEffect(() => {
-        const handler = () => {
-            setNotificationRefreshKey((current) => current + 1);
-        };
-
-        window.addEventListener('pit:notifications-refresh', handler);
-        return () => window.removeEventListener('pit:notifications-refresh', handler);
-    }, []);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -259,7 +229,6 @@ export function SidebarShell() {
         () => (hasTeamContext && user?.id ? teams : []),
         [hasTeamContext, teams, user?.id]
     );
-    const displayedUnreadCount = user?.id ? unreadCount : 0;
 
     // Available context options for the dropdown
     const contextOptions = useMemo(() => {
@@ -413,18 +382,6 @@ export function SidebarShell() {
 
             {/* Footer */}
             <div className="p-4 border-t border-slate-800/50 flex flex-col gap-2">
-                <button className="flex items-center justify-between w-full px-4 py-2 text-slate-400 hover:text-slate-100 hover:bg-slate-800/50 rounded-lg transition-all group">
-                    <div className="flex items-center gap-3">
-                        <MSIcon name="notifications" className="text-[22px] group-hover:text-primary" />
-                        <span className="text-sm font-medium">Notificações</span>
-                    </div>
-                        {displayedUnreadCount > 0 && (
-                            <span className="bg-primary text-white text-[10px] font-black px-2 py-0.5 rounded-full">
-                                {displayedUnreadCount}
-                            </span>
-                        )}
-                </button>
-
                 <button
                     onClick={signOut}
                     className="flex items-center gap-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all"
@@ -436,3 +393,4 @@ export function SidebarShell() {
         </aside>
     );
 }
+

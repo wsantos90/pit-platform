@@ -313,6 +313,14 @@ export interface Notification {
     created_at: string;
 }
 
+export interface UserNotificationPreference {
+    user_id: string;
+    type: NotificationType;
+    inapp_enabled: boolean;
+    created_at: string;
+    updated_at: string;
+}
+
 export type PlayerStatsView = {
     player_id: string
     ea_gamertag: string

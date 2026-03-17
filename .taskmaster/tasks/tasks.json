@@ -1497,7 +1497,7 @@
           "22",
           "2"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1505,7 +1505,7 @@
             "description": "Instalar @mercadopago/sdk, configurar credenciais no .env e implementar POST /api/payment/create que recebe tournament_id/club_id, cria payment PIX (R$3,00), retorna QR code/link e registra em payments (status='pending').",
             "dependencies": [],
             "details": "Usar lib/payment/mercadopago.ts com funÃ§Ã£o createPayment(amount=300, description, externalReference). Integrar com Mercado Pago sandbox para testes iniciais. Validar parÃ¢metros de entrada e tratar erros de API.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criaÃ§Ã£o de payment com tournament_id vÃ¡lido. Verificar QR code/link retornados. Confirmar registro em payments com status='pending'.",
             "parentId": "undefined"
           },
@@ -1517,7 +1517,7 @@
               1
             ],
             "details": "Usar funÃ§Ã£o handleWebhook(body) em lib/payment/mercadopago.ts. Implementar validaÃ§Ã£o de assinatura HMAC. Logar eventos para debug. Tratar idempotÃªncia com externalReference.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular webhook com payload approved/rejected. Verificar atualizaÃ§Ãµes em payments e tournament_entries. Testar validaÃ§Ã£o de assinatura invÃ¡lida (retorna 401).",
             "parentId": "undefined"
           },
@@ -1529,7 +1529,7 @@
               2
             ],
             "details": "Adicionar tabela trust_scores (club_id, score, last_payment). Ao confirmar pagamento, incrementar score. Verificar score > threshold para permitir inscriÃ§Ã£o com crÃ©dito 24h. Decay score apÃ³s 30 dias sem pagamento.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar incremento de score apÃ³s pagamento aprovado. Verificar permissÃ£o de inscriÃ§Ã£o com crÃ©dito para score alto. Confirmar expiraÃ§Ã£o apÃ³s 24h sem pagamento.",
             "parentId": "undefined"
           },
@@ -1541,7 +1541,7 @@
               3
             ],
             "details": "Adicionar tabela strikes (club_id, count, last_strike). Incrementar strike se nÃ£o pagar em 24h. Ao atingir 3 strikes, setar ban_until (prÃ³ximo FIFA date). Bloquear inscriÃ§Ãµes durante ban.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular 3 nÃ£o-pagamentos e verificar ban aplicado. Testar reset de strikes apÃ³s pagamento. Confirmar bloqueio de inscriÃ§Ãµes durante ban ativo.",
             "parentId": "undefined"
           }
@@ -1561,7 +1561,7 @@
           "2",
           "5"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1569,7 +1569,7 @@
             "description": "Implementar schema da tabela notifications no Supabase com campos user_id, type, title, body, is_read, data JSONB, created_at. Criar funÃ§Ã£o createNotification(userId, type, title, body, data) que insere registro e configura RLS.",
             "dependencies": [],
             "details": "Usar Supabase SQL Editor para CREATE TABLE. Definir tipos enum para notification types. Implementar RLS policies para acesso por user_id. Testar inserÃ§Ã£o manual via SQL.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que tabela Ã© criada com colunas corretas. Testar createNotification com diferentes tipos. Confirmar que RLS bloqueia acesso nÃ£o autorizado.",
             "parentId": "undefined"
           },
@@ -1581,7 +1581,7 @@
               1
             ],
             "details": "Usar supabase.channel('notifications:' + userId).on('postgres_changes', {event: 'INSERT', table: 'notifications', filter: `user_id=eq.${userId}`}). Implementar estado local com notificaÃ§Ãµes nÃ£o lidas.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que subscribe recebe notificaÃ§Ãµes em tempo real. Verificar fetch inicial carrega Ãºltimas 10 notificaÃ§Ãµes. Confirmar filtro por user_id funciona.",
             "parentId": "undefined"
           },
@@ -1593,7 +1593,7 @@
               2
             ],
             "details": "Usar hook useNotifications() para dados. Badge com contador no Ã­cone sininho. Dropdown com lista de notificaÃ§Ãµes (title, body, data). Auto-close ao clicar fora.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar contador atualiza em realtime. Confirmar dropdown mostra exatamente 10 notificaÃ§Ãµes. Testar responsividade mobile.",
             "parentId": "undefined"
           },
@@ -1606,7 +1606,7 @@
               3
             ],
             "details": "Criar funÃ§Ã£o markAsRead(notificationId). Mapear types para rotas (claim_approved â†’ /claims). Adicionar tabela user_notification_prefs(user_id, type, email_enabled, inapp_enabled).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar que clique marca como lida e contador diminui. Verificar navegaÃ§Ã£o correta por type. Confirmar preferÃªncias salvam e respeitam opt-out.",
             "parentId": "undefined"
           }

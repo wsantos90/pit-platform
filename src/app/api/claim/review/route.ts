@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { hasAnyRole } from "@/lib/auth/roles";
+import { createNotification } from "@/lib/notifications";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types";
 
 const reviewSchema = z
   .object({
-    claimId: z.string().uuid("claimId deve ser UUID válido"),
+    claimId: z.string().uuid("claimId deve ser UUID valido"),
     action: z.enum(["approve", "reject"]),
     rejectionReason: z.string().trim().min(10, "Motivo deve ter ao menos 10 caracteres").optional(),
   })
@@ -16,7 +17,7 @@ const reviewSchema = z
       context.addIssue({
         code: "custom",
         path: ["rejectionReason"],
-        message: "rejectionReason é obrigatório ao rejeitar uma claim",
+        message: "rejectionReason e obrigatorio ao rejeitar uma claim",
       });
     }
   });
@@ -26,14 +27,14 @@ type ReviewAction = z.infer<typeof reviewSchema>["action"];
 function mapReviewRpcError(message: string) {
   const normalized = message.toLowerCase();
   if (normalized.includes("claim_not_found")) {
-    return { status: 404, body: { code: "claim_not_found", error: "Claim não encontrada." } };
+    return { status: 404, body: { code: "claim_not_found", error: "Claim nao encontrada." } };
   }
   if (normalized.includes("claim_not_pending")) {
     return {
       status: 409,
       body: {
         code: "claim_not_pending",
-        error: "A claim não está mais pendente para revisão.",
+        error: "A claim nao esta mais pendente para revisao.",
       },
     };
   }
@@ -41,7 +42,7 @@ function mapReviewRpcError(message: string) {
     status: 500,
     body: {
       code: "review_failed",
-      error: "Não foi possível concluir a revisão da claim.",
+      error: "Nao foi possivel concluir a revisao da claim.",
     },
   };
 }
@@ -71,31 +72,51 @@ async function notifyClaimant(
 
   if (action === "approve") {
     const clubName = (payload.club_name as string | undefined) ?? "seu time";
-    await adminClient.from("notifications").insert({
-      user_id: userId,
-      type: "claim_approved",
-      title: "Reivindicação aprovada",
-      message: `Sua reivindicação do time ${clubName} foi aprovada.`,
-      data: {
-        claim_id: claimId,
-        club_id: (payload.club_id as string | undefined) ?? null,
+    const result = await createNotification(
+      {
+        userId,
+        type: "claim_approved",
+        title: "Reivindicacao aprovada",
+        message: `Sua reivindicacao do time ${clubName} foi aprovada.`,
+        data: {
+          claim_id: claimId,
+          club_id: (payload.club_id as string | undefined) ?? null,
+        },
       },
-    });
+      adminClient
+    );
+    if (result.error) {
+      console.error("[Claim/Review] failed to notify claimant about approval", {
+        claimId,
+        userId,
+        error: result.error.message,
+      });
+    }
     return;
   }
 
   const reasonSuffix = rejectionReason ? ` Motivo: ${rejectionReason}` : "";
-  await adminClient.from("notifications").insert({
-    user_id: userId,
-    type: "claim_rejected",
-    title: "Reivindicação rejeitada",
-    message: `Sua reivindicação foi rejeitada.${reasonSuffix}`,
-    data: {
-      claim_id: claimId,
-      discovered_club_id: (payload.discovered_club_id as string | undefined) ?? null,
-      rejection_reason: rejectionReason ?? null,
+  const result = await createNotification(
+    {
+      userId,
+      type: "claim_rejected",
+      title: "Reivindicacao rejeitada",
+      message: `Sua reivindicacao foi rejeitada.${reasonSuffix}`,
+      data: {
+        claim_id: claimId,
+        discovered_club_id: (payload.discovered_club_id as string | undefined) ?? null,
+        rejection_reason: rejectionReason ?? null,
+      },
     },
-  });
+    adminClient
+  );
+  if (result.error) {
+    console.error("[Claim/Review] failed to notify claimant about rejection", {
+      claimId,
+      userId,
+      error: result.error.message,
+    });
+  }
 }
 
 export async function POST(request: NextRequest) {

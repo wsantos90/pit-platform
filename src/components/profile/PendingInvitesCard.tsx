@@ -53,7 +53,6 @@ export function PendingInvitesCard({ invites }: Props) {
         return
       }
 
-      window.dispatchEvent(new CustomEvent('pit:notifications-refresh'))
       setFeedback({
         type: 'success',
         message: payload?.message ?? 'Resposta registrada com sucesso.',
