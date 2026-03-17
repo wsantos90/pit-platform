@@ -36,7 +36,7 @@ function renderSnapshot(snapshot) {
   if (!snapshot.syncConfigured) {
     syncStatus.textContent = "Build sem sync configurado"
     syncStatus.dataset.tone = "warning"
-    syncHintField.textContent = "Esta e a build de desenvolvimento. Para sync no Edge, carregue dist/edge-extension/ em vez de chrome-extension/."
+    syncHintField.textContent = "Esta build nao tem sync configurado. Gere a build operacional e carregue dist/browser-extension/."
     return
   }
 

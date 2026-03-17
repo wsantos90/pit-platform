@@ -193,8 +193,8 @@ export default function CollectControl() {
                   A extensao oficial agora faz duas coisas: coleta manual de campeonatos e sincronizacao de cookies para o proxy do Discovery.
                 </p>
                 <p className="text-foreground-secondary">
-                  No Chrome/dev, carregue a pasta <code className="rounded bg-muted px-1">chrome-extension/</code>. No Edge,
-                  gere e carregue a build em <code className="rounded bg-muted px-1">dist/edge-extension/</code>.
+                  Gere a extensao com <code className="rounded bg-muted px-1">npm run build:extension</code> e carregue
+                  <code className="rounded bg-muted px-1"> dist/browser-extension/</code> no navegador.
                 </p>
                 <p className="text-foreground-secondary">
                   Depois confirme que <code className="rounded bg-muted px-1">NEXT_PUBLIC_PIT_EXTENSION_ID</code> aponta para o ID da extensao instalada.
