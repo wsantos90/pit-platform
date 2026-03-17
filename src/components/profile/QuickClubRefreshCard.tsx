@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 const EXTENSION_ID = process.env.NEXT_PUBLIC_PIT_EXTENSION_ID ?? ""
+const EXTENSION_MESSAGE_TIMEOUT_MS = 2_500
 
 type CollectResponse = {
   run_id: string
@@ -67,7 +68,21 @@ function sendExtensionMessage(payload: unknown): Promise<{ response: RuntimeResp
   }
 
   return new Promise((resolve) => {
+    let settled = false
+    const timeoutId = setTimeout(() => {
+      if (settled) return
+      settled = true
+      resolve({
+        response: null,
+        error: "A extensao nao respondeu dentro do tempo esperado.",
+      })
+    }, EXTENSION_MESSAGE_TIMEOUT_MS)
+
     runtime.sendMessage(EXTENSION_ID, payload, (response) => {
+      if (settled) return
+      settled = true
+      clearTimeout(timeoutId)
+
       if (runtime.lastError) {
         resolve({
           response: null,
@@ -114,6 +129,8 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
   const [lastSuccessfulScanAt, setLastSuccessfulScanAt] = useState<string | null>(lastScannedAt)
 
   const refreshExtensionStatus = useCallback(async () => {
+    setExtensionReady(null)
+    setExtensionStatusReason(null)
     setIsCheckingExtension(true)
     const result = await pingExtension()
     setExtensionReady(result.ok)
@@ -229,10 +246,12 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
   }, [eaClubId, extensionReady, runServerCollect, state.phase])
 
   const modeBadge = useMemo(() => {
-    if (extensionReady === null) return { label: "Detectando extensao", className: "border-border bg-background/50 text-foreground" }
+    if (extensionReady === null || isCheckingExtension) {
+      return { label: "Detectando extensao", className: "border-border bg-background/50 text-foreground" }
+    }
     if (extensionReady) return { label: "Modo rapido local pronto", className: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700" }
     return { label: "Fallback via servidor", className: "border-amber-500/30 bg-amber-500/10 text-amber-700" }
-  }, [extensionReady])
+  }, [extensionReady, isCheckingExtension])
 
   return (
     <Card className="border-border bg-card">
@@ -261,7 +280,13 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
           </div>
           <div className="rounded-lg border border-border bg-background/50 p-3 text-sm">
             <p className="text-foreground-secondary">Modo preferido</p>
-            <p className="font-medium text-foreground">{extensionReady ? "Local (extensao)" : "Servidor / VPS"}</p>
+            <p className="font-medium text-foreground">
+              {extensionReady === null || isCheckingExtension
+                ? "Verificando extensao..."
+                : extensionReady
+                  ? "Local (extensao)"
+                  : "Servidor / VPS"}
+            </p>
           </div>
           <div className="rounded-lg border border-border bg-background/50 p-3 text-sm">
             <p className="text-foreground-secondary">Cooldown manual</p>
@@ -304,7 +329,7 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
           </div>
         ) : null}
 
-        {!extensionReady ? (
+        {extensionReady === false ? (
           <div className="rounded-lg border border-border bg-background/50 p-3 text-sm text-foreground-secondary">
             Sem extensao detectada, o botao continua funcionando via VPS. Para velocidade maxima, mantenha a PIT Collect ativa no navegador desta maquina.
             {extensionStatusReason ? (
