@@ -22,6 +22,11 @@ type RuntimeResponse = {
   error?: string
 }
 
+type ExtensionCheckResult = {
+  ok: boolean
+  reason: string | null
+}
+
 type ChromeRuntime = {
   lastError?: { message?: string }
   sendMessage: (extensionId: string, payload: unknown, callback: (response?: RuntimeResponse) => void) => void
@@ -45,24 +50,54 @@ function getChromeRuntime(): ChromeRuntime | null {
   return maybeChrome?.runtime ?? null
 }
 
-function sendExtensionMessage(payload: unknown): Promise<RuntimeResponse | null> {
+function sendExtensionMessage(payload: unknown): Promise<{ response: RuntimeResponse | null; error: string | null }> {
   const runtime = getChromeRuntime()
-  if (!runtime || !EXTENSION_ID) return Promise.resolve(null)
+  if (!runtime) {
+    return Promise.resolve({
+      response: null,
+      error: "chrome.runtime indisponivel neste navegador.",
+    })
+  }
+
+  if (!EXTENSION_ID) {
+    return Promise.resolve({
+      response: null,
+      error: "NEXT_PUBLIC_PIT_EXTENSION_ID nao foi embutida neste deploy.",
+    })
+  }
 
   return new Promise((resolve) => {
     runtime.sendMessage(EXTENSION_ID, payload, (response) => {
       if (runtime.lastError) {
-        resolve(null)
+        resolve({
+          response: null,
+          error: runtime.lastError.message ?? "Falha ao conectar com a extensao.",
+        })
         return
       }
-      resolve(response ?? null)
+      resolve({
+        response: response ?? null,
+        error: null,
+      })
     })
   })
 }
 
-async function pingExtension() {
-  const response = await sendExtensionMessage({ type: "PING" })
-  return response?.ok === true
+async function pingExtension(): Promise<ExtensionCheckResult> {
+  const { response, error } = await sendExtensionMessage({ type: "PING" })
+
+  if (error) {
+    return { ok: false, reason: error }
+  }
+
+  if (response?.ok === true) {
+    return { ok: true, reason: null }
+  }
+
+  return {
+    ok: false,
+    reason: "A extensao nao respondeu ao ping. Verifique o ID carregado e recarregue a extensao.",
+  }
 }
 
 type Props = {
@@ -73,13 +108,16 @@ type Props = {
 
 export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt }: Props) {
   const [extensionReady, setExtensionReady] = useState<boolean | null>(null)
+  const [extensionStatusReason, setExtensionStatusReason] = useState<string | null>(null)
   const [isCheckingExtension, setIsCheckingExtension] = useState(false)
   const [state, setState] = useState<RefreshState>({ phase: "idle" })
   const [lastSuccessfulScanAt, setLastSuccessfulScanAt] = useState<string | null>(lastScannedAt)
 
   const refreshExtensionStatus = useCallback(async () => {
     setIsCheckingExtension(true)
-    setExtensionReady(await pingExtension())
+    const result = await pingExtension()
+    setExtensionReady(result.ok)
+    setExtensionStatusReason(result.reason)
     setIsCheckingExtension(false)
   }, [])
 
@@ -124,10 +162,15 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
 
     try {
       if (extensionReady) {
-        const extensionResponse = await sendExtensionMessage({
+        const { response: extensionResponse, error: extensionError } = await sendExtensionMessage({
           type: "FETCH_MATCHES_FOR_CLUB",
           eaClubId,
         })
+
+        if (extensionError) {
+          setExtensionReady(false)
+          setExtensionStatusReason(extensionError)
+        }
 
         if (extensionResponse?.ok && extensionResponse.rawData !== undefined) {
           const persistResponse = await fetch("/api/collect/run", {
@@ -264,6 +307,11 @@ export default function QuickClubRefreshCard({ clubName, eaClubId, lastScannedAt
         {!extensionReady ? (
           <div className="rounded-lg border border-border bg-background/50 p-3 text-sm text-foreground-secondary">
             Sem extensao detectada, o botao continua funcionando via VPS. Para velocidade maxima, mantenha a PIT Collect ativa no navegador desta maquina.
+            {extensionStatusReason ? (
+              <span className="mt-2 block text-xs text-amber-700 dark:text-amber-400">
+                Diagnostico da extensao: {extensionStatusReason}
+              </span>
+            ) : null}
           </div>
         ) : null}
       </CardContent>
