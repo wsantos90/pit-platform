@@ -18,6 +18,7 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
   const [error, setError] = useState<string | null>(null);
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [pixCopy, setPixCopy] = useState<string | null>(null);
+  const [pixQrCode, setPixQrCode] = useState<string | null>(null);
   const [initPoint, setInitPoint] = useState<string | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(600); // 10 min
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -104,6 +105,7 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
 
       setPaymentId(data.paymentId);
       setPixCopy(data.pixCopyPaste ?? null);
+      setPixQrCode(data.pixQrCode ?? null);
       setInitPoint(data.initPoint ?? null);
       setState('awaiting_payment');
       startTimer();
@@ -130,6 +132,13 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
           <p className="text-xs text-muted-foreground">Aguardando pagamento PIX</p>
           <p className="text-primary font-mono text-sm font-semibold">{formatTime(secondsLeft)}</p>
         </div>
+        {pixQrCode ? (
+          <img
+            src={`data:image/png;base64,${pixQrCode}`}
+            alt="QR Code PIX"
+            className="mx-auto w-40 h-40 rounded"
+          />
+        ) : null}
         {pixCopy ? (
           <div className="flex gap-2">
             <code className="flex-1 rounded bg-muted p-2 text-xs break-all text-muted-foreground line-clamp-2">
@@ -139,7 +148,21 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
               size="sm"
               variant="outline"
               className="shrink-0 text-xs"
-              onClick={() => navigator.clipboard.writeText(pixCopy)}
+              onClick={() => {
+                const copyText = (text: string) => {
+                  const el = document.createElement('textarea');
+                  el.value = text;
+                  document.body.appendChild(el);
+                  el.select();
+                  document.execCommand('copy');
+                  document.body.removeChild(el);
+                };
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(pixCopy).catch(() => copyText(pixCopy));
+                } else {
+                  copyText(pixCopy);
+                }
+              }}
             >
               Copiar
             </Button>

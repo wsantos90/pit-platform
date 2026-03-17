@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "mercadopago-pagamento-unico": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.mercadopago.com/mcp",
+        "--header",
+        "Authorization:Bearer TEST-1680982195867135-021912-c2642aba63bc379f3d11b316dc2e04e5-64377432"
+      ]
+    }
+  }
+}

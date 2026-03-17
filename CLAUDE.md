@@ -85,8 +85,33 @@ supabase/
 ## Views Disponíveis (Supabase)
 `v_player_stats`, `v_club_stats`, `v_financial_dashboard`, `v_club_rankings`
 
+## Guardrails Críticos (não esquecer)
+
+### Execução & Validação
+- **Middleware** protege APENAS `/api/*` — proteção de páginas vai no `(dashboard)/layout.tsx` (Server Component). Nunca mover redirect de página para o middleware.
+- **`admin.ts` Supabase** é server-only (bypassa RLS). Nunca importar em client components ou rotas públicas.
+- **Testes:** Vitest com ESM nativo. Mocks Supabase SSR exigem `vi.hoisted()`. Rodar via `npm test`.
+- **TaskMaster JSON:** estrutura aninhada — acessar `master.tasks`, não `tasks` diretamente.
+
+### EA API — Pegadinhas
+- Chave de jogador em `players[clubId]` é ID de plataforma numérico; usar `playername` para o gamertag.
+- Posições são strings descritivas (`"midfielder"`, `"defender"`), não códigos numéricos.
+- Tempo jogado está em `secondsPlayed` — dividir por 60 para minutos.
+- Nomes de clube podem ter mojibake (problema da EA, não tratar no parser).
+- `details.name` para nome real do clube; campos de clube no nível raiz podem estar vazios.
+- Rotas `/api/ea/*` usam `isWebhookRoute()` — validar `x-webhook-secret`, não session.
+
+### Shell & VPS
+- `source .env.stack` quebra com `&` em valores — usar `deploy-stack.sh` para deploy do cookie-service.
+- IP da VPS (datacenter) bloqueado pelo Akamai — usar Edge Extension para sincronizar cookies.
+
+### Diretivas de Comunicação
+- Toda comunicação com o usuário em **Português (BR)**. Código e comentários em inglês.
+- Respostas diretas e técnicas — sem rodeios ou introduções desnecessárias.
+- **Design congelado até task 25** — NÃO alterar visual, layout ou components de UI. Redesign Stitch pós-task 25.
+
 ## Referências
 - `Imput Manual/Schema prisma_P.I.T.md` — arquitetura + schema detalhado
 - `Imput Manual/FlowCharts_P.I.T.mermaid` — 12 flowcharts (FC01–FC12)
-- `.claude/napkin.md` — runbook de erros e padrões aprendidos (ler antes de qualquer sessão)
+- `.claude/napkin.md` — runbook dinâmico (erros novos, estado atual da task)
 - `vps/VPS_CONTEXT.md` — contexto do ambiente VPS

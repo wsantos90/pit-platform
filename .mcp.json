@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.supabase.com/mcp?project_ref=mvjhiinhvsznqlurntcv&features=docs%2Caccount%2Cdatabase%2Cdebugging%2Cdevelopment%2Cfunctions%2Cbranching%2Cstorage",
+        "--header",
+        "Authorization:Bearer sbp_f621c7feb61e07be5a3f30baed0491e5a94bf426"
+      ]
+    },
+    "mercadopago-pagamento-unico": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://mcp.mercadopago.com/mcp",
+        "--header",
+        "Authorization:Bearer TEST-1680982195867135-021912-c2642aba63bc379f3d11b316dc2e04e5-64377432"
+      ]
+    }
+  }
+}

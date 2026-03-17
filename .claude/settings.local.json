@@ -62,7 +62,14 @@
       "Read(//c/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/api/tournament/$d/**)",
       "Bash(done)",
       "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation\")",
-      "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/components\")"
+      "Bash(ls \"c:/Users/wdsan/OneDrive/Documentos/Projetos Coding/P.I.T - PERFORMANCE - INTELIGENCE - TRACKING/pit-platform/src/app/\\(dashboard\\)/moderation/components\")",
+      "Skill(update-config)",
+      "Skill(update-config:*)",
+      "mcp__mercadopago-pagamento-unico__create_test_user",
+      "mcp__mercadopago-pagamento-unico__add_money_test_user",
+      "mcp__supabase__list_migrations",
+      "mcp__supabase__execute_sql",
+      "mcp__supabase__apply_migration"
     ],
     "additionalDirectories": [
       "C:\\Users\\wdsan\\OneDrive\\Documentos\\Projetos Coding\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING",
