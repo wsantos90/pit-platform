@@ -132,7 +132,11 @@ export function isProtectedApi(pathname: string) {
 export function isWebhookRoute(pathname: string) {
   const webhookPrefixes = [
     "/api/ea/",
-    "/api/cron/collect",
+    "/api/cron/",
+    "/api/admin/seed-players",
+    "/api/admin/ingest-raw",
+    "/api/matchmaking/expire",
+    "/api/matchmaking/match",
   ];
   return webhookPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
@@ -141,6 +145,7 @@ export function getRequiredRoles(pathname: string): UserRole[] | null {
   const rules: Array<{ prefix: string; roles: UserRole[] }> = [
     { prefix: "/admin", roles: ["admin"] },
     { prefix: "/moderation", roles: ["moderator", "admin"] },
+    { prefix: "/team/claim", roles: ["player", "manager", "admin"] },
     { prefix: "/team", roles: ["manager", "moderator", "admin"] },
     { prefix: "/matchmaking", roles: ["manager", "moderator", "admin"] },
     { prefix: "/profile", roles: ["player", "manager", "moderator", "admin"] },

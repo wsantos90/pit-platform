@@ -139,7 +139,7 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">Resumo de performance</CardTitle>
           <p className="text-sm text-foreground-secondary">
-            Estatisticas filtradas apenas por championship e friendly_pit.
+            Estatisticas de todas as partidas registradas.
           </p>
         </div>
 

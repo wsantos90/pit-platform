@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { MatchRow } from '@/app/(dashboard)/team/page'
 
 type ResultBadgeProps = {
@@ -113,31 +114,37 @@ export function MatchHistoryTable({ matches, clubId }: Props) {
               })
 
               return (
-                <tr key={m.id} className="hover:bg-muted/30 transition-colors">
+                <tr key={m.id} className="hover:bg-muted/30 transition-colors cursor-pointer">
                   <td className="px-5 py-4">
-                    <div className="flex flex-col">
+                    <Link href={`/matches/${m.id}`} className="flex flex-col">
                       <span className="text-sm font-medium text-foreground">{dateStr}</span>
                       <span className="text-xs text-muted-foreground">{timeStr}</span>
-                    </div>
+                    </Link>
                   </td>
                   <td className="px-5 py-4">
-                    <div className="flex items-center gap-2.5">
+                    <Link href={`/matches/${m.id}`} className="flex items-center gap-2.5">
                       <OpponentAvatar name={opponentName} />
-                      <span className="font-semibold text-foreground text-sm">{opponentName}</span>
-                    </div>
+                      <span className="font-semibold text-foreground text-sm hover:text-primary transition-colors">{opponentName}</span>
+                    </Link>
                   </td>
                   <td className="px-5 py-4">
-                    <ResultBadge result={result} />
+                    <Link href={`/matches/${m.id}`}>
+                      <ResultBadge result={result} />
+                    </Link>
                   </td>
                   <td className="px-5 py-4">
-                    <span className="text-xs px-2 py-1 rounded border border-border text-muted-foreground">
-                      {MATCH_TYPE_LABEL[m.match_type] ?? m.match_type}
-                    </span>
+                    <Link href={`/matches/${m.id}`}>
+                      <span className="text-xs px-2 py-1 rounded border border-border text-muted-foreground">
+                        {MATCH_TYPE_LABEL[m.match_type] ?? m.match_type}
+                      </span>
+                    </Link>
                   </td>
                   <td className="px-5 py-4 text-right">
-                    <span className="font-black text-foreground tabular-nums">
-                      {scored} <span className="text-muted-foreground font-normal">×</span> {conceded}
-                    </span>
+                    <Link href={`/matches/${m.id}`}>
+                      <span className="font-black text-foreground tabular-nums">
+                        {scored} <span className="text-muted-foreground font-normal">×</span> {conceded}
+                      </span>
+                    </Link>
                   </td>
                 </tr>
               )

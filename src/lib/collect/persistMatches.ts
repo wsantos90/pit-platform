@@ -132,7 +132,7 @@ export async function persistMatchesForClub(
 
     for (const player of match.players) {
       eaClubIds.add(player.eaClubId)
-      const gamertag = player.gamertag.trim()
+      const gamertag = player.playerName.trim()
       if (gamertag.length > 0) {
         gamertags.add(gamertag)
       }
@@ -187,7 +187,20 @@ export async function persistMatchesForClub(
   const matchesNew = insertedRows.length
   const matchesSkipped = Math.max(0, deduped.length - matchesNew) + duplicatesSkipped
 
-  if (insertedRows.length === 0) {
+  // Buscar IDs de matches que já existiam no banco (ignorados pelo ignoreDuplicates)
+  const insertedEaMatchIds = new Set(insertedRows.map((r) => r.ea_match_id))
+  const skippedEaMatchIds = deduped.map((m) => m.matchId).filter((id) => !insertedEaMatchIds.has(id))
+
+  let allMatchRows: InsertedMatchRow[] = [...insertedRows]
+  if (skippedEaMatchIds.length > 0) {
+    const { data: existingMatches } = await adminClient
+      .from("matches")
+      .select("id, ea_match_id")
+      .in("ea_match_id", skippedEaMatchIds)
+    allMatchRows = [...insertedRows, ...((existingMatches ?? []) as InsertedMatchRow[])]
+  }
+
+  if (allMatchRows.length === 0) {
     return {
       matchesNew,
       matchesSkipped,
@@ -200,13 +213,13 @@ export async function persistMatchesForClub(
     matchByEaMatchId.set(match.matchId, match)
   }
 
-  const matchPlayersRows = insertedRows.flatMap((insertedMatch) => {
+  const matchPlayersRows = allMatchRows.flatMap((insertedMatch) => {
     const match = matchByEaMatchId.get(insertedMatch.ea_match_id)
     if (!match) return []
 
     return match.players
       .map((player) => {
-        const gamertag = player.gamertag.trim()
+        const gamertag = player.playerName.trim()
         if (!gamertag) return null
 
         return {
@@ -248,21 +261,38 @@ export async function persistMatchesForClub(
     }
   }
 
-  const upsertResults = await Promise.allSettled(
-    chunkArray(matchPlayersRows, UPSERT_CHUNK_SIZE).map((rowsChunk) =>
-      adminClient.from("match_players").upsert(rowsChunk, {
+  type MatchPlayerRow = (typeof matchPlayersRows)[number]
+
+  async function upsertChunkWithFallback(rows: MatchPlayerRow[]): Promise<void> {
+    const { error } = await adminClient.from("match_players").upsert(rows, {
+      onConflict: "match_id,ea_gamertag",
+      ignoreDuplicates: false,
+    })
+
+    if (!error) return
+
+    // Chunk falhou — retry row a row para não perder todo o chunk por um único row problemático
+    console.warn(
+      `[Collect] Chunk de ${rows.length} rows falhou (${error.message}), tentando row-by-row`
+    )
+    for (const row of rows) {
+      const { error: rowError } = await adminClient.from("match_players").upsert(row, {
         onConflict: "match_id,ea_gamertag",
-        ignoreDuplicates: true,
+        ignoreDuplicates: false,
       })
+      if (rowError) {
+        console.error(
+          `[Collect] Row falhou ea_gamertag=${row.ea_gamertag} match_id=${row.match_id}: ${rowError.message}`
+        )
+      }
+    }
+  }
+
+  await Promise.all(
+    chunkArray(matchPlayersRows, UPSERT_CHUNK_SIZE).map((chunk) =>
+      upsertChunkWithFallback(chunk)
     )
   )
-
-  const failedUpserts = upsertResults.filter((result) => result.status === "rejected")
-  if (failedUpserts.length > 0) {
-    console.error(
-      `[Collect] ${failedUpserts.length} chunk(s) failed during match_players upsert for eaClubId=${eaClubId}.`
-    )
-  }
 
   return {
     matchesNew,

@@ -1,6 +1,6 @@
 import type { MatchType, PlayerPosition } from "@/types/database"
 
-export const PROFILE_MATCH_TYPES: MatchType[] = ["championship", "friendly_pit"]
+export const PROFILE_MATCH_TYPES: MatchType[] = ["championship", "friendly_pit", "friendly_external"]
 
 export const PROFILE_PERIOD_OPTIONS = [
   { value: "7d", label: "7 dias" },
