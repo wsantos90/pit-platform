@@ -80,5 +80,51 @@ export async function POST(request: NextRequest) {
             .eq('gateway_payment_id', payment.id);
     }
 
+    // Sync tournament_entries when payment is tournament-related
+    if (externalReference) {
+        const { data: paymentRow } = await admin
+            .from('payments')
+            .select('tournament_id, club_id')
+            .eq('id', externalReference)
+            .maybeSingle();
+
+        if (paymentRow?.tournament_id && paymentRow.club_id) {
+            await admin
+                .from('tournament_entries')
+                .update({ payment_status: status })
+                .eq('tournament_id', paymentRow.tournament_id)
+                .eq('club_id', paymentRow.club_id);
+
+            // Auto-confirm tournament when paid entries >= capacity_min
+            if (status === 'paid') {
+                const [{ count }, { data: tournament }] = await Promise.all([
+                    admin
+                        .from('tournament_entries')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('tournament_id', paymentRow.tournament_id)
+                        .eq('payment_status', 'paid'),
+                    admin
+                        .from('tournaments')
+                        .select('status, capacity_min')
+                        .eq('id', paymentRow.tournament_id)
+                        .maybeSingle(),
+                ]);
+
+                if (tournament?.status === 'open' && (count ?? 0) >= tournament.capacity_min) {
+                    await admin
+                        .from('tournaments')
+                        .update({ status: 'confirmed' })
+                        .eq('id', paymentRow.tournament_id)
+                        .eq('status', 'open');
+
+                    console.info('mp.tournament.auto_confirmed', {
+                        tournamentId: paymentRow.tournament_id,
+                        paidCount: count,
+                    });
+                }
+            }
+        }
+    }
+
     return NextResponse.json({ received: true });
 }

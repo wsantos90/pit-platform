@@ -1299,7 +1299,7 @@
           "16",
           "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1307,7 +1307,7 @@
             "description": "Implementar tabelas no Supabase: matchmaking_queue, confrontation_chats e confrontation_messages com todos os campos especificados.",
             "dependencies": [],
             "details": "Definir schema exato: matchmaking_queue (club_id, slot_time, status, matched_with, expires_at, created_at); confrontation_chats (queue_entry_a, queue_entry_b, club_a_id, club_b_id, confirmed_by_a, confirmed_by_b, match_id, expires_at); confrontation_messages (chat_id, club_id, message, timestamp). Criar Ã­ndices em club_id, slot_time, expires_at.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar criaÃ§Ã£o das tabelas via Supabase dashboard. Testar INSERT bÃ¡sico em cada tabela. Confirmar Ã­ndices e constraints (NOT NULL, foreign keys).",
             "parentId": "undefined"
           },
@@ -1319,7 +1319,7 @@
               1
             ],
             "details": "Usar horÃ¡rio UTC-3 fixo. BotÃ£o chama API para inserir em matchmaking_queue com status='waiting'. Mostrar status atual da fila do club. Refresh automÃ¡tico a cada 30s. Design responsivo com Tailwind.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar clique em slot insere na queue. Verificar UI mostra slots corretos. Confirmar refresh atualiza status. Testar mÃºltiplos slots (bloquear duplicados).",
             "parentId": "undefined"
           },
@@ -1332,7 +1332,7 @@
               2
             ],
             "details": "Criar API endpoint /api/matchmaking/match. Query: SELECT clubs WHERE slot_time=?:slot AND status='waiting' AND expires_at > NOW() ORDER BY ABS(pit_rating - :target_rating). Limit 1. Se match: UPDATE status='matched', matched_with. SenÃ£o random do mesmo slot. Executar via cron a cada 30s.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar matching com ratings prÃ³ximos (ex: 1500 vs 1520). Verificar random quando sem rating. Confirmar update matched_with. Testar exclusÃ£o de expirados.",
             "parentId": "undefined"
           },
@@ -1345,7 +1345,7 @@
               3
             ],
             "details": "Usar Supabase channel em confrontation_messages. Componente mostra chat quando queue.status='matched'. Enviar notificaÃ§Ã£o push via Supabase Edge Function. UI com input mensagem, lista mensagens, avatar clubs. Auto-scroll.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar mensagens realtime (2 browsers). Verificar chat abre apÃ³s match. Confirmar notificaÃ§Ã£o push. Testar histÃ³rico carrega mensagens antigas.",
             "parentId": "undefined"
           },
@@ -1359,7 +1359,7 @@
               4
             ],
             "details": "API /api/matchmaking/confirm. Se ambos confirmed: status='confirmed', expires_at=+5min. Job cron verifica expires_at, se expired: status='waiting', deletar chat. Se confirmed apÃ³s 5min: status='expired'. NotificaÃ§Ãµes para cada estado.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar confirmaÃ§Ã£o A+B â†’ confirmed. Testar timeout 5min â†’ expired. Verificar volta para fila. Testar apenas 1 confirma â†’ ainda waiting.",
             "parentId": "undefined"
           },
@@ -1372,7 +1372,7 @@
               5
             ],
             "details": "Cron job monitora confirmed chats sem match_id. Chama EA API com club_ids/slot_time. Parse resultado, INSERT matches. UPDATE confrontation_chats com match_id. DELETE queue entries. Trigger para atualizar pit_rating.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar coleta mock EA API â†’ cria match. Verificar stats atualizam. Confirmar cleanup queue/chat. Testar erro API â†’ retry 3x.",
             "parentId": "undefined"
           }
@@ -1392,7 +1392,7 @@
           "13",
           "16"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1400,7 +1400,7 @@
             "description": "Implementar tabelas tournaments, tournament_entries, payments, trust_scores e hall_of_fame no Supabase",
             "dependencies": [],
             "details": "Definir schema completo: tournaments (name, type='corujao', format, status, capacity_min/max, scheduled_date, start_time, entry_fee); tournament_entries (tournament_id, club_id, payment_status, payment_id); payments (id, amount, pix_code, status); trust_scores (club_id, score); hall_of_fame (tournament_id, club_id, award_type, value)",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar que tabelas foram criadas com colunas corretas. Testar INSERT de tournament vÃ¡lido. Confirmar relacionamentos FK tournament_id â†’ tournaments.id",
             "parentId": "undefined"
           },
@@ -1412,7 +1412,7 @@
               1
             ],
             "details": "Criar app/(admin)/tournaments/page.tsx com formulÃ¡rio (nome, capacidade min/max=8/16, data/horÃ¡rio, formato mata-mata, taxa R$3). API: POST /api/tournaments, GET /api/tournaments?type=corujao, PUT/DELETE. Validar capacity_min >=8, scheduled_date futura",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar criaÃ§Ã£o com dados vÃ¡lidos/invÃ¡lidos. Verificar listagem filtra type='corujao'. Confirmar que tournament aparece em dashboard apÃ³s criaÃ§Ã£o",
             "parentId": "undefined"
           },
@@ -1425,7 +1425,7 @@
               2
             ],
             "details": "Em app/(dashboard)/tournaments/page.tsx criar TournamentCard com EnrollButton. Ao clicar: POST /api/tournament_entries â†’ gera payment via MercadoPago (R$3,00), salva pix_code em payments. Webhook confirma pagamento â†’ UPDATE tournament_entries.payment_status='paid'. UI polling a cada 10s",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Testar clique 'Inscrever' gera PIX vÃ¡lido. Simular webhook confirma pagamento. Verificar status muda para 'paid'. Testar que clube nÃ£o pode se inscrever 2x",
             "parentId": "undefined"
           },
@@ -1438,7 +1438,7 @@
               3
             ],
             "details": "Criar lib/bracket-generator.ts: quando COUNT(entries.paid) >= capacity_min â†’ UPDATE tournament.status='confirmed', gerar bracket JSON (rounds: [{match1: [teamA,teamB], winner: null}, ...]). Sorteio aleatÃ³rio ou seed por trust_score/PitRating. Notificar todos inscritos via Supabase realtime",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular 8 inscriÃ§Ãµes â†’ verificar status='confirmed' e bracket gerado. Testar com 16 times. Validar que seed ordena por trust_score descendente. Confirmar notificaÃ§Ã£o enviada",
             "parentId": "undefined"
           },
@@ -1450,7 +1450,7 @@
               4
             ],
             "details": "Criar cron job a cada 5min: GET /api/matches?club_ids=entrants&date=tournament_date. Para cada match no bracket sem winner: se resultado encontrado â†’ UPDATE bracket.match.winner=club_vencedor, avanÃ§ar para prÃ³xima rodada. Se finalizada todas rodadas â†’ calcular awards",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular API retorna resultado de match. Verificar bracket atualiza winner. Testar avanÃ§o automÃ¡tico para semi-final. Confirmar que playoff completa gera final",
             "parentId": "undefined"
           },
@@ -1463,7 +1463,7 @@
               5
             ],
             "details": "Criar lib/hall-of-fame.ts: extrair de todos matches do torneio: campeÃ£o=final.winner, MVP=maior avg rating, artilheiro=mais gols, garÃ§om=mais assist, pitbull=mais tackles, muralha=mais clean sheets, melhor rating=avg rating. INSERT hall_of_fame com esses dados",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Simular torneio completo com stats. Verificar awards calculados corretamente. Confirmar campeÃ£o Ã© final.winner. Testar que artilheiro soma gols de todos matches",
             "parentId": "undefined"
           },
@@ -1477,7 +1477,7 @@
               6
             ],
             "details": "app/(dashboard)/tournaments/page.tsx: lista TournamentCard (nome, status, vagas, botÃ£o Inscrever). BracketView mostra chaves visuais com winners destacados. HallOfFameCard mostra top7 awards com Ã­cones. Usar realtime Supabase para updates live",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verificar TournamentCard mostra status corretos (aberto/cheio/confirmado/finalizado). Testar BracketView renderiza 8/16 times corretamente. Confirmar HallOfFameCard mostra awards do torneio",
             "parentId": "undefined"
           }
