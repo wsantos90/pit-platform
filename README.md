@@ -1,157 +1,79 @@
-# 🏆 P.I.T — Performance · Intelligence · Tracking
+# P.I.T - Performance Intelligence Tracking
 
-Plataforma de Gestão Competitiva para **FIFA Pro Clubs 11v11**.
+![Next.js](https://img.shields.io/badge/Next.js-16.1.6-000000?logo=next.js)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)
+![License](https://img.shields.io/badge/License-Private-lightgrey)
 
-> Versão: 1.0 | Autor: Wander — ThePitbullOne
+Plataforma de gestao competitiva para EA Sports FC Pro Clubs 11v11.
 
----
+The project uses Next.js App Router on the frontend, Supabase for auth and data, Mercado Pago for PIX payments, and a VPS-hosted cookie service plus n8n for EA API automation.
 
-## ⚡ Stack
+## Documentation Index
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Frontend | Next.js 14 (App Router, TypeScript) |
-| Estilo | Tailwind CSS |
-| Backend/BaaS | Supabase (PostgreSQL 15+) |
-| Pagamento | Mercado Pago (PIX) |
-| Automação | n8n (VPS) |
-| Cookie Renewal | Puppeteer (VPS) |
-| Deploy Frontend | Vercel |
-| Deploy VPS | Ubuntu (n8n + Puppeteer) |
+| Document | Purpose |
+| --- | --- |
+| [README.md](./README.md) | High-level project overview and quick start. |
+| [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) | Branching, commit, PR, and review workflow. |
+| [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) | Local setup, env vars, Supabase workflow, and scripts. |
+| [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md) | Runtime architecture, auth patterns, and system flows. |
+| [docs/API.md](./docs/API.md) | Route inventory for `src/app/api`. |
+| [docs/DATABASE.md](./docs/DATABASE.md) | Schema, enums, ERDs, views, RLS, and trigger summary. |
+| [docs/ai-tools/README.md](./docs/ai-tools/README.md) | Secondary AI tooling references and snapshots. |
+| [CLAUDE.md](./CLAUDE.md) | Operational SSOT for conventions and guardrails. |
+| [vps/VPS_CONTEXT.md](./vps/VPS_CONTEXT.md) | VPS, cookie-service, and n8n deployment context. |
 
-## 🚀 Setup Rápido
+## Stack
+
+| Layer | Technology |
+| --- | --- |
+| Frontend | Next.js 16.1.6, React 18, TypeScript |
+| Styling | Tailwind CSS |
+| Backend | Supabase (PostgreSQL 15+, Auth, Storage, Realtime) |
+| Payments | Mercado Pago |
+| Automation | n8n on VPS |
+| EA access | VPS cookie service plus browser-assisted fallback |
+| Testing | Vitest |
+
+## Quick Start
 
 ```bash
-# 1. Instalar dependências
+git clone https://github.com/wsantos90/pit-platform.git
 cd pit-platform
 npm install
-
-# 2. Configurar variáveis de ambiente
 cp .env.example .env.local
-# Editar .env.local com suas credenciais
-
-# 3. Rodar em desenvolvimento
 npm run dev
-# → http://localhost:3000
-
-# 4. (Opcional) Subir Supabase local
-npx supabase start
-npx supabase db push
 ```
 
-## 📁 Estrutura do Projeto
+For the full local workflow, env var descriptions, Supabase commands, and script reference, see [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md).
 
-```
-pit-platform/
-├── src/
-│   ├── app/                    # Pages + API Routes (App Router)
-│   │   ├── (auth)/             # Login, Register
-│   │   ├── (dashboard)/        # Páginas autenticadas
-│   │   ├── (public)/           # Perfis públicos, Rankings
-│   │   └── api/                # Route Handlers
-│   ├── components/             # Componentes React
-│   ├── hooks/                  # Custom hooks
-│   ├── lib/                    # Lógica de negócio
-│   ├── types/                  # TypeScript types
-│   └── middleware.ts           # Supabase session
-├── supabase/
-│   ├── migrations/             # 17 SQL migrations
-│   ├── seed.sql                # Dados iniciais
-│   └── config.toml             # Config local
-├── vps/
-│   ├── cookie-service/         # Puppeteer + Express
-│   └── n8n/workflows/          # Instruções n8n
-├── .cursorrules                # Cursor AI
-├── CLAUDE.md                   # Claude Code
-├── AGENTS.md                   # OpenAI Codex
-├── .github/copilot-instructions.md  # GitHub Copilot
-└── .trae/rules                 # TRAE IDE
+## Project Snapshot
+
+- App router with `(auth)`, `(dashboard)`, `(public)`, and `api` groups
+- 37 Supabase migrations in `supabase/migrations/`
+- Generated database types in `src/types/database.ts`
+- Consolidated AI tool references in `docs/ai-tools/`
+
+## Important Paths
+
+```text
+src/app                Next.js pages and API route handlers
+src/components         React components
+src/hooks              Reusable hooks
+src/lib                Domain logic, integrations, auth helpers
+src/types              Database and EA API types
+supabase/migrations    SQL migration history
+docs                   Project documentation
+vps                    Cookie service and n8n context
 ```
 
-## 🏗️ Princípios de Arquitetura
+## AI Tooling Notes
 
-| Princípio | Regra |
-|-----------|-------|
-| **SRP** | Cada módulo com um único motivo de mudança |
-| **DRY** | Zero repetição — extraia helpers |
-| **SSOT** | Dados: DB → API → UI |
-| **KISS** | Solução mais simples possível |
-| **YAGNI** | Só o necessário agora |
-| **SOLID** | OCP/LSP/ISP/DIP quando relevante |
+`CLAUDE.md` is the operational source of truth.
 
-## 🔐 Variáveis de Ambiente
+Files in [`docs/ai-tools/`](./docs/ai-tools/) are tool-specific references and should not override the project rules in `CLAUDE.md`.
 
-Veja `.env.example` para a lista completa. Credenciais necessárias:
+## Author
 
-- **Supabase:** URL + Anon Key + Service Role Key
-- **Mercado Pago:** Access Token + Public Key + Webhook Secret
-- **VPS:** Cookie Service URL + Secret
-- **n8n:** Webhook Secret
-
-## 🧩 Parser EA Sports
-
-O parser converte o response bruto da EA em dados tipados e prontos para persistência.
-
-Entrada esperada:
-
-```ts
-import type { EaMatchRawResponse } from '@/types';
-
-const raw: EaMatchRawResponse[] = await fetchMatchesRaw('637741', cookies);
-```
-
-Saída do parser:
-
-```ts
-import { parseMatches } from '@/lib/ea/parser';
-
-const matches = parseMatches(raw, '637741');
-```
-
-Campos principais:
-
-- matchId, timestampUtc, timestampBrasilia
-- homeClubId, awayClubId, homeClubName, awayClubName
-- homeScore, awayScore
-- players com stats numéricos e posição normalizada
-
-Exemplo de uso completo:
-
-```ts
-import { fetchMatchesRaw } from '@/lib/ea/api';
-import { parseMatches } from '@/lib/ea/parser';
-
-const raw = await fetchMatchesRaw(clubId, cookies);
-const matches = parseMatches(raw, clubId);
-```
-
-Uso integrado:
-
-```ts
-import { fetchMatches } from '@/lib/ea/api';
-
-const matches = await fetchMatches(clubId, cookies);
-```
-
-## 📖 Docs de Referência
-
-| Documento | Descrição |
-|-----------|-----------|
-| `Imput Manual/Schema prisma_P.I.T.md` | Arquitetura + Schema completo (2136 linhas) |
-| `Imput Manual/FlowCharts_P.I.T.mermaid` | 12 flowcharts (FC01–FC12) |
-| `Imput Manual/PRD_v1.5_P.I.T.docx` | Product Requirements Document |
-| `Imput Manual/Design_System_v2_P.I.T.docx` | Design System |
-
-## 🤖 AI Tool Configs
-
-O projeto inclui configurações para 5 ferramentas de AI:
-
-- **Cursor** → `.cursorrules`
-- **Claude Code** → `CLAUDE.md`
-- **GitHub Copilot / Codex** → `.github/copilot-instructions.md`
-- **TRAE IDE** → `.trae/rules`
-- **OpenAI Codex (multi-agent)** → `AGENTS.md`
-
----
-
-Feito com ❤️ por Wander — ThePitbullOne 🐕
+Wander - ThePitbullOne
