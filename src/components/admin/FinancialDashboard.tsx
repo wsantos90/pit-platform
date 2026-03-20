@@ -1,10 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
 import { AlertTriangle, BarChart3, TrendingUp, Wallet } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import {
+  formatFinancialPeriod,
+  periodOptions,
+  useFinancialTab,
+  type PeriodOption,
+} from "@/hooks/admin/useFinancialTab"
 import {
   Area,
   AreaChart,
@@ -17,109 +22,14 @@ import {
   YAxis,
 } from "recharts"
 
-type PeriodOption = "30d" | "90d" | "12m"
-
-type FinancialTimelinePoint = {
-  period: string
-  total_revenue: number
-  total_refunded: number
-  total_pending: number
-  tournament_revenue: number
-  subscription_revenue: number
-  overdue_count: number
-}
-
-type DelinquentClub = {
-  club_id: string
-  club_name: string
-  days_overdue: number
-  overdue_amount: number
-  strikes: number
-}
-
-type FinancialPayload = {
-  period: PeriodOption
-  summary: {
-    revenue_total: number
-    refunded_total: number
-    pending_total: number
-    overdue_count_total: number
-  }
-  projection_30d: number
-  timeline: FinancialTimelinePoint[]
-  delinquent_clubs: DelinquentClub[]
-}
-
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
   currency: "BRL",
   minimumFractionDigits: 2,
 })
 
-const periodOptions: Array<{ value: PeriodOption; label: string }> = [
-  { value: "30d", label: "30 dias" },
-  { value: "90d", label: "90 dias" },
-  { value: "12m", label: "12 meses" },
-]
-
-function formatPeriod(value: string) {
-  const parsed = new Date(value)
-  if (Number.isNaN(parsed.getTime())) return value
-  return parsed.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" })
-}
-
 export default function FinancialDashboard() {
-  const [period, setPeriod] = useState<PeriodOption>("30d")
-  const [data, setData] = useState<FinancialPayload | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchFinancial = useCallback(async (nextPeriod: PeriodOption, options?: { silent?: boolean }) => {
-    const silent = options?.silent ?? false
-    if (!silent) {
-      setIsRefreshing(true)
-    }
-
-    try {
-      const response = await fetch(`/api/admin/financial?period=${encodeURIComponent(nextPeriod)}`, {
-        method: "GET",
-        cache: "no-store",
-      })
-
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(body?.error ?? "failed_to_load_financial_dashboard")
-      }
-
-      const payload = (await response.json()) as FinancialPayload
-      setData(payload)
-      setError(null)
-    } catch (fetchError) {
-      const message = fetchError instanceof Error ? fetchError.message : "failed_to_load_financial_dashboard"
-      setError(message)
-    } finally {
-      setIsLoading(false)
-      if (!silent) {
-        setIsRefreshing(false)
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    void fetchFinancial(period)
-  }, [fetchFinancial, period])
-
-  const timeline = useMemo(() => data?.timeline ?? [], [data])
-  const compositionData = useMemo(
-    () =>
-      timeline.map((row) => ({
-        period: formatPeriod(row.period),
-        torneios: row.tournament_revenue,
-        assinaturas: row.subscription_revenue,
-      })),
-    [timeline]
-  )
+  const { compositionData, data, error, isLoading, isRefreshing, period, refresh, setPeriod, timeline } = useFinancialTab()
 
   if (isLoading && !data) {
     return (
@@ -150,7 +60,7 @@ export default function FinancialDashboard() {
             </select>
             <button
               type="button"
-              onClick={() => void fetchFinancial(period)}
+              onClick={() => void refresh()}
               disabled={isRefreshing}
               className="h-9 rounded-md border border-border bg-card px-3 text-sm font-medium text-foreground hover:bg-elevated disabled:cursor-not-allowed disabled:opacity-60"
             >
@@ -217,7 +127,7 @@ export default function FinancialDashboard() {
               <CardContent>
                 <div className="h-64 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={timeline.map((row) => ({ ...row, period: formatPeriod(row.period) }))}>
+                    <AreaChart data={timeline.map((row) => ({ ...row, period: formatFinancialPeriod(row.period) }))}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                       <XAxis dataKey="period" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis
@@ -294,7 +204,7 @@ export default function FinancialDashboard() {
                         {club.days_overdue > 30 ? (
                           <Badge className="border-destructive/30 bg-destructive/10 text-destructive">Critico</Badge>
                         ) : (
-                          <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-700">Atenção</Badge>
+                          <Badge className="border-amber-500/30 bg-amber-500/10 text-amber-700">Atencao</Badge>
                         )}
                       </TableCell>
                     </TableRow>

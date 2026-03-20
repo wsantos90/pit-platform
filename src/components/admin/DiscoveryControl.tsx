@@ -1,66 +1,15 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
 import { AlertTriangle, Loader2, Radar, Server } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-
-type DiscoveryRunStatus = "running" | "completed" | "failed" | "cancelled" | "success"
-
-type DiscoveryRun = {
-  id: string
-  started_at: string
-  finished_at: string | null
-  status: DiscoveryRunStatus
-  clubs_scanned: number
-  clubs_new: number
-  players_found: number
-  error_message: string | null
-}
-
-type DiscoveryRunsPayload = {
-  runs: DiscoveryRun[]
-}
-
-type DiscoveryHealthPayload = {
-  ea_fetch_transport: "direct" | "browser_proxy"
-  cookie_service_configured: boolean
-  service_health: {
-    ok: boolean
-    error: string | null
-    http_status: number | null
-    status: string | null
-    last_execution: string | null
-    next_execution: string | null
-    cache: {
-      has_cookie: boolean | null
-    }
-    renewal: {
-      last_error: string | null
-    }
-    fallback: {
-      browserless_configured: boolean | null
-    }
-  }
-  ea_fetch_health: {
-    ok: boolean
-    error: string | null
-    http_status: number | null
-    stage: string | null
-    resolved_by: string | null
-    used_cached_cookie: boolean | null
-    upstream_status: number | null
-    content_type: string | null
-    body_snippet: string | null
-    last_error: string | null
-    cache: {
-      has_cookie: boolean | null
-    }
-  }
-}
+import {
+  useDiscoveryTab,
+  type DiscoveryHealthPayload,
+  type DiscoveryRunStatus,
+} from "@/hooks/admin/useDiscoveryTab"
 
 const integerFormatter = new Intl.NumberFormat("pt-BR")
 
@@ -112,7 +61,7 @@ function diagnosticBadgeClass(payload: DiscoveryHealthPayload | null) {
 
 function diagnosticLabel(payload: DiscoveryHealthPayload | null) {
   if (!payload) return "Diagnostico indisponivel"
-  if (!payload.cookie_service_configured) return "Cookie service nao configurado"
+  if (!payload.cookie_service_configured) return "Cookie service não configurado"
   if (!payload.service_health.ok) return "Cookie service indisponivel"
   if (payload.service_health.status === "degraded") return "Cookie service degradado"
   if (!payload.ea_fetch_health.ok) return "Fetch EA falhando no proxy"
@@ -141,150 +90,20 @@ function formatFetchFailure(payload: DiscoveryHealthPayload | null) {
 }
 
 export default function DiscoveryControl() {
-  const [runs, setRuns] = useState<DiscoveryRun[]>([])
-  const [health, setHealth] = useState<DiscoveryHealthPayload | null>(null)
-  const [isLoadingRuns, setIsLoadingRuns] = useState(true)
-  const [isLoadingHealth, setIsLoadingHealth] = useState(true)
-  const [isRefreshing, setIsRefreshing] = useState(false)
-  const [isStartingScan, setIsStartingScan] = useState(false)
-  const [isRealtimeConnected, setIsRealtimeConnected] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [healthError, setHealthError] = useState<string | null>(null)
-  const [feedback, setFeedback] = useState<string | null>(null)
-  const supabase = useMemo(() => createClient(), [])
-
-  const fetchRuns = useCallback(async (options?: { silent?: boolean }) => {
-    const silent = options?.silent ?? false
-
-    try {
-      const response = await fetch("/api/admin/discovery-runs", {
-        method: "GET",
-        cache: "no-store",
-      })
-
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(body?.error ?? "failed_to_load_discovery_runs")
-      }
-
-      const payload = (await response.json()) as DiscoveryRunsPayload
-      setRuns(payload.runs ?? [])
-      setError(null)
-    } catch (fetchError) {
-      const message = fetchError instanceof Error ? fetchError.message : "failed_to_load_discovery_runs"
-      setError(message)
-    } finally {
-      if (!silent) {
-        setIsLoadingRuns(false)
-      }
-    }
-  }, [])
-
-  const fetchHealth = useCallback(async (options?: { silent?: boolean }) => {
-    const silent = options?.silent ?? false
-
-    try {
-      const response = await fetch("/api/admin/discovery-health", {
-        method: "GET",
-        cache: "no-store",
-      })
-
-      if (!response.ok) {
-        const body = (await response.json().catch(() => null)) as { error?: string } | null
-        throw new Error(body?.error ?? "failed_to_load_discovery_health")
-      }
-
-      const payload = (await response.json()) as DiscoveryHealthPayload
-      setHealth(payload)
-      setHealthError(null)
-    } catch (fetchError) {
-      const message = fetchError instanceof Error ? fetchError.message : "failed_to_load_discovery_health"
-      setHealthError(message)
-    } finally {
-      if (!silent) {
-        setIsLoadingHealth(false)
-      }
-    }
-  }, [])
-
-  const refreshAll = useCallback(async () => {
-    setIsRefreshing(true)
-    await Promise.all([fetchRuns({ silent: true }), fetchHealth({ silent: true })])
-    setIsRefreshing(false)
-  }, [fetchHealth, fetchRuns])
-
-  const startScan = useCallback(async () => {
-    setIsStartingScan(true)
-    setFeedback(null)
-
-    try {
-      const response = await fetch("/api/discovery/scan", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({}),
-      })
-
-      const body = (await response.json().catch(() => null)) as
-        | { processed?: number; failed?: number; error?: string; message?: string }
-        | null
-
-      if (!response.ok) {
-        throw new Error(body?.error ?? "failed_to_execute_discovery_scan")
-      }
-
-      const processed = body?.processed ?? 0
-      const failed = body?.failed ?? 0
-      setFeedback(
-        body?.message ?? `Varredura concluida. Processados: ${processed}. Falhas: ${failed}.`
-      )
-      await Promise.all([fetchRuns({ silent: true }), fetchHealth({ silent: true })])
-    } catch (startError) {
-      const message = startError instanceof Error ? startError.message : "failed_to_execute_discovery_scan"
-      setError(message)
-    } finally {
-      setIsStartingScan(false)
-    }
-  }, [fetchHealth, fetchRuns])
-
-  useEffect(() => {
-    void Promise.all([fetchRuns(), fetchHealth()])
-  }, [fetchHealth, fetchRuns])
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("admin:discovery-runs")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "discovery_runs",
-        },
-        () => {
-          void fetchRuns({ silent: true })
-        }
-      )
-      .subscribe((status) => {
-        setIsRealtimeConnected(status === "SUBSCRIBED")
-      })
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [fetchRuns, supabase])
-
-  const needsCookieSyncHelp =
-    health?.ea_fetch_transport === "browser_proxy" &&
-    (!health.cookie_service_configured ||
-      !health.service_health.ok ||
-      health.service_health.status === "degraded" ||
-      health.service_health.cache.has_cookie === false ||
-      health.ea_fetch_health.cache.has_cookie === false ||
-      !health.ea_fetch_health.ok)
-
-  const isLoading = isLoadingRuns || isLoadingHealth
+  const {
+    error,
+    feedback,
+    health,
+    healthError,
+    isLoading,
+    isRealtimeConnected,
+    isRefreshing,
+    isStartingScan,
+    needsCookieSyncHelp,
+    refreshAll,
+    runs,
+    startScan,
+  } = useDiscoveryTab()
 
   return (
     <div className="space-y-4">
@@ -338,7 +157,7 @@ export default function DiscoveryControl() {
               <div className="rounded-lg border border-border bg-background/50 p-3 text-sm">
                 <p className="text-foreground-secondary">Cookie service</p>
                 <p className="font-medium text-foreground">
-                  {health.cookie_service_configured ? "Configurado" : "Nao configurado"}
+                  {health.cookie_service_configured ? "Configurado" : "Não configurado"}
                 </p>
                 <p className="mt-2 text-foreground-secondary">Status remoto</p>
                 <p className="font-medium text-foreground">{health.service_health.status ?? "-"}</p>
@@ -358,7 +177,7 @@ export default function DiscoveryControl() {
                     ? "-"
                     : health.service_health.fallback.browserless_configured
                       ? "Configurado"
-                      : "Nao configurado"}
+                      : "Não configurado"}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-background/50 p-3 text-sm">
@@ -382,7 +201,7 @@ export default function DiscoveryControl() {
                     ? "-"
                     : health.ea_fetch_health.used_cached_cookie
                       ? "Sim"
-                      : "Nao"}
+                      : "Não"}
                 </p>
               </div>
               <div className="rounded-lg border border-border bg-background/50 p-3 text-sm">
@@ -456,4 +275,3 @@ export default function DiscoveryControl() {
     </div>
   )
 }
-
