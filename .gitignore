@@ -23,6 +23,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+*.log
 
 # Local env files
 .env
@@ -52,5 +53,9 @@ Thumbs.db
 # TRAE IDE
 .trae/
 
-# Task Master AI (cache only — tasks are tracked in git)
+# Local temp files
+**/~$*
+logs/
+
+# Task Master AI (cache only - tasks are tracked in git)
 .taskmaster/cache/
