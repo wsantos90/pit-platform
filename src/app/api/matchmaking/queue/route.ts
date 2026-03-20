@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { runMatching } from '@/lib/matchmaking/match';
+import { logger } from '@/lib/logger';
 
 const postSchema = z.object({
   slot_time: z.string().min(1),
@@ -109,7 +110,7 @@ export async function GET() {
 
     return NextResponse.json({ entries: enrichedEntries });
   } catch (err) {
-    console.error('[Matchmaking/Queue/GET]', err);
+    logger.error('[Matchmaking/Queue/GET]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -202,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ entry }, { status: 201 });
   } catch (err) {
-    console.error('[Matchmaking/Queue/POST]', err);
+    logger.error('[Matchmaking/Queue/POST]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
@@ -252,7 +253,8 @@ export async function DELETE(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('[Matchmaking/Queue/DELETE]', err);
+    logger.error('[Matchmaking/Queue/DELETE]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+

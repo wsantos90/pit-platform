@@ -1,9 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { mockCreateClient, mockCreateAdminClient } = vi.hoisted(() => ({
+const { mockCreateClient, mockCreateAdminClient, mockLoggerError } = vi.hoisted(() => ({
   mockCreateClient: vi.fn(),
   mockCreateAdminClient: vi.fn(),
+  mockLoggerError: vi.fn(),
 }));
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -12,6 +13,15 @@ vi.mock("@/lib/supabase/server", () => ({
 
 vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: mockCreateAdminClient,
+}));
+
+vi.mock("@/lib/logger", () => ({
+  logger: {
+    error: mockLoggerError,
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
 }));
 
 import { POST } from "@/app/api/claim/review/route";
@@ -122,7 +132,6 @@ describe("POST /api/claim/review", () => {
   });
 
   it("mantem review com sucesso mesmo se a notificacao falhar", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
     mockCreateClient.mockResolvedValue(makeServerClient({ userId: "moderator-1" }));
     const adminClient = makeAdminClient({
       notificationError: { message: "insert failed" },
@@ -136,7 +145,7 @@ describe("POST /api/claim/review", () => {
 
     expect(response.status).toBe(200);
     expect(body.success).toBe(true);
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(mockLoggerError).toHaveBeenCalledWith(
       "[Claim/Review] failed to notify claimant about approval",
       expect.objectContaining({
         claimId: "11111111-1111-1111-1111-111111111111",
@@ -144,8 +153,6 @@ describe("POST /api/claim/review", () => {
         error: "insert failed",
       })
     );
-
-    consoleErrorSpy.mockRestore();
   });
 
   it("retorna 401 quando não autenticado", async () => {

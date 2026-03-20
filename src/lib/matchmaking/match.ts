@@ -4,6 +4,7 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 
 const DEFAULT_RATING = 1000;
 
@@ -44,7 +45,7 @@ export async function runMatching(slotTime?: string): Promise<number> {
   const { data: waitingEntries, error: fetchError } = await query;
 
   if (fetchError) {
-    console.error('[runMatching] fetch error:', fetchError);
+    logger.error('[runMatching] fetch error:', fetchError);
     return 0;
   }
 
@@ -89,7 +90,7 @@ export async function runMatching(slotTime?: string): Promise<number> {
         .eq('status', 'waiting');
 
       if (updateA) {
-        console.error('[runMatching] failed to update entry A:', updateA);
+        logger.error('[runMatching] failed to update entry A:', updateA);
         continue;
       }
 
@@ -105,7 +106,7 @@ export async function runMatching(slotTime?: string): Promise<number> {
           .from('matchmaking_queue')
           .update({ status: 'waiting', matched_with: null })
           .eq('id', entryA.id);
-        console.error('[runMatching] failed to update entry B, rolled back A:', updateB);
+        logger.error('[runMatching] failed to update entry B, rolled back A:', updateB);
         continue;
       }
 
@@ -123,7 +124,7 @@ export async function runMatching(slotTime?: string): Promise<number> {
         });
 
       if (chatError) {
-        console.error('[runMatching] failed to create chat, rolling back:', chatError);
+        logger.error('[runMatching] failed to create chat, rolling back:', chatError);
         await adminClient
           .from('matchmaking_queue')
           .update({ status: 'waiting', matched_with: null })
@@ -137,3 +138,4 @@ export async function runMatching(slotTime?: string): Promise<number> {
 
   return matched;
 }
+

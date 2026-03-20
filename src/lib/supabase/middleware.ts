@@ -2,6 +2,7 @@ import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { UserRole } from "@/types";
 import { hasAnyRole } from "@/lib/auth/roles";
+import { logger } from '@/lib/logger';
 
 type RateLimitEntry = {
   timestamps: number[];
@@ -156,6 +157,7 @@ export function getRequiredRoles(pathname: string): UserRole[] | null {
     { prefix: "/api/claim/submit", roles: ["player", "manager", "admin"] },
     { prefix: "/api/matchmaking", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/tournament/enroll", roles: ["manager", "moderator", "admin"] },
+    { prefix: "/api/tournament/create", roles: ["moderator", "admin"] },
     { prefix: "/api/tournament", roles: ["manager", "moderator", "admin"] },
     { prefix: "/api/discovery/insert-manual", roles: ["admin"] },
   ];
@@ -254,7 +256,7 @@ export async function updateSession(request: NextRequest) {
     if (pathname.startsWith("/")) {
       loginUrl.searchParams.set("next", pathname);
     }
-    console.warn("unauthorized_access", {
+    logger.warn("unauthorized_access", {
       pathname,
       ip: getClientIp(request),
       reason: "missing_user",
@@ -275,7 +277,7 @@ export async function updateSession(request: NextRequest) {
         .eq("id", user.id)
         .maybeSingle();
       if (userByIdError) {
-        console.warn("user_profile_lookup_failed", {
+        logger.warn("user_profile_lookup_failed", {
           pathname,
           authUserId: user.id,
           email: user.email ?? null,
@@ -292,7 +294,7 @@ export async function updateSession(request: NextRequest) {
           .eq("email", user.email)
           .maybeSingle();
         if (userByEmailError) {
-          console.warn("user_profile_lookup_failed", {
+          logger.warn("user_profile_lookup_failed", {
             pathname,
             authUserId: user.id,
             email: user.email,
@@ -306,7 +308,7 @@ export async function updateSession(request: NextRequest) {
             roles: userByEmail.roles,
             is_active: userByEmail.is_active,
           };
-          console.warn("auth_user_profile_mismatch", {
+          logger.warn("auth_user_profile_mismatch", {
             pathname,
             authUserId: user.id,
             profileUserId: userByEmail.id,
@@ -319,7 +321,7 @@ export async function updateSession(request: NextRequest) {
       const active = userRow?.is_active ?? true;
       const isAllowed = hasAnyRole(roles, requiredRoles);
       if (!active || !isAllowed) {
-        console.warn("unauthorized_access", {
+        logger.warn("unauthorized_access", {
           pathname,
           ip: getClientIp(request),
           reason: !active ? "inactive_user" : "insufficient_role",
@@ -345,3 +347,4 @@ export async function updateSession(request: NextRequest) {
 
   return applySecurityHeaders(response, request);
 }
+

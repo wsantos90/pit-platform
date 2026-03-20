@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { fetchMatchesPreview } from '@/lib/ea/api'
 import { tryFetchAkamaiCookies } from '@/lib/ea/cookieClient'
+import { logger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
     const supabase = await createClient()
@@ -42,10 +43,11 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.json({ matches: result })
     } catch (error) {
-        console.error('[claim/preview] Falha ao buscar partidas EA:', error)
+        logger.error('[claim/preview] Falha ao buscar partidas EA:', error)
         return NextResponse.json(
             { error: 'Não foi possível carregar as partidas. Tente novamente.' },
             { status: 502 }
         )
     }
 }
+

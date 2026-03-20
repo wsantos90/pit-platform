@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const bodySchema = z.object({
   chat_id: z.string().uuid(),
@@ -86,7 +87,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ chat: updatedChat });
   } catch (err) {
-    console.error('[Matchmaking/Confirm]', err);
+    logger.error('[Matchmaking/Confirm]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+

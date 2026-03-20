@@ -7,6 +7,7 @@ import { normalizeClubName } from "@/lib/ea/normalize"
 import { tryFetchAkamaiCookies } from "@/lib/ea/cookieClient"
 import { createNotification } from "@/lib/notifications"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { logger } from '@/lib/logger';
 
 const insertManualClubSchema = z.object({
   clubId: z.string().trim().min(1, "clubId is required"),
@@ -118,7 +119,7 @@ async function notifyPendingClaimants(
           return
         }
 
-        console.error("[ManualClub] failed to notify pending claimant", {
+        logger.error("[ManualClub] failed to notify pending claimant", {
           claimId: claim.id,
           userId: claim.user_id,
           clubId: club.ea_club_id,
@@ -126,7 +127,7 @@ async function notifyPendingClaimants(
         })
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error)
-        console.error("[ManualClub] failed to notify pending claimant", {
+        logger.error("[ManualClub] failed to notify pending claimant", {
           claimId: claim.id,
           userId: claim.user_id,
           clubId: club.ea_club_id,
@@ -247,13 +248,13 @@ export async function POST(request: NextRequest) {
         clubsNew: 1,
       })
     } catch (runError) {
-      console.error("[ManualClub] failed to log discovery_run", runError)
+      logger.error("[ManualClub] failed to log discovery_run", runError)
     }
 
     try {
       await notifyPendingClaimants(adminClient, insertedClub)
     } catch (notifyError) {
-      console.error("[ManualClub] failed to notify claimants", notifyError)
+      logger.error("[ManualClub] failed to notify claimants", notifyError)
     }
 
     return NextResponse.json({
@@ -265,3 +266,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "failed_to_insert_manual_club", details: message }, { status: 500 })
   }
 }
+

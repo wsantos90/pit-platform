@@ -1,4 +1,5 @@
 import { createAdminClient } from "@/lib/supabase/admin"
+import { logger } from '@/lib/logger';
 import {
   classifyMatch,
   createEmptyMatchClassificationContext,
@@ -188,19 +189,7 @@ export async function persistMatchesForClub(
   const matchesSkipped = Math.max(0, deduped.length - matchesNew) + duplicatesSkipped
 
   // Buscar IDs de matches que já existiam no banco (ignorados pelo ignoreDuplicates)
-  const insertedEaMatchIds = new Set(insertedRows.map((r) => r.ea_match_id))
-  const skippedEaMatchIds = deduped.map((m) => m.matchId).filter((id) => !insertedEaMatchIds.has(id))
-
-  let allMatchRows: InsertedMatchRow[] = [...insertedRows]
-  if (skippedEaMatchIds.length > 0) {
-    const { data: existingMatches } = await adminClient
-      .from("matches")
-      .select("id, ea_match_id")
-      .in("ea_match_id", skippedEaMatchIds)
-    allMatchRows = [...insertedRows, ...((existingMatches ?? []) as InsertedMatchRow[])]
-  }
-
-  if (allMatchRows.length === 0) {
+  if (insertedRows.length === 0) {
     return {
       matchesNew,
       matchesSkipped,
@@ -213,7 +202,7 @@ export async function persistMatchesForClub(
     matchByEaMatchId.set(match.matchId, match)
   }
 
-  const matchPlayersRows = allMatchRows.flatMap((insertedMatch) => {
+  const matchPlayersRows = insertedRows.flatMap((insertedMatch) => {
     const match = matchByEaMatchId.get(insertedMatch.ea_match_id)
     if (!match) return []
 
@@ -272,7 +261,7 @@ export async function persistMatchesForClub(
     if (!error) return
 
     // Chunk falhou — retry row a row para não perder todo o chunk por um único row problemático
-    console.warn(
+    logger.warn(
       `[Collect] Chunk de ${rows.length} rows falhou (${error.message}), tentando row-by-row`
     )
     for (const row of rows) {
@@ -281,7 +270,7 @@ export async function persistMatchesForClub(
         ignoreDuplicates: false,
       })
       if (rowError) {
-        console.error(
+        logger.error(
           `[Collect] Row falhou ea_gamertag=${row.ea_gamertag} match_id=${row.match_id}: ${rowError.message}`
         )
       }
@@ -300,3 +289,4 @@ export async function persistMatchesForClub(
     playersLinked,
   }
 }
+

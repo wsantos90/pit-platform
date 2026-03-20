@@ -3,6 +3,7 @@
  */
 
 import { getCookieServiceSecret, getCookieServiceUrl, isCookieServiceConfigured } from "@/lib/ea/runtimeConfig"
+import { logger } from '@/lib/logger';
 
 type CookieServiceResponse = {
   ak_bmsc: string
@@ -60,7 +61,8 @@ export async function tryFetchAkamaiCookies(): Promise<string | null> {
     return await fetchAkamaiCookies()
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    console.warn(`[cookieClient] Falha ao buscar cookies Akamai (continuando sem cookies): ${message}`)
+    logger.warn(`[cookieClient] Falha ao buscar cookies Akamai (continuando sem cookies): ${message}`)
     return null
   }
 }
+

@@ -11,6 +11,7 @@
 import { formatInTimeZone } from 'date-fns-tz';
 import { z } from 'zod';
 import { normalizeClubName } from './normalize';
+import { logger } from '@/lib/logger';
 import type { EaPositionCategory } from '@/types/database';
 import type {
     EaParsedClub,
@@ -225,7 +226,7 @@ function parsePositionCategory(value: string): EaPositionCategory {
     if (normalized === 'midfielder') return 'midfielder';
     if (normalized === 'forward') return 'forward';
     // Fallback robusto: posição desconhecida não deve derrubar o parse de toda a partida
-    console.warn(`EA parser: posição desconhecida "${value}", usando 'forward' como fallback`);
+    logger.warn(`EA parser: posição desconhecida "${value}", usando 'forward' como fallback`);
     return 'forward';
 }
 
@@ -235,3 +236,4 @@ function getValue(record: Record<string, unknown>, keys: string[]): unknown {
     }
     return undefined;
 }
+

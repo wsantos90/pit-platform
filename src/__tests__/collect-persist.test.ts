@@ -56,7 +56,7 @@ function makeAdminClient(options?: {
   })
 
   const playersIn = vi.fn().mockResolvedValue({
-    data: [{ id: "db-player-1", ea_gamertag: "player-one" }],
+    data: [{ id: "db-player-1", ea_gamertag: "Player One" }],
     error: null,
   })
 
@@ -90,6 +90,12 @@ function makeAdminClient(options?: {
 
       if (table === "matches") {
         return {
+          select: vi.fn().mockReturnValue({
+            in: vi.fn().mockResolvedValue({
+              data: [],
+              error: null,
+            }),
+          }),
           upsert: matchesUpsert,
         }
       }

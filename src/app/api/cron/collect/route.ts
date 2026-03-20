@@ -5,6 +5,7 @@ import { tryFetchAkamaiCookies } from "@/lib/ea/cookieClient"
 import { loadMatchClassificationContext } from "@/lib/collect/loadMatchClassificationContext"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { logger } from '@/lib/logger';
 
 type AdminClient = ReturnType<typeof createAdminClient>
 type CollectRunStatus = "running" | "completed" | "failed"
@@ -60,7 +61,7 @@ async function failStaleRunningRuns(adminClient: AdminClient) {
     .lt("started_at", staleThresholdIso)
 
   if (error) {
-    console.error("[Collect/Cron] Error while failing stale collect runs:", error)
+    logger.error("[Collect/Cron] Error while failing stale collect runs:", error)
   }
 }
 
@@ -282,10 +283,11 @@ export async function POST(request: NextRequest) {
           errorMessage,
         })
       } catch (updateError) {
-        console.error("[Collect/Cron] Failed to mark collect run as failed:", updateError)
+        logger.error("[Collect/Cron] Failed to mark collect run as failed:", updateError)
       }
     }
 
     return NextResponse.json({ error: "failed_to_execute_collect_cron" }, { status: 500 })
   }
 }
+

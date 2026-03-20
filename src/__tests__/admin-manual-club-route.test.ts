@@ -8,6 +8,7 @@ const {
   mockUpsertDiscoveredClub,
   mockCreateAdminClient,
   mockCreateNotification,
+  mockLoggerError,
 } = vi.hoisted(() => ({
   mockRequireAdmin: vi.fn(),
   mockFetchMatchesPreview: vi.fn(),
@@ -15,6 +16,7 @@ const {
   mockUpsertDiscoveredClub: vi.fn(),
   mockCreateAdminClient: vi.fn(),
   mockCreateNotification: vi.fn(),
+  mockLoggerError: vi.fn(),
 }))
 
 vi.mock("@/app/api/admin/_auth", () => ({
@@ -39,6 +41,15 @@ vi.mock("@/lib/supabase/admin", () => ({
 
 vi.mock("@/lib/notifications", () => ({
   createNotification: mockCreateNotification,
+}))
+
+vi.mock("@/lib/logger", () => ({
+  logger: {
+    error: mockLoggerError,
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+  },
 }))
 
 import { GET, POST } from "@/app/api/admin/manual-club/route"
@@ -261,7 +272,6 @@ describe("GET/POST /api/admin/manual-club", () => {
   })
 
   it("POST keeps success when discovery_runs logging fails", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const adminClient = makeAdminClient({
       existingClub: null,
       updatedClub: makeExistingClub(),
@@ -280,11 +290,9 @@ describe("GET/POST /api/admin/manual-club", () => {
 
     expect(response.status).toBe(200)
     expect(body.success).toBe(true)
-    expect(consoleErrorSpy).toHaveBeenCalledWith("[ManualClub] failed to log discovery_run", {
+    expect(mockLoggerError).toHaveBeenCalledWith("[ManualClub] failed to log discovery_run", {
       message: "db offline",
     })
-
-    consoleErrorSpy.mockRestore()
   })
 
   it("POST notifies pending claimants when the club is inserted", async () => {
@@ -326,7 +334,6 @@ describe("GET/POST /api/admin/manual-club", () => {
   })
 
   it("POST keeps success when a claimant notification throws", async () => {
-    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
     const adminClient = makeAdminClient({
       existingClub: null,
       updatedClub: makeExistingClub(),
@@ -352,7 +359,7 @@ describe("GET/POST /api/admin/manual-club", () => {
 
     expect(response.status).toBe(200)
     expect(body.success).toBe(true)
-    expect(consoleErrorSpy).toHaveBeenCalledWith(
+    expect(mockLoggerError).toHaveBeenCalledWith(
       "[ManualClub] failed to notify pending claimant",
       expect.objectContaining({
         claimId: "claim-1",
@@ -361,8 +368,6 @@ describe("GET/POST /api/admin/manual-club", () => {
         error: "notify exploded",
       })
     )
-
-    consoleErrorSpy.mockRestore()
   })
 
   it("POST short-circuits when the club already exists", async () => {

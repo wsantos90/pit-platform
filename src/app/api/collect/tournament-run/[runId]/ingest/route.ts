@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { parseMatches } from "@/lib/ea/parser"
 import { loadMatchClassificationContext } from "@/lib/collect/loadMatchClassificationContext"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
+import { logger } from '@/lib/logger';
 
 type AdminClient = ReturnType<typeof createAdminClient>
 
@@ -127,7 +128,7 @@ export async function POST(
     const nextFailed = run.clubs_failed + 1
     await adminClient.from("collect_runs").update({ clubs_failed: nextFailed }).eq("id", run.id)
 
-    console.warn(
+    logger.warn(
       `[TournamentRun/Ingest] Club failed: runId=${runId} ea_club_id=${ea_club_id} error=${clubError ?? "unknown"}`
     )
 
@@ -159,7 +160,7 @@ export async function POST(
       .eq("ea_club_id", ea_club_id)
   } catch (error) {
     const msg = error instanceof Error ? error.message : JSON.stringify(error)
-    console.error(
+    logger.error(
       `[TournamentRun/Ingest] Persist failed: runId=${runId} ea_club_id=${ea_club_id} err=${msg}`
     )
 

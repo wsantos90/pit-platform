@@ -5,6 +5,7 @@ import { createNotification } from "@/lib/notifications";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types";
+import { logger } from '@/lib/logger';
 
 const reviewSchema = z
   .object({
@@ -86,7 +87,7 @@ async function notifyClaimant(
       adminClient
     );
     if (result.error) {
-      console.error("[Claim/Review] failed to notify claimant about approval", {
+      logger.error("[Claim/Review] failed to notify claimant about approval", {
         claimId,
         userId,
         error: result.error.message,
@@ -111,7 +112,7 @@ async function notifyClaimant(
     adminClient
   );
   if (result.error) {
-    console.error("[Claim/Review] failed to notify claimant about rejection", {
+    logger.error("[Claim/Review] failed to notify claimant about rejection", {
       claimId,
       userId,
       error: result.error.message,
@@ -182,3 +183,4 @@ export async function POST(request: NextRequest) {
     message: successMessage,
   });
 }
+

@@ -8,6 +8,7 @@ import type { EaParsedMatch } from "@/types/ea-api"
 import { upsertDiscoveredClub } from "./discovery"
 import { parseMatches } from "./parser"
 import { getCookieServiceSecret, getCookieServiceUrl, getEaFetchTransport } from "./runtimeConfig"
+import { logger } from '@/lib/logger';
 
 const EA_BASE_URL = process.env.EA_API_BASE_URL || "https://proclubs.ea.com/api/fc"
 const EA_PLATFORM = process.env.EA_PLATFORM || "common-gen5"
@@ -144,7 +145,7 @@ export async function fetchMatchesRaw(clubId: string, cookies?: string): Promise
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     if (attempt > 0) {
       const waitMs = RETRY_BACKOFF_MS[attempt - 1]
-      console.log(`[EA API] Tentativa ${attempt + 1}/${maxAttempts} para clubId=${clubId} (aguardando ${waitMs}ms)`)
+      logger.info(`[EA API] Tentativa ${attempt + 1}/${maxAttempts} para clubId=${clubId} (aguardando ${waitMs}ms)`)
       await sleep(waitMs)
     }
 
@@ -159,11 +160,11 @@ export async function fetchMatchesRaw(clubId: string, cookies?: string): Promise
       }
 
       const data = await response.json()
-      console.log(`[EA API] Sucesso na tentativa ${attempt + 1} para clubId=${clubId}`)
+      logger.info(`[EA API] Sucesso na tentativa ${attempt + 1} para clubId=${clubId}`)
       return data
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error))
-      console.error(`[EA API] Tentativa ${attempt + 1} falhou para clubId=${clubId}: ${lastError.message}`)
+      logger.error(`[EA API] Tentativa ${attempt + 1} falhou para clubId=${clubId}: ${lastError.message}`)
     }
   }
 
@@ -198,12 +199,13 @@ export async function fetchMatches(clubId: string, cookies?: string): Promise<Ea
 
     results.forEach((result) => {
       if (result.status === "rejected") {
-        console.error(`[EA API] Falha ao persistir clube no Discovery: ${result.reason}`)
+        logger.error(`[EA API] Falha ao persistir clube no Discovery: ${result.reason}`)
       }
     })
   }
 
   return matches
 }
+
 
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { runMatching } from '@/lib/matchmaking/match';
+import { logger } from '@/lib/logger';
 
 const cronHeaderSchema = z.object({
   secret: z.string().trim().min(1),
@@ -20,7 +21,8 @@ export async function POST(request: NextRequest) {
     const matched = await runMatching();
     return NextResponse.json({ matched });
   } catch (err) {
-    console.error('[Matchmaking/Match]', err);
+    logger.error('[Matchmaking/Match]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 import {
   detectWinnerFromMatch,
   advanceWinnerInBracket,
@@ -107,7 +108,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ tournamentsProcessed, winnersAdvanced, tournamentsFinished });
   } catch (err) {
-    console.error('[Cron/Tournament]', err);
+    logger.error('[Cron/Tournament]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+

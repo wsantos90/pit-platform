@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { DiscoveredClub } from '@/types/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { logger } from '@/lib/logger';
 
 export interface EADiscoveredClubInput {
   clubId: string;
@@ -58,7 +59,7 @@ export async function upsertDiscoveredClub(
     .single();
 
   if (error) {
-    console.error('Error upserting discovered club:', error);
+    logger.error('Error upserting discovered club:', error);
     throw error;
   }
 
@@ -70,7 +71,7 @@ export async function upsertDiscoveredClub(
 
   if (incrementError) {
     // scan_count é não-crítico — não propaga o erro para não abortar coleta
-    console.error('Error incrementing scan_count:', incrementError);
+    logger.error('Error incrementing scan_count:', incrementError);
   }
 
   return data;
@@ -97,9 +98,10 @@ export async function searchDiscoveredClubs(query: string) {
     .limit(20);
 
   if (error) {
-    console.error('Error searching discovered clubs:', error);
+    logger.error('Error searching discovered clubs:', error);
     throw error;
   }
 
   return data;
 }
+

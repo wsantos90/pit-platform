@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { requireAdmin } from "@/app/api/admin/_auth"
 import { createAdminClient } from "@/lib/supabase/admin"
+import { logger } from '@/lib/logger';
 
 async function loadActiveTournamentClubs(
   adminClient: ReturnType<typeof createAdminClient>
@@ -51,7 +52,7 @@ export async function POST(_request: NextRequest) {
   try {
     targets = await loadActiveTournamentClubs(adminClient)
   } catch (error) {
-    console.error("[TournamentRun/Start] Failed to load active tournament clubs:", error)
+    logger.error("[TournamentRun/Start] Failed to load active tournament clubs:", error)
     return NextResponse.json({ error: "failed_to_load_tournament_clubs" }, { status: 500 })
   }
 
@@ -78,7 +79,7 @@ export async function POST(_request: NextRequest) {
     .single()
 
   if (runError || !runData?.id) {
-    console.error("[TournamentRun/Start] Failed to create collect run:", runError)
+    logger.error("[TournamentRun/Start] Failed to create collect run:", runError)
     return NextResponse.json({ error: "failed_to_start_collect_run" }, { status: 500 })
   }
 
@@ -88,3 +89,4 @@ export async function POST(_request: NextRequest) {
     targets,
   })
 }
+

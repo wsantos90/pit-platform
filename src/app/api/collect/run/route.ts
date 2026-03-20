@@ -9,6 +9,7 @@ import { upsertDiscoveredClub } from "@/lib/ea/discovery"
 import { loadMatchClassificationContext } from "@/lib/collect/loadMatchClassificationContext"
 import { loadManagerCollectContext } from "@/lib/collect/managerClub"
 import { persistMatchesForClub } from "@/lib/collect/persistMatches"
+import { logger } from '@/lib/logger';
 
 type AdminClient = ReturnType<typeof createAdminClient>
 type CollectRunStatus = "running" | "completed" | "failed"
@@ -118,7 +119,7 @@ async function upsertDiscoveryClubsFromMatches(matches: ReturnType<typeof parseM
 
   results.forEach((result) => {
     if (result.status === "rejected") {
-      console.error(`[Collect/Manual] Falha ao persistir clube no Discovery: ${result.reason}`)
+      logger.error(`[Collect/Manual] Falha ao persistir clube no Discovery: ${result.reason}`)
     }
   })
 }
@@ -266,10 +267,11 @@ export async function POST(request: NextRequest) {
           errorMessage,
         })
       } catch (updateError) {
-        console.error("[Collect/Manual] Failed to mark run as failed:", updateError)
+        logger.error("[Collect/Manual] Failed to mark run as failed:", updateError)
       }
     }
 
     return NextResponse.json({ error: "failed_to_collect_matches" }, { status: 500 })
   }
 }
+

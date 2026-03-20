@@ -5,6 +5,7 @@ import { createAdminClient } from "@/lib/supabase/admin"
 import { fetchMatches } from "@/lib/ea/api"
 import { tryFetchAkamaiCookies } from "@/lib/ea/cookieClient"
 import type { EaParsedMatch } from "@/types/ea-api"
+import { logger } from '@/lib/logger';
 
 const discoveredClubSchema = z.object({
   clubId: z.string().trim().min(1, "clubId is required"),
@@ -155,7 +156,7 @@ async function persistDiscoveredPlayers(
 
   if (playersByGamertag.size === 0) {
     const totalEntries = matches.reduce((acc, m) => acc + m.players.length, 0)
-    console.warn(
+    logger.warn(
       `[Discovery] persistDiscoveredPlayers: 0 gamertags extraídos. ` +
         `matches=${matches.length}, totalPlayerEntries=${totalEntries}`
     )
@@ -202,7 +203,7 @@ async function persistDiscoveredPlayers(
 
   const rejected = results.filter((result) => result.status === "rejected")
   if (rejected.length > 0) {
-    console.error(`[Discovery] ${rejected.length} player upserts failed during scan.`)
+    logger.error(`[Discovery] ${rejected.length} player upserts failed during scan.`)
   }
 
   return upsertRows.length
@@ -256,7 +257,7 @@ async function failStaleRunningRuns(adminClient: ReturnType<typeof createAdminCl
     .lt("started_at", staleThresholdIso)
 
   if (error) {
-    console.error("Error while failing stale discovery runs:", error)
+    logger.error("Error while failing stale discovery runs:", error)
   }
 }
 
@@ -416,7 +417,7 @@ export async function POST(request: NextRequest) {
       failures,
     })
   } catch (error) {
-    console.error("[Discovery] Outer catch:", JSON.stringify(error))
+    logger.error("[Discovery] Outer catch:", JSON.stringify(error))
 
     const errorMessage =
       error instanceof Error
@@ -438,3 +439,4 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "failed_to_execute_discovery_scan" }, { status: 500 })
   }
 }
+

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
+import { logger } from '@/lib/logger';
 
 const cronHeaderSchema = z.object({
   secret: z.string().trim().min(1),
@@ -99,7 +100,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ expired });
   } catch (err) {
-    console.error('[Matchmaking/Expire]', err);
+    logger.error('[Matchmaking/Expire]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+

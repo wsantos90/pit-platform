@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { createPixPayment } from '@/lib/payment/mercadopago';
+import { logger } from '@/lib/logger';
 
 const schema = z.object({
   tournament_id: z.string().uuid(),
@@ -133,7 +134,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     await admin.from('payments').delete().eq('id', payment.id);
-    console.error('[enroll] pix creation failed', err);
+    logger.error('[enroll] pix creation failed', err);
     return NextResponse.json({ error: 'mercadopago_error' }, { status: 502 });
   }
 
@@ -150,7 +151,7 @@ export async function POST(request: NextRequest) {
     .eq('id', payment.id);
 
   if (paymentSyncError) {
-    console.error('[enroll] failed to sync pix data on payment row', paymentSyncError);
+    logger.error('[enroll] failed to sync pix data on payment row', paymentSyncError);
   }
 
   const { data: entry, error: entryError } = await admin
@@ -180,3 +181,4 @@ export async function POST(request: NextRequest) {
     pixExpiration: pixPayment.expiration,
   });
 }
+

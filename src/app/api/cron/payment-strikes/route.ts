@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { logger } from '@/lib/logger';
 
 const cronHeaderSchema = z.object({
   secret: z.string().trim().min(1),
@@ -103,7 +104,8 @@ export async function GET(request: NextRequest) {
       bannedClubs,
     });
   } catch (err) {
-    console.error('[Cron/PaymentStrikes]', err);
+    logger.error('[Cron/PaymentStrikes]', err);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
+
