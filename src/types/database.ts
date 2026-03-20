@@ -216,6 +216,7 @@ export interface PlayerStatsView {
     player_id: string;
     ea_gamertag: string;
     primary_position: PlayerPosition;
+    secondary_position: PlayerPosition | null;
     user_id: string;
     total_matches: number;
     total_goals: number;
@@ -273,6 +274,7 @@ export interface TournamentEntry {
     club_id: string;
     enrolled_by: string;
     payment_status: PaymentStatus;
+    trust_deadline: string | null;
     seed: number | null;
     group_letter: string | null;
     eliminated_at: string | null;
@@ -342,4 +344,12 @@ export interface Notification {
     data: unknown;
     is_read: boolean;
     created_at: string;
+}
+
+export interface UserNotificationPreference {
+    user_id: string;
+    type: NotificationType;
+    inapp_enabled: boolean;
+    created_at: string;
+    updated_at: string;
 }
