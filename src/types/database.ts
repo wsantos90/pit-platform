@@ -1,10 +1,9 @@
 /**
- * Database Types — Gerado a partir do Schema doc
+ * Database Types - gerado manualmente a partir do schema atual.
  *
- * Princípio SSOT: Estes tipos refletem 1:1 a estrutura do banco.
- * Em produção, usar `supabase gen types typescript` para gerar automaticamente.
- *
- * TODO: Substituir por tipos auto-gerados via Supabase CLI após db push.
+ * Principio SSOT: estes tipos devem refletir 1:1 a estrutura do banco.
+ * Quando o Supabase local estiver disponivel, prefira `npm run gen:types`
+ * para substituir este arquivo pela versao auto-gerada.
  */
 
 // ============================================================
@@ -191,7 +190,6 @@ export interface MatchPlayer {
     possession: number | null;
 }
 
-<<<<<<< HEAD
 export interface Lineup {
     id: string;
     club_id: string;
@@ -209,12 +207,11 @@ export interface LineupPlayer {
     lineup_id: string;
     player_id: string;
     position: PlayerPosition;
+    slot_id: string;
     is_starter: boolean;
     sort_order: number;
 }
 
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 export interface PlayerStatsView {
     player_id: string;
     ea_gamertag: string;

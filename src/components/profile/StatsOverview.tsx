@@ -4,19 +4,16 @@ import { useEffect, useMemo, useState } from "react"
 import { StatsCard } from "@/components/player/StatsCard"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
 import {
   PROFILE_MATCH_TYPES,
   PROFILE_PERIOD_OPTIONS,
   formatNumber,
   formatRating,
   getPeriodCutoff,
-<<<<<<< HEAD
   parseNumeric,
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
   type ProfilePeriod,
 } from "@/lib/profile/dashboard"
+import { createClient } from "@/lib/supabase/client"
 
 type StatsOverviewProps = {
   playerId: string
@@ -39,22 +36,6 @@ type MatchPlayerAggregateRow = {
   tackles_made: number | string | null
 }
 
-<<<<<<< HEAD
-=======
-function toNumber(value: number | string | null | undefined) {
-  if (typeof value === "number") {
-    return value
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : 0
-  }
-
-  return 0
-}
-
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 const EMPTY_STATS: OverviewStats = {
   goals: 0,
   assists: 0,
@@ -97,7 +78,6 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         }
 
         const rows = (data ?? []) as MatchPlayerAggregateRow[]
-<<<<<<< HEAD
         const ratings = rows.map((row) => parseNumeric(row.rating)).filter((value): value is number => value !== null && value > 0)
         const nextStats = rows.reduce<OverviewStats>(
           (accumulator, row) => ({
@@ -106,16 +86,6 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
             avgRating: accumulator.avgRating,
             passesCompleted: accumulator.passesCompleted + (parseNumeric(row.passes_completed) ?? 0),
             tacklesMade: accumulator.tacklesMade + (parseNumeric(row.tackles_made) ?? 0),
-=======
-        const ratings = rows.map((row) => toNumber(row.rating)).filter((value) => value > 0)
-        const nextStats = rows.reduce<OverviewStats>(
-          (accumulator, row) => ({
-            goals: accumulator.goals + toNumber(row.goals),
-            assists: accumulator.assists + toNumber(row.assists),
-            avgRating: accumulator.avgRating,
-            passesCompleted: accumulator.passesCompleted + toNumber(row.passes_completed),
-            tacklesMade: accumulator.tacklesMade + toNumber(row.tackles_made),
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
             matchCount: accumulator.matchCount + 1,
           }),
           { ...EMPTY_STATS }
@@ -130,11 +100,7 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
         }
       } catch {
         if (isMounted) {
-<<<<<<< HEAD
           setError("Não foi possível carregar o resumo do jogador.")
-=======
-          setError("Nao foi possivel carregar o resumo do jogador.")
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           setStats(EMPTY_STATS)
         }
       } finally {
@@ -160,22 +126,13 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
       <CardHeader className="gap-4 pb-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <CardTitle className="text-base font-semibold">Resumo de performance</CardTitle>
-<<<<<<< HEAD
-          <p className="text-sm text-muted-foreground">
-            Estatísticas filtradas apenas por championship e friendly_pit.
-=======
           <p className="text-sm text-foreground-secondary">
-            Estatisticas filtradas apenas por championship e friendly_pit.
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
+            Estatísticas filtradas apenas por championship e friendly_pit.
           </p>
         </div>
 
         <div className="w-full md:max-w-[180px]">
-<<<<<<< HEAD
           <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Período">
-=======
-          <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Periodo">
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
             {PROFILE_PERIOD_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -190,13 +147,8 @@ export default function StatsOverview({ playerId }: StatsOverviewProps) {
 
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
           <StatsCard label="Gols" value={loading ? "..." : formatNumber(stats.goals)} helper={helper} />
-<<<<<<< HEAD
           <StatsCard label="Assistências" value={loading ? "..." : formatNumber(stats.assists)} helper={helper} />
           <StatsCard label="Nota média" value={loading ? "..." : formatRating(stats.avgRating)} helper={helper} />
-=======
-          <StatsCard label="Assistencias" value={loading ? "..." : formatNumber(stats.assists)} helper={helper} />
-          <StatsCard label="Nota media" value={loading ? "..." : formatRating(stats.avgRating)} helper={helper} />
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           <StatsCard label="Passes" value={loading ? "..." : formatNumber(stats.passesCompleted)} helper={helper} />
           <StatsCard label="Desarmes" value={loading ? "..." : formatNumber(stats.tacklesMade)} helper={helper} />
         </div>

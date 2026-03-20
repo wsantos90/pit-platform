@@ -1,10 +1,7 @@
 import { Suspense } from "react"
 import EvolutionChart from "@/components/profile/EvolutionChart"
 import MatchHistory from "@/components/profile/MatchHistory"
-<<<<<<< HEAD
 import { PendingInvitesCard } from "@/components/profile/PendingInvitesCard"
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 import PlayerHeader from "@/components/profile/PlayerHeader"
 import PositionStats from "@/components/profile/PositionStats"
 import QuickClubRefreshCard from "@/components/profile/QuickClubRefreshCard"
@@ -14,7 +11,6 @@ import { loadManagerCollectContext } from "@/lib/collect/managerClub"
 import { createClient } from "@/lib/supabase/server"
 import type { Player } from "@/types/database"
 
-<<<<<<< HEAD
 type PendingInviteRow = {
   id: string
   club_id: string
@@ -26,8 +22,6 @@ type PendingInviteRow = {
   } | null
 }
 
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 function SectionFallback({ label }: { label: string }) {
   return (
     <Card className="border-border bg-card">
@@ -51,7 +45,6 @@ export default async function Page() {
     loadManagerCollectContext(supabase, user.id, user.email ?? null),
   ])
 
-<<<<<<< HEAD
   let pendingInvites: PendingInviteRow[] = []
   if (player) {
     const { data: inviteRows } = await supabase
@@ -73,8 +66,6 @@ export default async function Page() {
     }))
   }
 
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
   const showManagerSection = context.canCollect || context.roles.includes("manager") || context.roles.includes("admin")
 
   return (
@@ -116,11 +107,8 @@ export default async function Page() {
         )
       ) : null}
 
-<<<<<<< HEAD
       {player ? <PendingInvitesCard invites={pendingInvites} /> : null}
 
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
       {player ? (
         <>
           <Suspense fallback={<SectionFallback label="Carregando resumo do jogador..." />}>

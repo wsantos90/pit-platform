@@ -4,19 +4,16 @@ import { useEffect, useMemo, useState } from "react"
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select } from "@/components/ui/select"
-import { createClient } from "@/lib/supabase/client"
 import {
   PROFILE_MATCH_TYPES,
   PROFILE_PERIOD_OPTIONS,
   formatDateTime,
   formatRating,
   getPeriodCutoff,
-<<<<<<< HEAD
   parseNumeric,
-=======
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
   type ProfilePeriod,
 } from "@/lib/profile/dashboard"
+import { createClient } from "@/lib/supabase/client"
 
 type EvolutionChartProps = {
   playerId: string
@@ -43,22 +40,6 @@ type ChartPoint = {
   rating: number
 }
 
-<<<<<<< HEAD
-=======
-function toNumber(value: number | string | null | undefined) {
-  if (typeof value === "number") {
-    return value
-  }
-
-  if (typeof value === "string") {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : null
-  }
-
-  return null
-}
-
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 export default function EvolutionChart({ playerId }: EvolutionChartProps) {
   const supabase = useMemo(() => createClient(), [])
   const [period, setPeriod] = useState<ProfilePeriod>("90d")
@@ -96,11 +77,7 @@ export default function EvolutionChart({ playerId }: EvolutionChartProps) {
         const nextPoints = ((data ?? []) as EvolutionRow[])
           .map((row) => {
             const match = Array.isArray(row.matches) ? row.matches[0] : row.matches
-<<<<<<< HEAD
             const rating = parseNumeric(row.rating)
-=======
-            const rating = toNumber(row.rating)
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
 
             if (!match || rating === null) {
               return null
@@ -127,11 +104,7 @@ export default function EvolutionChart({ playerId }: EvolutionChartProps) {
         }
       } catch {
         if (isMounted) {
-<<<<<<< HEAD
           setError("Não foi possível carregar a evolução de notas.")
-=======
-          setError("Nao foi possivel carregar a evolucao de notas.")
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
           setData([])
         }
       } finally {
@@ -152,21 +125,12 @@ export default function EvolutionChart({ playerId }: EvolutionChartProps) {
     <Card className="border-border bg-card">
       <CardHeader className="gap-4 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-<<<<<<< HEAD
           <CardTitle className="text-base font-semibold">Evolução de rating</CardTitle>
-          <p className="text-sm text-muted-foreground">Linha cronológica das notas nas partidas válidas.</p>
-        </div>
-
-        <div className="w-full md:max-w-[180px]">
-          <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Período do gráfico">
-=======
-          <CardTitle className="text-base font-semibold">Evolucao de rating</CardTitle>
-          <p className="text-sm text-foreground-secondary">Linha cronologica das notas nas partidas validas.</p>
+          <p className="text-sm text-foreground-secondary">Linha cronológica das notas nas partidas válidas.</p>
         </div>
 
         <div className="w-full md:max-w-[180px]">
           <Select value={period} onChange={(event) => setPeriod(event.target.value as ProfilePeriod)} aria-label="Periodo do grafico">
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
             {PROFILE_PERIOD_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
@@ -180,11 +144,7 @@ export default function EvolutionChart({ playerId }: EvolutionChartProps) {
         {error ? <p className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">{error}</p> : null}
 
         {loading ? (
-<<<<<<< HEAD
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">Carregando gráfico...</div>
-=======
           <div className="flex h-[300px] items-center justify-center text-sm text-foreground-secondary">Carregando grafico...</div>
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
         ) : data.length ? (
           <div className="h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
@@ -204,13 +164,8 @@ export default function EvolutionChart({ playerId }: EvolutionChartProps) {
             </ResponsiveContainer>
           </div>
         ) : (
-<<<<<<< HEAD
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-            Ainda não há ratings suficientes para montar o gráfico.
-=======
           <div className="flex h-[300px] items-center justify-center text-sm text-foreground-secondary">
-            Ainda nao ha ratings suficientes para montar o grafico.
->>>>>>> 11f87daa2b3f8be0a1abef3cd95e37277078e423
+            Ainda não há ratings suficientes para montar o gráfico.
           </div>
         )}
       </CardContent>
