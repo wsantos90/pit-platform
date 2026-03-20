@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { createClient } from '@/lib/supabase/client';
@@ -133,10 +134,13 @@ export function EnrollButton({ tournamentId, clubId, entryFee, onEnrolled }: Enr
           <p className="font-mono text-sm font-semibold text-primary">{formatTime(secondsLeft)}</p>
         </div>
         {pixQrCode ? (
-          <img
+          <Image
             src={`data:image/png;base64,${pixQrCode}`}
             alt="QR Code PIX"
+            width={160}
+            height={160}
             className="mx-auto h-40 w-40 rounded"
+            unoptimized
           />
         ) : null}
         {pixCopy ? (

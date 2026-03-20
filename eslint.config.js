@@ -9,6 +9,47 @@ module.exports = [
   ...typescript,
   {
     rules: {
+      "@typescript-eslint/naming-convention": [
+        "error",
+        {
+          selector: "variable",
+          format: ["camelCase", "PascalCase", "UPPER_CASE"],
+          leadingUnderscore: "allow",
+          trailingUnderscore: "allow",
+        },
+        {
+          selector: "variable",
+          modifiers: ["destructured"],
+          format: null,
+        },
+        {
+          selector: "function",
+          format: ["camelCase", "PascalCase"],
+          leadingUnderscore: "allow",
+        },
+        {
+          selector: "parameter",
+          format: ["camelCase", "PascalCase"],
+          leadingUnderscore: "allow",
+        },
+        {
+          selector: "parameter",
+          modifiers: ["destructured"],
+          format: null,
+        },
+        {
+          selector: "typeLike",
+          format: ["PascalCase"],
+        },
+        {
+          selector: "objectLiteralProperty",
+          format: null,
+        },
+        {
+          selector: "typeProperty",
+          format: null,
+        },
+      ],
       "@typescript-eslint/no-unused-vars": [
         "error",
         {

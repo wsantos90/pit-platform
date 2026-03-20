@@ -7,15 +7,15 @@ export async function GET(request: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const tournament_id = request.nextUrl.searchParams.get('tournament_id');
-  if (!tournament_id) return NextResponse.json({ error: 'tournament_id required' }, { status: 400 });
+  const tournamentId = request.nextUrl.searchParams.get('tournament_id');
+  if (!tournamentId) return NextResponse.json({ error: 'tournament_id required' }, { status: 400 });
 
   const admin = createAdminClient();
 
   const { data: tournament } = await admin
     .from('tournaments')
     .select('id, name, status, current_round, format')
-    .eq('id', tournament_id)
+    .eq('id', tournamentId)
     .maybeSingle();
 
   if (!tournament) return NextResponse.json({ error: 'tournament_not_found' }, { status: 404 });
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
   const { data: brackets, error } = await admin
     .from('tournament_brackets')
     .select('id, round, round_order, match_order, home_entry_id, away_entry_id, home_club_id, away_club_id, home_score, away_score, winner_entry_id, next_bracket_id, status, completed_at, match_id')
-    .eq('tournament_id', tournament_id)
+    .eq('tournament_id', tournamentId)
     .order('round_order', { ascending: true })
     .order('match_order', { ascending: true });
 
@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
 
   // Resolve winner club from winner_entry_id via tournament_entries
   const entryIds = (brackets ?? []).map((b) => b.winner_entry_id).filter(Boolean) as string[];
-  let entryToClub = new Map<string, string>();
+  const entryToClub = new Map<string, string>();
   if (entryIds.length > 0) {
     const { data: entries } = await admin
       .from('tournament_entries')

@@ -154,17 +154,14 @@ export function useNotifications(userId: string | null, limit = 10) {
 
   useEffect(() => {
     if (!userId) {
-      const emptySnapshot = { notifications: [], unreadCount: 0 }
-      snapshotRef.current = emptySnapshot
-      setSnapshot(emptySnapshot)
-      setLoading(false)
       return
     }
 
     let active = true
-    setLoading(true)
 
     const poll = async () => {
+      setLoading(true)
+
       const [listResult, countResult] = await Promise.all([
         supabase
           .from("notifications")
@@ -238,9 +235,9 @@ export function useNotifications(userId: string | null, limit = 10) {
   }
 
   return {
-    notifications: snapshot.notifications,
-    unreadCount: snapshot.unreadCount,
-    loading,
+    notifications: userId ? snapshot.notifications : [],
+    unreadCount: userId ? snapshot.unreadCount : 0,
+    loading: userId ? loading : false,
     markAsRead,
   }
 }

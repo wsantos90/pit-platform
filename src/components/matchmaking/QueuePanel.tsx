@@ -24,10 +24,6 @@ function getUnlockTimeBRT(slotTime: string): Date {
   return new Date(d.getTime() + 50 * 60 * 1000);
 }
 
-function isSlotUnlocked(slotTime: string): boolean {
-  return Date.now() >= getUnlockTimeBRT(slotTime).getTime();
-}
-
 function isMidnightBRT(): boolean {
   // BRT = UTC-3. Midnight BRT = 03:00 UTC
   const utcHour = new Date().getUTCHours();
@@ -51,15 +47,6 @@ type QueueEntry = {
   matched_with: string | null;
   opponent_name?: string;
   chat_id?: string;
-};
-
-type ChatRow = {
-  id: string;
-  club_a_id: string;
-  club_b_id: string;
-  queue_entry_a: string;
-  queue_entry_b: string;
-  status: string;
 };
 
 type ConfirmedMatchInfo = {

@@ -16,16 +16,15 @@ export function useNotificationPrefs(userId: string | null) {
 
   useEffect(() => {
     if (!userId) {
-      setPreferences({})
-      setLoading(false)
       return
     }
 
     let active = true
-    setLoading(true)
-    setErrorMessage(null)
 
     const load = async () => {
+      setLoading(true)
+      setErrorMessage(null)
+
       const { data, error } = await supabase
         .from("user_notification_prefs")
         .select("type, inapp_enabled")
@@ -60,9 +59,9 @@ export function useNotificationPrefs(userId: string | null) {
     () =>
       NOTIFICATION_PREFERENCE_OPTIONS.map((option) => ({
         ...option,
-        inappEnabled: preferences[option.type] ?? true,
+        inappEnabled: (userId ? preferences : {})[option.type] ?? true,
       })),
-    [preferences]
+    [preferences, userId]
   )
 
   const setInAppEnabled = async (type: NotificationType, inappEnabled: boolean) => {
@@ -97,7 +96,7 @@ export function useNotificationPrefs(userId: string | null) {
 
   return {
     items,
-    loading,
+    loading: userId ? loading : false,
     savingType,
     errorMessage,
     setInAppEnabled,
