@@ -41,6 +41,12 @@
 6. **[2026-03-19] TaskMaster `validate-dependencies` rejeita deps intra-subtask**
    Do instead: após `expand --all`, rodar script de limpeza para remover deps com IDs < 26 (refs de irmãs que o validador trata como top-level inexistentes). Isso é bug do TaskMaster, não erro de configuração.
 
+7. **[2026-03-20] Toda task precisa comeÃ§ar em branch nova antes da primeira ediÃ§Ã£o**
+   Do instead: antes de qualquer alteraÃ§Ã£o, rodar `git checkout main && git pull` e criar `feat/`, `refactor/`, `fix/`, `docs/` ou `design/` conforme a task. Nunca implementar em branch herdada da task anterior.
+
+8. **[2026-03-20] NÃ£o declarar task pronta sem validaÃ§Ã£o final completa**
+   Do instead: antes de reportar conclusÃ£o, rodar `npx tsc --noEmit`, `npm run build`, `npm test`, lint relevante e checks pontuais da task, e citar explicitamente o resultado.
+
 ---
 
 ## Shell & Command Reliability
@@ -77,36 +83,38 @@
 
 ## Config por Task (Fase 2)
 
-**Template de abertura de chat:**
-```
-Task XX — [nome]. /model claude-sonnet-4-6 /effort high
-npx task-master show XX
-```
+**Fluxo padrão por task:**
+1. **Planejar** → Claude Opus + effort high + Plan Mode
+2. **Implementar** → Codex (modelo abaixo) + reasoning indicado
+3. **Revisar** → Claude Sonnet + effort medium (checar o que foi feito, identificar gaps)
+4. **Corrigir** → Codex novamente se necessário
 
-| Task | Modelo | Effort | Nota |
+**Codex — modelo padrão: `GPT-5.4` para todas as tasks.**
+
+| Task | Plano (Claude) | Codex Reasoning | Nota |
 |---|---|---|---|
-| 26 Codebase Refactoring | Sonnet | high | |
-| 27 Documentation | Sonnet | medium | |
-| 28 Visual Brainstorming + Design System | **Opus** | high | Decisões que afetam tudo |
-| 29 Design Tokens | Sonnet | high | Mudança global |
-| 30 Shared Components | Sonnet | high | |
-| 31 Layout Shell (Sidebar+Navbar) | Sonnet | high | skill frontend-design |
-| 32 Auth Pages | Sonnet | medium | |
-| 33 Profile Page | Sonnet | high | |
-| 34 Profile Sub-Pages | Sonnet | medium | |
-| 35 Team Page | Sonnet | high | |
-| 36 Team Sub-Pages | Sonnet | medium | |
-| 37 Matchmaking Page | Sonnet | medium | |
-| 38 Tournament Pages | Sonnet | high | |
-| 39 Detail Pages | Sonnet | medium | |
-| 40 Rankings + Hall of Fame | Sonnet | medium | |
-| 41 Landing Page | **Opus** | high | Página pública crítica |
-| 42 Admin Panel | Sonnet | high | |
-| 43 Moderation Panel | Sonnet | medium | |
-| 44 Utility Pages | Sonnet | low | 404, loading, etc |
-| 45 SEO + OG Images | Sonnet | high | |
-| 46 Performance Budget | Sonnet | high | |
-| 47 Visual Regression Tests | Sonnet | medium | |
+| 26 Codebase Refactoring | Opus/high | High | |
+| 27 Documentation | Opus/high | Medium | |
+| 28 Visual Brainstorm + Design System | Opus/high | — | Só planejamento, sem impl |
+| 29 Design Tokens | Opus/high | High | Mudança global |
+| 30 Shared Components | Opus/high | High | |
+| 31 Layout Shell (Sidebar+Navbar) | Opus/high | High | |
+| 32 Auth Pages | Opus/high | Medium | |
+| 33 Profile Page | Opus/high | High | |
+| 34 Profile Sub-Pages | Opus/high | Medium | |
+| 35 Team Page | Opus/high | High | |
+| 36 Team Sub-Pages | Opus/high | Medium | |
+| 37 Matchmaking Page | Opus/high | Medium | |
+| 38 Tournament Pages | Opus/high | High | |
+| 39 Detail Pages | Opus/high | Medium | |
+| 40 Rankings + Hall of Fame | Opus/high | Medium | |
+| 41 Landing Page | Opus/high | Extra High | Página crítica |
+| 42 Admin Panel | Opus/high | High | |
+| 43 Moderation Panel | Opus/high | Medium | |
+| 44 Utility Pages | Opus/medium | Low | 404, loading |
+| 45 SEO + OG Images | Opus/high | High | |
+| 46 Performance Budget | Opus/high | High | |
+| 47 Visual Regression Tests | Opus/high | Medium | |
 
 ---
 
