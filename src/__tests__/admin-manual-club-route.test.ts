@@ -7,12 +7,14 @@ const {
   mockTryFetchAkamaiCookies,
   mockUpsertDiscoveredClub,
   mockCreateAdminClient,
+  mockCreateNotification,
 } = vi.hoisted(() => ({
   mockRequireAdmin: vi.fn(),
   mockFetchMatchesPreview: vi.fn(),
   mockTryFetchAkamaiCookies: vi.fn(),
   mockUpsertDiscoveredClub: vi.fn(),
   mockCreateAdminClient: vi.fn(),
+  mockCreateNotification: vi.fn(),
 }))
 
 vi.mock("@/app/api/admin/_auth", () => ({
@@ -35,6 +37,10 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: mockCreateAdminClient,
 }))
 
+vi.mock("@/lib/notifications", () => ({
+  createNotification: mockCreateNotification,
+}))
+
 import { GET, POST } from "@/app/api/admin/manual-club/route"
 
 function makeGetRequest(url: string) {
@@ -49,6 +55,98 @@ function makePostRequest(body: unknown) {
   })
 }
 
+function makeExistingClub(overrides?: Partial<{
+  id: string
+  ea_club_id: string
+  display_name: string
+  status: string
+  discovered_via: string | null
+}>) {
+  return {
+    id: "dc-1",
+    ea_club_id: "123",
+    display_name: "Pit Home",
+    status: "unclaimed",
+    discovered_via: "manual_admin",
+    ...overrides,
+  }
+}
+
+function makeAdminClient(options?: {
+  existingClub?: ReturnType<typeof makeExistingClub> | null
+  updatedClub?: ReturnType<typeof makeExistingClub>
+  pendingClaims?: Array<{ id: string; user_id: string; discovered_club_id: string }>
+  updateError?: { message: string } | null
+  discoveryRunError?: { message: string } | null
+}) {
+  const discoveredClubMaybeSingle = vi.fn().mockResolvedValue({
+    data: options?.existingClub ?? null,
+    error: null,
+  })
+
+  const discoveredClubUpdateSingle = vi.fn().mockResolvedValue({
+    data: options?.updatedClub ?? makeExistingClub(),
+    error: options?.updateError ?? null,
+  })
+
+  const discoveryRunInsert = vi.fn().mockResolvedValue({
+    data: null,
+    error: options?.discoveryRunError ?? null,
+  })
+
+  const claimsByClubId = vi.fn().mockResolvedValue({
+    data: options?.pendingClaims ?? [],
+    error: null,
+  })
+
+  const from = vi.fn((table: string) => {
+    if (table === "discovered_clubs") {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            maybeSingle: discoveredClubMaybeSingle,
+          }),
+        }),
+        update: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            select: vi.fn().mockReturnValue({
+              single: discoveredClubUpdateSingle,
+            }),
+          }),
+        }),
+      }
+    }
+
+    if (table === "discovery_runs") {
+      return {
+        insert: discoveryRunInsert,
+      }
+    }
+
+    if (table === "claims") {
+      return {
+        select: vi.fn().mockReturnValue({
+          eq: vi.fn().mockReturnValue({
+            eq: claimsByClubId,
+          }),
+        }),
+      }
+    }
+
+    return {}
+  })
+
+  return {
+    from,
+    __mocks: {
+      discoveredClubMaybeSingle,
+      discoveredClubUpdateSingle,
+      discoveryRunInsert,
+      claimsByClubId,
+    },
+  }
+}
+
 describe("GET/POST /api/admin/manual-club", () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -60,6 +158,11 @@ describe("GET/POST /api/admin/manual-club", () => {
       },
     })
     mockTryFetchAkamaiCookies.mockResolvedValue(null)
+    mockCreateNotification.mockResolvedValue({
+      data: null,
+      error: null,
+      skipped: false,
+    })
   })
 
   it("GET returns 401 when unauthorized", async () => {
@@ -76,6 +179,7 @@ describe("GET/POST /api/admin/manual-club", () => {
   })
 
   it("GET returns preview data for a valid clubId", async () => {
+    mockCreateAdminClient.mockReturnValue(makeAdminClient({ existingClub: null }))
     mockFetchMatchesPreview.mockResolvedValue([
       {
         matchId: "m-1",
@@ -103,34 +207,30 @@ describe("GET/POST /api/admin/manual-club", () => {
     expect(body.recentMatches[0].score).toBe("2 x 1")
   })
 
-  it("POST inserts manual club and returns success payload", async () => {
-    const single = vi.fn().mockResolvedValue({
-      data: {
-        id: "dc-1",
-        ea_club_id: "123",
-        display_name: "Pit Home",
-        status: "unclaimed",
-        discovered_via: "manual_admin",
-      },
-      error: null,
-    })
-
-    const adminClient = {
-      from: vi.fn((table: string) => {
-        if (table === "discovered_clubs") {
-          return {
-            update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                select: vi.fn().mockReturnValue({
-                  single,
-                }),
-              }),
-            }),
-          }
-        }
-        return {}
+  it("GET returns duplicate feedback when club already exists", async () => {
+    const adminClient = makeAdminClient({
+      existingClub: makeExistingClub({
+        status: "pending",
+        discovered_via: "12345",
       }),
-    }
+    })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+
+    const response = await GET(makeGetRequest("http://localhost/api/admin/manual-club?clubId=123"))
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.alreadyExists).toBe(true)
+    expect(body.club.display_name).toBe("Pit Home")
+    expect(body.club.status).toBe("pending")
+    expect(mockFetchMatchesPreview).not.toHaveBeenCalled()
+  })
+
+  it("POST inserts manual club, logs discovery run and returns success payload", async () => {
+    const adminClient = makeAdminClient({
+      existingClub: null,
+      updatedClub: makeExistingClub(),
+    })
     mockCreateAdminClient.mockReturnValue(adminClient)
     mockUpsertDiscoveredClub.mockResolvedValue({ id: "dc-1" })
 
@@ -149,5 +249,144 @@ describe("GET/POST /api/admin/manual-club", () => {
       { clubId: "123", name: "Pit Home" },
       adminClient
     )
+    expect(adminClient.__mocks.discoveryRunInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        triggered_by: "admin-1",
+        status: "completed",
+        clubs_scanned: 1,
+        clubs_new: 1,
+        run_type: "manual_admin",
+      })
+    )
+  })
+
+  it("POST keeps success when discovery_runs logging fails", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const adminClient = makeAdminClient({
+      existingClub: null,
+      updatedClub: makeExistingClub(),
+      discoveryRunError: { message: "db offline" },
+    })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+    mockUpsertDiscoveredClub.mockResolvedValue({ id: "dc-1" })
+
+    const response = await POST(
+      makePostRequest({
+        clubId: "123",
+        displayName: "Pit Home",
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(consoleErrorSpy).toHaveBeenCalledWith("[ManualClub] failed to log discovery_run", {
+      message: "db offline",
+    })
+
+    consoleErrorSpy.mockRestore()
+  })
+
+  it("POST notifies pending claimants when the club is inserted", async () => {
+    const adminClient = makeAdminClient({
+      existingClub: null,
+      updatedClub: makeExistingClub(),
+      pendingClaims: [
+        {
+          id: "claim-1",
+          user_id: "manager-1",
+          discovered_club_id: "dc-1",
+        },
+      ],
+    })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+    mockUpsertDiscoveredClub.mockResolvedValue({ id: "dc-1" })
+
+    const response = await POST(
+      makePostRequest({
+        clubId: "123",
+        displayName: "Pit Home",
+      })
+    )
+
+    expect(response.status).toBe(200)
+    expect(mockCreateNotification).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: "manager-1",
+        type: "team_discovered",
+        title: "Time encontrado",
+        data: expect.objectContaining({
+          claim_id: "claim-1",
+          discovered_club_id: "dc-1",
+          ea_club_id: "123",
+        }),
+      }),
+      adminClient
+    )
+  })
+
+  it("POST keeps success when a claimant notification throws", async () => {
+    const consoleErrorSpy = vi.spyOn(console, "error").mockImplementation(() => {})
+    const adminClient = makeAdminClient({
+      existingClub: null,
+      updatedClub: makeExistingClub(),
+      pendingClaims: [
+        {
+          id: "claim-1",
+          user_id: "manager-1",
+          discovered_club_id: "dc-1",
+        },
+      ],
+    })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+    mockUpsertDiscoveredClub.mockResolvedValue({ id: "dc-1" })
+    mockCreateNotification.mockRejectedValueOnce(new Error("notify exploded"))
+
+    const response = await POST(
+      makePostRequest({
+        clubId: "123",
+        displayName: "Pit Home",
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(consoleErrorSpy).toHaveBeenCalledWith(
+      "[ManualClub] failed to notify pending claimant",
+      expect.objectContaining({
+        claimId: "claim-1",
+        userId: "manager-1",
+        clubId: "123",
+        error: "notify exploded",
+      })
+    )
+
+    consoleErrorSpy.mockRestore()
+  })
+
+  it("POST short-circuits when the club already exists", async () => {
+    const adminClient = makeAdminClient({
+      existingClub: makeExistingClub({
+        status: "pending",
+        discovered_via: "automatic",
+      }),
+    })
+    mockCreateAdminClient.mockReturnValue(adminClient)
+
+    const response = await POST(
+      makePostRequest({
+        clubId: "123",
+        displayName: "Pit Home",
+      })
+    )
+    const body = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(body.success).toBe(true)
+    expect(body.alreadyExists).toBe(true)
+    expect(mockUpsertDiscoveredClub).not.toHaveBeenCalled()
+    expect(adminClient.__mocks.discoveryRunInsert).not.toHaveBeenCalled()
+    expect(mockCreateNotification).not.toHaveBeenCalled()
   })
 })

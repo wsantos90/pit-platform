@@ -9,13 +9,15 @@
 ---
 
 ## Project State (atualizar a cada task)
-- **Task atual:** 20 — Escalação visual (grid 3-5-2 com drag & drop)
-- **Tasks pendentes:** 20, 21, 22, 23, 24, 25
-- **Tasks concluídas:** 1–19
+- **Fase:** 2 — Redesign Visual + Refatoração (tasks 26–47)
+- **Task atual:** 26 — Codebase Refactoring and Cleanup
+- **Tasks pendentes:** 26–47 (22 tasks, 148 subtasks)
+- **Tasks concluídas Fase 1:** 1–25 (todas done)
 - **Migrations:** 23 arquivos em `supabase/migrations/`
-- **Design:** NÃO aplicar redesign visual durante tasks 20–25. Redesign Stitch completo após task 25.
-- **Fluxo:** Claude (plano) → Codex (impl) → Claude (revisão) → Codex (fix) → Claude (aprovação)
-- **Branch:** criar branch nova por task, merge na main só após aprovação do Claude
+- **Design:** Fase 2 É o redesign — aplicar livremente. Usar skills: `ui-ux-pro-max`, `frontend-design`, `stitch-brief`, `stitch-apply`, `vercel-react-best-practices`
+- **TaskMaster:** tasks 26–47 no `master` tag. Modelo: `claude-sonnet-4-6` via Anthropic.
+- **Fluxo Fase 2:** `task-master next` → branch nova → implementar com skills → PR → merge
+- **Branch atual:** `feature/task-25-manual-club-id` (fase 1) — criar nova branch para task 26
 
 ---
 
@@ -32,6 +34,12 @@
 
 4. **[2026-03-10] Cliente admin do Supabase nunca deve ir ao cliente**
    Do instead: `src/lib/supabase/admin.ts` é server-only (bypassa RLS). Nunca importar em componentes client ou rotas públicas.
+
+5. **[2026-03-19] `expand --all` só age em tasks SEM subtasks**
+   Do instead: se todas já têm subtasks, `expand --all` retorna "0 tasks eligible". Usar `expand --id=N` para re-gerar individualmente se necessário.
+
+6. **[2026-03-19] TaskMaster `validate-dependencies` rejeita deps intra-subtask**
+   Do instead: após `expand --all`, rodar script de limpeza para remover deps com IDs < 26 (refs de irmãs que o validador trata como top-level inexistentes). Isso é bug do TaskMaster, não erro de configuração.
 
 ---
 
@@ -67,6 +75,41 @@
 
 ---
 
+## Config por Task (Fase 2)
+
+**Template de abertura de chat:**
+```
+Task XX — [nome]. /model claude-sonnet-4-6 /effort high
+npx task-master show XX
+```
+
+| Task | Modelo | Effort | Nota |
+|---|---|---|---|
+| 26 Codebase Refactoring | Sonnet | high | |
+| 27 Documentation | Sonnet | medium | |
+| 28 Visual Brainstorming + Design System | **Opus** | high | Decisões que afetam tudo |
+| 29 Design Tokens | Sonnet | high | Mudança global |
+| 30 Shared Components | Sonnet | high | |
+| 31 Layout Shell (Sidebar+Navbar) | Sonnet | high | skill frontend-design |
+| 32 Auth Pages | Sonnet | medium | |
+| 33 Profile Page | Sonnet | high | |
+| 34 Profile Sub-Pages | Sonnet | medium | |
+| 35 Team Page | Sonnet | high | |
+| 36 Team Sub-Pages | Sonnet | medium | |
+| 37 Matchmaking Page | Sonnet | medium | |
+| 38 Tournament Pages | Sonnet | high | |
+| 39 Detail Pages | Sonnet | medium | |
+| 40 Rankings + Hall of Fame | Sonnet | medium | |
+| 41 Landing Page | **Opus** | high | Página pública crítica |
+| 42 Admin Panel | Sonnet | high | |
+| 43 Moderation Panel | Sonnet | medium | |
+| 44 Utility Pages | Sonnet | low | 404, loading, etc |
+| 45 SEO + OG Images | Sonnet | high | |
+| 46 Performance Budget | Sonnet | high | |
+| 47 Visual Regression Tests | Sonnet | medium | |
+
+---
+
 ## User Directives
 
 1. **[2026-03-10] Comunicação em Português**
@@ -75,5 +118,5 @@
 2. **[2026-03-10] Respostas diretas e técnicas**
    Do instead: ir direto ao ponto, sem rodeios ou introduções desnecessárias.
 
-3. **[2026-03-15] Design congelado até task 25**
-   Do instead: NÃO alterar visual, layout ou components de UI durante tasks 20–25. Qualquer melhoria visual fica para o redesign Stitch pós-task 25.
+3. **[2026-03-19] Novo chat por task — passar contexto mínimo necessário**
+   Do instead: ao iniciar nova task, mencionar "Task 2X" e rodar `task-master show <id>` para carregar contexto. Não resumir toda a Fase 2 manualmente.

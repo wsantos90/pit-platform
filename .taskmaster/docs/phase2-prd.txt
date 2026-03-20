@@ -1,0 +1,477 @@
+# P.I.T — Phase 2: Redesign & Refactoring PRD
+# Performance · Intelligence · Tracking
+# Refatoração completa + Redesign visual de todas as páginas
+# Versão 1.0 | Autor: Wander (ThePitbullOne) | Data: 19/03/2026
+
+---
+
+## 1. VISÃO GERAL DA FASE 2
+
+### 1.1 O que é a Fase 2?
+A Fase 1 do P.I.T (25 tasks) está concluída. O sistema é funcional mas o visual é inconsistente — seções puxadas de referências diferentes resultaram em fontes, espaçamentos, cores e tamanhos de componentes que não batem entre si. A Fase 2 consiste em:
+
+1. **Refatoração do codebase** — cleanup, documentação, remoção de dead code, consolidação
+2. **Brainstorming visual** — definir design system via UI/UX Pro Max skill, paleta de cores, tipografia
+3. **Redesign visual** — página por página, componente por componente, usando skills do Claude Code
+4. **Landing page pública** — nova página antes do login (campeonatos, rankings, resultados)
+5. **SEO & Performance** — Open Graph, Lighthouse 90+, performance budget
+6. **Testes de regressão visual** — component gallery, screenshot tests
+
+### 1.2 Objetivos
+- Zero hardcoded styles (tudo via tokens CSS)
+- 100% das páginas migradas para design system
+- 80%+ de componentes reutilizados (vs criados do zero)
+- Lighthouse 90+ em landing page (performance + accessibility)
+- WCAG AA compliance (contraste, keyboard nav, aria-labels)
+- Toda página com estados: loading, empty, error, success, no-permission
+
+### 1.3 Restrições
+- **APENAS visual** — não mudar lógica de negócio, rotas, schema, tipos, API routes
+- **Desktop-first** — responsividade mínima: 1440p / 1080p / 1366px
+- **MVP-first** — lançar Bloco 1 (fundação + profile + auth) e iterar
+- **Uma task = um branch = um PR** — facilitar rollback
+
+### 1.4 Stack Existente
+- Frontend: Next.js 16.1.6 (App Router, TypeScript) + Tailwind CSS 3.4.1
+- Backend: Supabase (PostgreSQL 15+, Auth, RLS, Realtime, Storage)
+- UI: shadcn/ui (11 componentes) + Lucide React + Recharts
+- Deploy: Vercel (frontend) + VPS Ubuntu (cookie service)
+
+### 1.5 Skills Disponíveis
+- **UI/UX Pro Max** — gerar design system completo (MASTER.md)
+- **frontend-design** — implementação production-grade de UI
+- **stitch-brief / stitch-apply** — design briefs via Google Stitch
+- **vercel-react-best-practices** — 62 regras de performance
+- **simplify** — code review: reuso, qualidade, eficiência
+
+### 1.6 Referências Visuais
+- VirtualNexusArena.com — cards de torneio com banner, sidebar dark, transfers live, landing page pública
+- 21st.dev — componentes UI de alta qualidade
+- Dribbble — dashboards esports, cards, layouts de dados
+
+---
+
+## 2. INVENTÁRIO ATUAL
+
+### 2.1 Páginas Existentes (32 total)
+
+**Auth (3):** /login, /register, /forgot-password
+**Profile (3):** /profile (header + stats + chart + history + positions), /profile/matches, /profile/settings
+**Team (6):** /team (4 tabs: dashboard/roster/history/matchmaking), /team/claim, /team/lineup, /team/roster, /team/matches, /team/matchmaking
+**Matchmaking (1):** /matchmaking (queue + confrontation chat)
+**Tournaments (2):** /tournaments (lista), /tournaments/[id] (bracket + hall of fame)
+**Player/Match (2):** /players/[id], /matches/[id]
+**Admin (1):** /admin (7 tabs: metrics, collect, discovery, manual club, settings, subscriptions, financial)
+**Moderation (5):** /moderation (4 tabs: claims, disputes, tournaments, users) + sub-pages
+**Public (2):** /rankings (stub), /hall-of-fame (stub)
+**Payment (3):** /payment/success, /payment/pending, /payment/failure
+**Utility (3):** /settings/notifications, /unauthorized, /dashboard (redirect)
+
+### 2.2 Componentes Existentes (52 total)
+- **UI primitives (11):** badge, button, card, checkbox, input, label, select, separator, table, tabs, textarea
+- **Layout (5):** Navbar, Sidebar, SidebarShell, ContextSwitcher, RoleGuard
+- **Profile (7):** PlayerHeader, StatsOverview, EvolutionChart, MatchHistory, PositionStats, PendingInvitesCard, QuickClubRefreshCard
+- **Player (4):** StatsCard, PositionBadge, PlayerIdentityForm, PositionSettingsForm
+- **Team (7):** TeamDashboard, TeamManagementClient, RosterTable, RosterBench, MatchHistoryTable, LineupVisual, LineupPageClient
+- **Admin (7):** DashboardMetrics, CollectControl, DiscoveryControl, FinancialDashboard, GlobalSettings, ManualClubId, SubscriptionManager
+- **Moderation (11):** ClaimQueue, ClaimRejectDialog, ClaimsTabPanel, DisputeViewer, DisputesTabPanel, TournamentManager, TournamentCreateForm, TournamentBracketView, TournamentsTabPanel, UserManagement, UsersTabPanel
+- **Matchmaking (3):** MatchmakingWrapper, QueuePanel, ConfrontationChat
+- **Tournament (4):** TournamentCard, EnrollButton, BracketView, HallOfFameCard
+- **Notifications (2):** NotificationBell, NotificationPreferencesPanel
+
+### 2.3 Problemas Identificados
+1. Payment pages usam `bg-gray-950` hardcoded em vez de tokens CSS
+2. SidebarShell usa `slate-*` hardcoded em vez de tokens
+3. `.nav-item-active` usa `#0d7ff2` hardcoded em vez de `hsl(var(--primary))`
+4. Mix de Material Symbols (sidebar ~300KB) + Lucide (resto) — inconsistente
+5. Espaçamento inconsistente (`gap-4` vs `gap-6` vs `gap-8` sem padrão)
+6. Merge conflicts em profile/page.tsx, StatsOverview.tsx, EvolutionChart.tsx, PositionStats.tsx
+7. Sem skeleton loading ou empty state padronizados
+8. 14+ `console.error` sem logging centralizado
+9. 5 configs de IA redundantes (CLAUDE.md, AGENTS.md, .cursorrules, .trae, copilot)
+10. Rotas stub retornando 501 (tournament/create, discovery/insert-manual)
+11. Tipos do banco manuais (sem auto-generate do Supabase CLI)
+12. Sem CI/CD no GitHub, sem templates de Issue/PR
+
+---
+
+## 3. FASE 0: REFATORAÇÃO + BRAINSTORMING
+
+### 3.1 Feature: Refatoração do Codebase (Task 26)
+**Prioridade:** Critical
+**Dependências:** Nenhuma
+
+Cleanup completo do codebase antes de iniciar qualquer trabalho visual:
+
+**Cleanup de código:**
+- Resolver merge conflicts em: profile/page.tsx, StatsOverview.tsx, EvolutionChart.tsx, PositionStats.tsx
+- Remover rotas stub 501 (tournament/create, discovery/insert-manual) ou implementar
+- Remover `console.error` scattered → criar `src/lib/logger.ts` wrapper sobre Winston
+- Rodar `npx depcheck` e remover dependências não usadas
+- Remover `material-symbols` do package.json se não usado fora do sidebar
+- Limpar diretórios: `./~/`, `coverage/`, `dist/` → adicionar ao .gitignore
+
+**Organização:**
+- Consolidar configs de IA: manter `CLAUDE.md` como SSOT, mover AGENTS.md/.cursorrules/.trae para `docs/ai-tools/`
+- Extrair lógica stateful dos 7 tab panels do admin → custom hooks
+- Implementar auto-generate de tipos: `"gen:types": "supabase gen types typescript --local > src/types/database.ts"`
+- Naming audit: verificar consistência de nomes em componentes, hooks, utils
+- Atualizar packages, remover unused
+
+### 3.2 Feature: Documentação (Task 27)
+**Prioridade:** High
+**Dependências:** Task 26
+
+Criar documentação sólida do projeto:
+
+**Codebase:**
+- `docs/CONTRIBUTING.md` — workflow Git, setup dev, code review checklist, testing requirements
+- `docs/DEVELOPMENT.md` — guia local (Supabase start, env vars, migrations, seed data)
+- `docs/ARCHITECTURE.md` — design do sistema (diagrama alto nível, fluxos principais)
+- `docs/API.md` — referência dos 40+ route handlers com método, path, params, resposta
+- `docs/DATABASE.md` — schema, migrations, views (v_player_stats, v_club_stats, etc.), ERD
+
+**GitHub:**
+- `.github/ISSUE_TEMPLATE/bug_report.md` e `feature_request.md`
+- `.github/PULL_REQUEST_TEMPLATE.md` com checklist de redesign
+- Labels: `bug`, `feature`, `refactor`, `docs`, `redesign`, `phase-2`
+- Milestone: "Phase 2: Redesign"
+
+**README.md:** atualizar com getting started, como rodar testes, deploy, links para docs
+
+### 3.3 Feature: Brainstorming Visual + Design System (Task 28)
+**Prioridade:** Critical
+**Dependências:** Task 26
+
+Definir a direção visual e gerar design system:
+
+1. Instalar skill UI/UX Pro Max: `npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill --skill ui-ux-pro-max`
+2. Criar pasta `design-refs/` com screenshots de referência (VirtualNexusArena, 21st.dev, Dribbble)
+3. Rodar UI/UX Pro Max para gerar design system completo
+4. Output: `design-system/MASTER.md` com:
+   - Paleta de cores final (primary, secondary, accent, semantic colors)
+   - Tipografia (font pairings, escalas, weights)
+   - Espaçamento (grid 4px/8px, spacing scale)
+   - Specs de componentes (button, card, modal, table, sidebar, navbar)
+   - Anti-patterns a evitar
+5. Criar `design-system/pages/` com spec de cada página (layout, dados, componentes necessários)
+6. Validar e ajustar manualmente as decisões do skill
+7. Definir cor primary final (blue vs orange vs alternativa)
+
+---
+
+## 4. FASE 1: FUNDAÇÃO TÉCNICA
+
+### 4.1 Feature: Design Tokens (Task 29)
+**Prioridade:** Critical
+**Dependências:** Task 28
+
+Aplicar decisões do MASTER.md nos arquivos de configuração:
+
+**Arquivos:** `src/app/globals.css`, `tailwind.config.ts`, `src/app/layout.tsx`
+
+- Refinar CSS variables: adicionar `--card-hover`, `--surface-1`, `--surface-2`
+- Adicionar tokens de posição PIT: `--position-gk`, `--position-def`, `--position-mid`, `--position-fwd`, `--position-atk`
+- Definir escala tipográfica em classes Tailwind (page-title, section-title, card-title, body, label, data-value, timestamp)
+- Converter `.nav-item-active` para usar `hsl(var(--primary))` em vez de hardcoded `#0d7ff2`
+- Converter `.glass-sidebar` para usar tokens em vez de `rgba()` hardcoded
+- Configurar fonte final via `next/font/google`
+- Adicionar Fira Code com utility `.font-data` para dados numéricos
+
+### 4.2 Feature: Biblioteca de Componentes Compartilhados (Task 30)
+**Prioridade:** Critical
+**Dependências:** Task 29
+
+Expandir shadcn/ui e criar componentes reutilizáveis:
+
+**Adicionar shadcn:** Dialog, DropdownMenu, Avatar, Tooltip, Sheet, Breadcrumb, Skeleton, ScrollArea, Progress
+
+**Criar em `src/components/shared/`:**
+- **PageHeader** — título, subtítulo, ações opcionais (botões)
+- **StatCard v2** — ícone, label, valor numérico (Fira Code), delta/trend, sparkline opcional
+- **EmptyState** — ícone, título, descrição, CTA button
+- **ErrorState** — ícone, mensagem de erro, retry action
+- **NoPermissionState** — mensagem de acesso negado, CTA para contato
+- **LoadingSkeleton** — CardSkeleton, TableSkeleton, ChartSkeleton (espelhar layout final para evitar layout shift)
+- **StatusBadge** — unificado para todos os status da plataforma (approved, pending, rejected, cancelled, etc.)
+- **ScoreDisplay** — placar reutilizável (W/D/L com cores)
+- **PlayerAvatar** — inicial-based (primeira letra do gamertag)
+- **DataTable** — wrapper sobre table com sort, filter, pagination
+
+**Requisitos de acessibilidade para todos os componentes:**
+- Contraste WCAG AA verificado
+- Navegável via teclado (Tab, Enter, Escape)
+- aria-labels em ícones sem texto explicativo
+- Foco visível (focus-visible ring)
+
+### 4.3 Feature: Layout Shell — Sidebar + Navbar (Task 31)
+**Prioridade:** Critical
+**Dependências:** Task 30
+
+Redesign do layout que aparece em todas as páginas autenticadas:
+
+**Arquivo principal:** `src/components/layout/SidebarShell.tsx` (395 linhas, mais hardcoded colors)
+
+- Migrar de Material Symbols para Lucide (e remover `material-symbols` do package.json — economia de ~300KB)
+- Substituir `slate-*` hardcoded por tokens CSS
+- Adicionar collapsible state no sidebar
+- Adicionar mobile drawer via Sheet (shadcn)
+- Adicionar breadcrumb no Navbar
+- Adicionar user avatar dropdown (DropdownMenu) no Navbar
+- Preparar layout alternativo para landing page pública (sem sidebar)
+
+### 4.4 Feature: Auth Pages — Login, Register, Forgot Password (Task 32)
+**Prioridade:** High
+**Dependências:** Task 29, Task 30
+
+Redesign das 3 páginas de autenticação:
+
+- Background com padrão sutil (grid geométrico ou textura)
+- Cards auth com tokens atualizados
+- Branding P.I.T (logo/ícone)
+- Consistência visual entre login, register e forgot-password
+- Estados: loading (submit), error (validação/server), success (redirect)
+
+---
+
+## 5. FASE 2: PÁGINAS DE ALTO IMPACTO
+
+### 5.1 Feature: Profile Page — /profile (Task 33)
+**Prioridade:** Critical
+**Dependências:** Task 30, Task 31
+
+Redesign da página mais visitada da plataforma:
+
+**Usar spec de:** `design-system/pages/profile.md`
+
+**Componentes a redesenhar:**
+- PlayerHeader: avatar maior (PlayerAvatar), gamertag proeminente, position badges refinados (PositionBadge)
+- StatsOverview: usar StatCard v2 com ícones + indicadores de tendência
+- EvolutionChart: cores branded via chart tokens, tooltip melhorado
+- MatchHistory: usar DataTable com sorting
+- PositionStats: mapa visual de posições ou spider chart
+- PendingInvitesCard: card refinado com StatusBadge
+- QuickClubRefreshCard: card refinado
+
+**Estados obrigatórios:** loading (skeleton por seção via Suspense), empty (sem dados/sem time), error
+
+### 5.2 Feature: Profile Sub-Pages (Task 34)
+**Prioridade:** High
+**Dependências:** Task 33
+
+- **/profile/matches:** DataTable com filtros (por tipo de partida, resultado, data)
+- **/profile/settings:** Layout limpo de formulário (PlayerIdentityForm, PositionSettingsForm)
+
+### 5.3 Feature: Team Page — /team (Task 35)
+**Prioridade:** High
+**Dependências:** Task 30, Task 31
+
+Redesign da página de gestão de time com todas as tabs:
+
+- Tabs com estilo underline consistente (não pill style)
+- **Tab Elenco:** TeamDashboard (StatCard v2 grid), RosterTable (DataTable + PlayerAvatar + stats inline)
+- **Tab Histórico:** MatchHistoryTable (DataTable + ScoreDisplay)
+- **Tab Matchmaking:** EmptyState ou redirect para /matchmaking
+- **Tab Escalação:** LineupVisual com campo visual polido
+- Invite modal via Dialog (shadcn)
+
+### 5.4 Feature: Team Sub-Pages (Task 36)
+**Prioridade:** High
+**Dependências:** Task 35
+
+- **/team/claim:** Wizard 3 passos com progress indicator visual (SearchStep → PreviewStep → UploadStep)
+- **/team/lineup:** Campo visual drag-drop refinado (dnd-kit)
+- **/team/roster, /team/matches, /team/matchmaking:** Redirects ou layouts individuais conforme necessário
+
+### 5.5 Feature: Matchmaking Page — /matchmaking (Task 37)
+**Prioridade:** High
+**Dependências:** Task 30, Task 31
+
+- QueuePanel com animação de espera (pulse, progress)
+- ConfrontationChat com message bubbles estilizados
+- Countdown visual para timeouts
+- Indicadores de status (searching, matched, confirmed, expired)
+
+---
+
+## 6. FASE 3: COMPETIÇÃO & PÚBLICO
+
+### 6.1 Feature: Tournament Pages (Task 38)
+**Prioridade:** High
+**Dependências:** Task 30, Task 31
+
+- **/tournaments:** TournamentCard redesenhado com banner visual, badge de status, preço, CTA (inspiração VirtualNexusArena)
+- **/tournaments/[id]:** Migrar inline styles para tokens Tailwind. BracketView com linhas mais limpas. HallOfFameCard com styling de achievement. EnrollButton com loading states.
+
+### 6.2 Feature: Detail Pages — /players/[id], /matches/[id] (Task 39)
+**Prioridade:** Medium
+**Dependências:** Task 30
+
+- **/players/[id]:** Player profile card, grid de stats (StatCard v2), tabela de match history (DataTable)
+- **/matches/[id]:** ScoreDisplay central, tabelas home/away com DataTable
+- Breadcrumb navigation em ambas as páginas
+
+### 6.3 Feature: Public Pages — /rankings, /hall-of-fame (Task 40)
+**Prioridade:** Medium
+**Dependências:** Task 30
+
+Implementação do zero (atualmente são stubs):
+
+- **/rankings:** Leaderboard filtrável (jogadores por Pit Rating, clubes por wins). DataTable com sort/filter. Tabs: Players, Clubs.
+- **/hall-of-fame:** Categorias de prêmio (melhor jogador por posição, melhor time, etc.). Cards de campeões por temporada.
+
+### 6.4 Feature: Landing Page Pública (Task 41)
+**Prioridade:** High
+**Dependências:** Task 31, Task 38, Task 40
+
+Nova página antes do login, visível sem autenticação:
+
+- Layout próprio sem sidebar do dashboard (usar layout alternativo preparado na Task 31)
+- **Hero section:** Branding P.I.T, tagline, CTAs (login/registro)
+- **Campeonatos abertos:** Cards de torneio com banner (reusar TournamentCard da Task 38)
+- **Rankings resumidos:** Top 5 jogadores, Top 5 times (reusar dados da Task 40)
+- **Últimos resultados:** Últimas partidas disputadas na plataforma
+- **Destaques por posição:** Melhores jogadores por posição PIT
+- **SEO:** Open Graph meta tags dinâmicas (card bonito ao compartilhar no Discord/Twitter/WhatsApp)
+- **JSON-LD:** Dados estruturados para torneios (indexação Google com datas das competições)
+
+Inspiração: homepage do VirtualNexusArena.com
+
+---
+
+## 7. FASE 4: INTERNO & UTILIDADES
+
+### 7.1 Feature: Admin Panel (Task 42)
+**Prioridade:** Low
+**Dependências:** Task 30
+
+Redesign das 7 tabs do painel admin:
+- DashboardMetrics: StatCard v2 grid
+- CollectControl, DiscoveryControl: operation panels com StatusBadge
+- FinancialDashboard: charts e DataTable
+- GlobalSettings, SubscriptionManager, ManualClubId: forms com tokens atualizados
+
+### 7.2 Feature: Moderation Panel (Task 43)
+**Prioridade:** Low
+**Dependências:** Task 30
+
+Redesign das 4 tabs de moderação:
+- ClaimQueue: fila de review com cards e StatusBadge
+- DisputeViewer: display de evidência + action panel
+- TournamentManager: create/edit forms
+- UserManagement: tabela de usuários com role badges
+
+### 7.3 Feature: Utility Pages (Task 44)
+**Prioridade:** Low
+**Dependências:** Task 29
+
+Aplicar design system em páginas utilitárias:
+- /payment/success, /pending, /failure: remover `bg-gray-950` → tokens CSS
+- /settings/notifications: painel com toggles (switch components)
+- /unauthorized: error page com branding P.I.T
+- 404/500 pages se existirem
+
+---
+
+## 8. FASE 5: QUALIDADE & POLISH
+
+### 8.1 Feature: SEO, OG Images & Social Engine (Task 45)
+**Prioridade:** Medium
+**Dependências:** Task 41
+
+- Open Graph dinâmico para perfis de jogador, torneios, times (card bonito no Discord/Twitter/WhatsApp)
+- Sitemap XML para páginas públicas (landing, rankings, hall of fame, torneios)
+- JSON-LD para torneios com datas, participantes (indexação Google)
+- Meta tags dinâmicas via Next.js metadata API
+- robots.txt configurado
+
+### 8.2 Feature: Performance Budget & Otimização (Task 46)
+**Prioridade:** Medium
+**Dependências:** Task 44
+
+- Definir budget: JS máximo por página crítica, tempo de carregamento aceitável
+- Validar lazy-load em admin/moderation (React.lazy + Suspense)
+- Otimizar charts (Recharts) e tabelas grandes com virtualização se necessário
+- Audit Lighthouse para landing page e profile (meta: 90+ performance, 90+ accessibility)
+- Remover dependências pesadas restantes
+- Analisar bundle com `next/bundle-analyzer`
+
+### 8.3 Feature: Testes de Regressão Visual + Component Gallery (Task 47)
+**Prioridade:** Medium
+**Dependências:** Task 46
+
+- Criar rota `/dev/components` (só em desenvolvimento) para visualizar todos os componentes compartilhados com seus estados (default, loading, disabled, hover, error, empty)
+- Screenshot tests para páginas críticas (profile, team, tournaments, landing page)
+- Comparar antes/depois para garantir que alterações futuras não quebrem o design system
+- Documentar componentes com exemplos de uso
+
+---
+
+## 9. DEFINITION OF DONE (POR TASK)
+
+Uma task só está done quando:
+
+1. `npm run build` — sem erros
+2. `npm test` — testes passando
+3. 100% alinhada com tokens CSS (zero hardcoded colors/spacing)
+4. Usa componentes compartilhados quando aplicável
+5. Tem estados: loading (skeleton), empty, error, success
+6. Contraste WCAG AA verificado
+7. Navegável via teclado (Tab, Enter, Escape)
+8. Visual check em 1080p com dados reais
+9. Visual check com dados vazios
+10. Consistência de espaçamento/tipografia com páginas já redesenhadas
+11. Copy revisada (labels, mensagens, CTAs em PT-BR)
+12. Deploy preview na Vercel aprovado
+
+---
+
+## 10. ESTRATÉGIA DE ENTREGA
+
+### 10.1 Blocos de Entrega
+
+| Bloco | Tasks | Gate de Aprovação |
+|-------|-------|-------------------|
+| 1 — Fundação + Críticas | 26-33 | Preview aprovado, zero hardcoded, profile funcional |
+| 2 — Core App | 34-37 | Todas as páginas do app interno consistentes |
+| 3 — Público & Aquisição | 38-41 | Landing page com SEO, páginas públicas no ar |
+| 4 — Backoffice | 42-44 | Painéis internos consistentes |
+| 5 — Polish | 45-47 | Lighthouse 90+, gallery de componentes funcional |
+
+### 10.2 Rollout
+1. Preview/staging na Vercel primeiro
+2. Validar páginas críticas com dados reais
+3. Aprovar visual + funcional
+4. Merge na main → produção
+
+### 10.3 Rollback
+- Se uma task quebrar UX ou performance → reverter o PR individual
+- PRs pequenos (1 task = 1 PR) facilitam rollback
+- Releases pequenas e isoladas
+
+---
+
+## 11. RISCOS
+
+| Risco | Mitigação |
+|-------|-----------|
+| Escopo crescer demais | MVP-first. Fase 5 é polish, não bloqueante |
+| Misturar refatoração com mudança visual | Fase 0 separa refatoração do redesign |
+| Criar componentes demais sem necessidade | Governança: reusar primeiro, justificar criação nova |
+| Perder consistência visual | MASTER.md é SSOT. Toda task valida contra ele |
+| Landing page virar projeto paralelo | Escopo mínimo: hero + campeonatos + rankings |
+| Performance piorar | Budget (Task 46). Lighthouse em cada PR |
+| Refatoração quebrar funcionalidade | Testes antes e depois. Deploy preview obrigatório |
+
+---
+
+## 12. MÉTRICAS DE SUCESSO
+
+| Métrica | Meta |
+|---------|------|
+| Páginas migradas para tokens | 100% |
+| Componentes reutilizados vs criados do zero | 80%+ reuso |
+| Hardcoded styles restantes | Zero |
+| Dependências removidas | material-symbols + unused packages |
+| Lighthouse landing page | 90+ performance, 90+ accessibility |
+| Consistência visual | Qualquer página nova segue design system sem ajuste manual |

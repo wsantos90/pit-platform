@@ -5,6 +5,7 @@ import { fetchMatchesPreview } from "@/lib/ea/api"
 import { upsertDiscoveredClub } from "@/lib/ea/discovery"
 import { normalizeClubName } from "@/lib/ea/normalize"
 import { tryFetchAkamaiCookies } from "@/lib/ea/cookieClient"
+import { createNotification } from "@/lib/notifications"
 import { createAdminClient } from "@/lib/supabase/admin"
 
 const insertManualClubSchema = z.object({
@@ -23,6 +24,119 @@ function resolveClubNameFromMatch(
   return null
 }
 
+type ExistingDiscoveredClub = {
+  id: string
+  ea_club_id: string
+  display_name: string
+  status: string
+  discovered_via: string | null
+}
+
+type PendingClaimRow = {
+  id: string
+  user_id: string
+  discovered_club_id: string
+}
+
+async function loadExistingDiscoveredClub(
+  adminClient: ReturnType<typeof createAdminClient>,
+  clubId: string
+) {
+  const { data, error } = await adminClient
+    .from("discovered_clubs")
+    .select("id,ea_club_id,display_name,status,discovered_via")
+    .eq("ea_club_id", clubId)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return (data as ExistingDiscoveredClub | null) ?? null
+}
+
+async function createManualDiscoveryRun(
+  adminClient: ReturnType<typeof createAdminClient>,
+  input: {
+    triggeredBy: string
+    clubsNew: number
+  }
+) {
+  const { error } = await adminClient.from("discovery_runs").insert({
+    triggered_by: input.triggeredBy,
+    status: "completed",
+    clubs_scanned: 1,
+    clubs_new: input.clubsNew,
+    players_found: 0,
+    finished_at: new Date().toISOString(),
+    run_type: "manual_admin",
+  })
+
+  if (error) {
+    throw error
+  }
+}
+
+async function notifyPendingClaimants(
+  adminClient: ReturnType<typeof createAdminClient>,
+  club: ExistingDiscoveredClub
+) {
+  const { data, error } = await adminClient
+    .from("claims")
+    .select("id,user_id,discovered_club_id")
+    .eq("status", "pending")
+    .eq("discovered_club_id", club.id)
+
+  if (error) {
+    throw error
+  }
+
+  const pendingClaims = (data as PendingClaimRow[] | null) ?? []
+  if (pendingClaims.length === 0) {
+    return
+  }
+
+  await Promise.all(
+    pendingClaims.map(async (claim) => {
+      try {
+        const result = await createNotification(
+          {
+            userId: claim.user_id,
+            type: "team_discovered",
+            title: "Time encontrado",
+            message: `O time ${club.display_name} que você solicitou foi adicionado à base do PIT.`,
+            data: {
+              claim_id: claim.id,
+              discovered_club_id: claim.discovered_club_id,
+              ea_club_id: club.ea_club_id,
+            },
+          },
+          adminClient
+        )
+
+        if (!result.error) {
+          return
+        }
+
+        console.error("[ManualClub] failed to notify pending claimant", {
+          claimId: claim.id,
+          userId: claim.user_id,
+          clubId: club.ea_club_id,
+          error: result.error.message,
+        })
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error)
+        console.error("[ManualClub] failed to notify pending claimant", {
+          claimId: claim.id,
+          userId: claim.user_id,
+          clubId: club.ea_club_id,
+          error: message,
+        })
+      }
+    })
+  )
+}
+
 export async function GET(request: NextRequest) {
   const auth = await requireAdmin()
   if (!auth.ok) {
@@ -34,7 +148,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "clubId is required" }, { status: 400 })
   }
 
+  const adminClient = createAdminClient()
+
   try {
+    const existingClub = await loadExistingDiscoveredClub(adminClient, clubId)
+    if (existingClub) {
+      return NextResponse.json({
+        alreadyExists: true,
+        club: existingClub,
+      })
+    }
+
     const cookies = (await tryFetchAkamaiCookies()) ?? undefined
     const matches = await fetchMatchesPreview(clubId, cookies)
 
@@ -87,6 +211,15 @@ export async function POST(request: NextRequest) {
   const adminClient = createAdminClient()
 
   try {
+    const existingClub = await loadExistingDiscoveredClub(adminClient, clubId)
+    if (existingClub) {
+      return NextResponse.json({
+        success: true,
+        alreadyExists: true,
+        club: existingClub,
+      })
+    }
+
     await upsertDiscoveredClub({ clubId, name: displayName }, adminClient)
 
     const normalizedDisplayName = normalizeClubName(displayName)
@@ -106,9 +239,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "failed_to_update_manual_club" }, { status: 500 })
     }
 
+    const insertedClub = data as ExistingDiscoveredClub
+
+    try {
+      await createManualDiscoveryRun(adminClient, {
+        triggeredBy: auth.user.id,
+        clubsNew: 1,
+      })
+    } catch (runError) {
+      console.error("[ManualClub] failed to log discovery_run", runError)
+    }
+
+    try {
+      await notifyPendingClaimants(adminClient, insertedClub)
+    } catch (notifyError) {
+      console.error("[ManualClub] failed to notify claimants", notifyError)
+    }
+
     return NextResponse.json({
       success: true,
-      club: data,
+      club: insertedClub,
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : "failed_to_insert_manual_club"

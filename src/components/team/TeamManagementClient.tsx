@@ -10,7 +10,6 @@ import { TeamDashboard } from '@/components/team/TeamDashboard'
 import { RosterTable } from '@/components/team/RosterTable'
 import { MatchHistoryTable } from '@/components/team/MatchHistoryTable'
 import { LineupVisual } from '@/components/team/LineupVisual'
-import { MatchmakingWrapper } from '@/components/matchmaking/MatchmakingWrapper'
 import type { Club, PlayerStatsView, Player } from '@/types/database'
 import type { ClubPlayerRow, MatchRow, ClubStats } from '@/app/(dashboard)/team/page'
 
@@ -41,7 +40,7 @@ export function TeamManagementClient({
   const [searchResults, setSearchResults] = useState<PlayerSearchResult[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [invitingId, setInvitingId] = useState<string | null>(null)
-  const [feedback] = useState<FeedbackState>(null)
+  const [feedback, setFeedback] = useState<FeedbackState>(null)
   const [inviteError, setInviteError] = useState<string | null>(null)
   const supabase = createClient()
 
@@ -71,27 +70,34 @@ export function TeamManagementClient({
 
   async function handleInvite(playerId: string) {
     setInvitingId(playerId)
+    setInviteError(null)
 
     try {
-      const res = await fetch('/api/clubs/invite', {
+      const response = await fetch('/api/clubs/invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ clubId: club.id, playerId }),
+        body: JSON.stringify({
+          clubId: club.id,
+          playerId,
+        }),
       })
 
-      if (!res.ok) {
-        const error = await res.json()
-        alert(error.message || 'Erro ao enviar convite') // Simple alert for now, could be a toast
-      } else {
-        // Success
-        setShowInviteModal(false)
-        setSearchQuery('')
-        setSearchResults([])
-        startTransition(() => router.refresh())
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        setInviteError(payload?.message ?? 'Nao foi possivel enviar o convite.')
+        return
       }
-    } catch (e) {
-      console.error(e)
-      alert('Erro de conexão ao enviar convite')
+
+      setFeedback({
+        type: 'success',
+        message: payload?.message ?? 'Convite enviado com sucesso.',
+      })
+      setShowInviteModal(false)
+      setSearchQuery('')
+      setSearchResults([])
+      startTransition(() => router.refresh())
+    } catch {
+      setInviteError('Nao foi possivel enviar o convite.')
     } finally {
       setInvitingId(null)
     }
@@ -184,7 +190,17 @@ export function TeamManagementClient({
         </TabsContent>
 
         <TabsContent value="matchmaking" className="mt-0">
-          <MatchmakingWrapper clubId={club.id} />
+          <div className="flex flex-col items-center justify-center gap-4 py-20 text-center">
+            <div className="flex size-16 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+              <span className="material-symbols-outlined text-3xl text-primary">sports_esports</span>
+            </div>
+            <div>
+              <h3 className="mb-1 text-lg font-bold text-foreground">Matchmaking em breve</h3>
+              <p className="max-w-xs text-sm text-muted-foreground">
+                Fila de busca por adversarios em tempo real. Esta funcionalidade esta sendo desenvolvida.
+              </p>
+            </div>
+          </div>
         </TabsContent>
 
         <TabsContent value="escalacao" className="mt-0">

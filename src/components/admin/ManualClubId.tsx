@@ -21,10 +21,19 @@ type ManualClubPreview = {
   recentMatches: PreviewMatch[]
 }
 
+type ExistingClub = {
+  id: string
+  ea_club_id: string
+  display_name: string
+  status: string
+  discovered_via: string | null
+}
+
 export default function ManualClubId() {
   const [clubId, setClubId] = useState("")
   const [displayName, setDisplayName] = useState("")
   const [preview, setPreview] = useState<ManualClubPreview | null>(null)
+  const [existingClub, setExistingClub] = useState<ExistingClub | null>(null)
   const [isSearching, setIsSearching] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
@@ -34,13 +43,16 @@ export default function ManualClubId() {
   async function onSearch() {
     const trimmedClubId = clubId.trim()
     if (!trimmedClubId) {
-      setError("Informe um clubId valido.")
+      setError("Informe um clubId válido.")
       return
     }
 
     setIsSearching(true)
     setError(null)
     setSuccess(null)
+    setExistingClub(null)
+    setPreview(null)
+    setShowConfirmModal(false)
 
     try {
       const response = await fetch(`/api/admin/manual-club?clubId=${encodeURIComponent(trimmedClubId)}`, {
@@ -49,6 +61,7 @@ export default function ManualClubId() {
       })
       const payload = (await response.json().catch(() => null)) as
         | ManualClubPreview
+        | { alreadyExists: true; club: ExistingClub }
         | { error?: string; details?: string }
         | null
 
@@ -56,8 +69,14 @@ export default function ManualClubId() {
         const errorMessage =
           (payload as { error?: string; details?: string } | null)?.details ??
           (payload as { error?: string } | null)?.error ??
-          "Nao foi possivel buscar partidas para esse clubId."
+          "Não foi possível buscar partidas para esse clubId."
         throw new Error(errorMessage)
+      }
+
+      if (payload && "alreadyExists" in payload && payload.alreadyExists) {
+        setExistingClub(payload.club)
+        setDisplayName(payload.club.display_name)
+        return
       }
 
       const previewPayload = payload as ManualClubPreview
@@ -65,11 +84,12 @@ export default function ManualClubId() {
       setDisplayName(previewPayload.clubName)
     } catch (requestError) {
       setPreview(null)
+      setExistingClub(null)
       setDisplayName("")
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Nao foi possivel buscar partidas para esse clubId."
+          : "Não foi possível buscar partidas para esse clubId."
       )
     } finally {
       setIsSearching(false)
@@ -81,7 +101,7 @@ export default function ManualClubId() {
 
     const trimmedDisplayName = displayName.trim()
     if (trimmedDisplayName.length < 2) {
-      setError("displayName deve ter ao menos 2 caracteres.")
+      setError("displayName deve ter pelo menos 2 caracteres.")
       return
     }
 
@@ -100,22 +120,32 @@ export default function ManualClubId() {
       })
 
       const payload = (await response.json().catch(() => null)) as
-        | { success?: boolean; error?: string; details?: string }
+        | { success?: boolean; alreadyExists?: boolean; club?: ExistingClub; error?: string; details?: string }
         | null
 
       if (!response.ok || !payload?.success) {
         const errorMessage =
-          payload?.details ?? payload?.error ?? "Nao foi possivel inserir o club manualmente."
+          payload?.details ?? payload?.error ?? "Não foi possível inserir o clube manualmente."
         throw new Error(errorMessage)
       }
 
+      if (payload.alreadyExists && payload.club) {
+        setExistingClub(payload.club)
+        setPreview(null)
+        setDisplayName(payload.club.display_name)
+        setShowConfirmModal(false)
+        setSuccess(null)
+        return
+      }
+
+      setExistingClub(null)
       setSuccess(`Clube ${trimmedDisplayName} inserido com sucesso em discovered_clubs.`)
       setShowConfirmModal(false)
     } catch (requestError) {
       setError(
         requestError instanceof Error
           ? requestError.message
-          : "Nao foi possivel inserir o club manualmente."
+          : "Não foi possível inserir o clube manualmente."
       )
     } finally {
       setIsSubmitting(false)
@@ -126,7 +156,7 @@ export default function ManualClubId() {
     <div className="space-y-4">
       <Card className="rounded-xl border border-border bg-card">
         <CardHeader>
-          <CardTitle className="text-base font-semibold">Insercao Manual de Club ID</CardTitle>
+          <CardTitle className="text-base font-semibold">Inserção Manual de Club ID</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
@@ -148,6 +178,17 @@ export default function ManualClubId() {
 
           {error ? <p className="text-sm text-destructive">Erro: {error}</p> : null}
           {success ? <p className="text-sm text-emerald-700">{success}</p> : null}
+          {existingClub ? (
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-foreground">
+              <p className="font-medium text-amber-700">Time já existe na base.</p>
+              <p className="mt-1 text-foreground-secondary">
+                Nome: <strong className="text-foreground">{existingClub.display_name}</strong>
+              </p>
+              <p className="text-foreground-secondary">
+                Status atual: <strong className="text-foreground">{existingClub.status}</strong>
+              </p>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -182,11 +223,11 @@ export default function ManualClubId() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <Card className="w-full max-w-lg rounded-xl border border-border bg-card">
             <CardHeader>
-              <CardTitle className="text-base text-foreground">Confirmar insercao manual</CardTitle>
+              <CardTitle className="text-base text-foreground">Confirmar inserção manual</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <p className="text-sm text-foreground-secondary">
-                Confirme o nome de exibicao antes de inserir o clube <strong>{preview.clubId}</strong>.
+                Confirme o nome de exibição antes de inserir o clube <strong>{preview.clubId}</strong>.
               </p>
               <div className="space-y-2">
                 <Label htmlFor="manual-display-name">Display Name</Label>
@@ -206,7 +247,7 @@ export default function ManualClubId() {
                   Cancelar
                 </Button>
                 <Button onClick={() => void onConfirmInsert()} disabled={isSubmitting}>
-                  {isSubmitting ? "Inserindo..." : "Confirmar insercao"}
+                  {isSubmitting ? "Inserindo..." : "Confirmar inserção"}
                 </Button>
               </div>
             </CardContent>

@@ -10,12 +10,12 @@
 - **Idioma:** UI em Português (BR), código em Inglês
 
 ## Estado Atual do Projeto
-- **Tasks concluídas:** 1–19 (todas done)
-- **Task atual:** 20 — Implementar escalação visual (grid 3-5-2 com drag & drop)
-- **Tasks pendentes:** 20, 21, 22, 23, 24, 25
+- **Fase 1 concluída:** tasks 1–25 (todas done)
+- **Fase 2 ativa:** Redesign Visual + Refatoração — tasks 26–47 (22 tasks, 158 subtasks)
+- **Task atual:** 26 — Codebase Refactoring and Cleanup
 - **Migrations:** 23 arquivos em `supabase/migrations/`
-- **Design:** visual funcional sem padrão definido (1-2 telas com Stitch experimental)
-- **Decisão de design:** NÃO aplicar redesign durante tasks 20–25. Redesign Stitch completo após task 25.
+- **Design:** Fase 2 É o redesign — aplicar livremente com skills `ui-ux-pro-max`, `frontend-design`, `stitch-brief/apply`
+- **TaskMaster:** `npx task-master next` para próxima task. Modelo: `claude-sonnet-4-6`.
 
 ## Fluxo de Trabalho
 Claude (plano + análise) → Codex (implementação) → Claude (revisão) → Codex (correção) → Claude (aprovação)

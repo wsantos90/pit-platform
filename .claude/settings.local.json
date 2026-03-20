@@ -69,7 +69,9 @@
       "mcp__mercadopago-pagamento-unico__add_money_test_user",
       "mcp__supabase__list_migrations",
       "mcp__supabase__execute_sql",
-      "mcp__supabase__apply_migration"
+      "mcp__supabase__apply_migration",
+      "Bash(npx task-master:*)",
+      "Bash(ls .env*)"
     ],
     "additionalDirectories": [
       "C:\\Users\\wdsan\\OneDrive\\Documentos\\Projetos Coding\\P.I.T - PERFORMANCE - INTELIGENCE - TRACKING",

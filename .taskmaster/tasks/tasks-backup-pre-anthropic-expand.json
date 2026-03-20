@@ -1,0 +1,1746 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 26,
+        "title": "Codebase Refactoring and Cleanup",
+        "description": "Resolve merge conflicts, remove dead code/stubs, implement centralized logging, run depcheck, clean directories, and organize AI configs",
+        "details": "1. Resolve merge conflicts in profile/page.tsx, StatsOverview.tsx, EvolutionChart.tsx, PositionStats.tsx using git mergetool. 2. Remove 501 stub routes (tournament/create, discovery/insert-manual) or implement minimally. 3. Create src/lib/logger.ts with Winston: `npm i winston`, implement logger.error/replace console.error. 4. Run `npx depcheck --ignores='@types/*,eslint*'`, remove unused deps. 5. Remove material-symbols from package.json. 6. Add ./~/, coverage/, dist/ to .gitignore. 7. Consolidate AI configs to docs/ai-tools/, keep CLAUDE.md as SSOT. 8. Extract stateful logic from 7 admin tab panels to custom hooks (useState/useEffect). 9. Add npm script 'gen:types': 'supabase gen types typescript --local > src/types/database.ts'. 10. Run naming audit with ESLint naming rules.",
+        "testStrategy": "Run `npm run build`, `npm test`, verify no console.error in browser devtools, check bundle size reduction, validate types with `tsc --noEmit`, test logger with unit test: expect(logger.error('test')).toBeCalled()",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Resolve merge conflicts in profile and stats components",
+            "description": "Manually resolve merge conflicts in profile/page.tsx, StatsOverview.tsx, EvolutionChart.tsx, and PositionStats.tsx files using git mergetool",
+            "dependencies": [],
+            "details": "Use `git mergetool` to open each conflicted file and manually resolve conflicts by choosing appropriate code sections. Ensure all imports, component logic, and TypeScript types are preserved correctly. Test each component after resolution to ensure functionality is maintained.",
+            "status": "pending",
+            "testStrategy": "After resolution, run `npm run build` and `npm test` to ensure no compilation errors. Manually test each affected component in browser to verify UI renders correctly and no runtime errors occur."
+          },
+          {
+            "id": 2,
+            "title": "Remove or implement 501 stub routes",
+            "description": "Evaluate and either remove tournament/create and discovery/insert-manual stub routes or implement minimal functionality",
+            "dependencies": [],
+            "details": "Analyze the 501 stub routes (tournament/create, discovery/insert-manual) to determine if they should be removed entirely or implemented with minimal functionality. If removing, clean up any references in navigation, links, or routing configuration. If implementing, create basic placeholder pages with proper error handling.",
+            "status": "pending",
+            "testStrategy": "Test all navigation paths to ensure removed routes don't cause 404 errors. If implemented minimally, verify routes return appropriate responses and don't break application flow. Check for any dead links in the UI."
+          },
+          {
+            "id": 3,
+            "title": "Install Winston and create centralized logger",
+            "description": "Install Winston logging library and create src/lib/logger.ts with centralized logging functionality",
+            "dependencies": [],
+            "details": "Run `npm install winston` to add the logging library. Create src/lib/logger.ts with Winston configuration including different log levels (error, warn, info, debug). Set up file and console transports with appropriate formatting. Export logger instance with methods like logger.error, logger.warn, etc.",
+            "status": "pending",
+            "testStrategy": "Create unit test to verify logger.error method is called correctly. Test logger configuration by running sample log statements and checking output format. Verify log files are created in expected location."
+          },
+          {
+            "id": 4,
+            "title": "Replace console.error with Winston logger",
+            "description": "Find and replace all console.error statements throughout the codebase with the new Winston logger",
+            "dependencies": [],
+            "details": "Search codebase for all instances of console.error and replace with logger.error from the centralized logger. Also replace console.warn, console.log where appropriate with logger.warn, logger.info. Ensure proper import statements are added to each file that uses the logger.",
+            "status": "pending",
+            "testStrategy": "Run global search to ensure no console.error statements remain. Test error scenarios in browser devtools to verify errors are properly logged. Check that logger import statements are correctly added to all modified files."
+          },
+          {
+            "id": 5,
+            "title": "Run dependency audit and remove unused packages",
+            "description": "Execute depcheck to identify unused dependencies and remove them, including material-symbols package",
+            "dependencies": [],
+            "details": "Run `npx depcheck --ignores='@types/*,eslint*'` to identify unused dependencies. Review the output and safely remove packages that are not being used. Specifically remove material-symbols from package.json as mentioned. Update package-lock.json by running npm install after removals.",
+            "status": "pending",
+            "testStrategy": "After removing dependencies, run `npm run build` and `npm test` to ensure no build failures. Check that application still functions correctly in development and production modes. Verify bundle size reduction."
+          },
+          {
+            "id": 6,
+            "title": "Update .gitignore with additional exclusions",
+            "description": "Add ./~/, coverage/, and dist/ directories to .gitignore file to exclude them from version control",
+            "dependencies": [],
+            "details": "Open .gitignore file and add the following entries: ./~/ (temporary files), coverage/ (test coverage reports), and dist/ (build output directory). Ensure proper formatting and that these additions don't conflict with existing entries.",
+            "status": "pending",
+            "testStrategy": "Verify that files in these directories are no longer tracked by git using `git status`. Test that build and test processes still work correctly and generate files in these directories without git tracking them."
+          },
+          {
+            "id": 7,
+            "title": "Consolidate AI configuration files",
+            "description": "Move all AI-related configuration files to docs/ai-tools/ directory and maintain CLAUDE.md as single source of truth",
+            "dependencies": [],
+            "details": "Create docs/ai-tools/ directory if it doesn't exist. Move all AI configuration files (prompts, settings, documentation) into this centralized location. Ensure CLAUDE.md remains as the authoritative source of truth for AI tool configuration. Update any references to moved files.",
+            "status": "pending",
+            "testStrategy": "Verify all AI configuration files are properly organized in docs/ai-tools/. Check that CLAUDE.md contains comprehensive and up-to-date information. Ensure no broken references to moved configuration files exist."
+          },
+          {
+            "id": 8,
+            "title": "Extract stateful logic from admin panels to custom hooks",
+            "description": "Create custom hooks to extract useState and useEffect logic from 7 admin tab panels for better code organization",
+            "dependencies": [],
+            "details": "Identify the 7 admin tab panels and extract their stateful logic (useState, useEffect, data fetching, form handling) into custom hooks. Create hooks like useAdminPanel, useUserManagement, etc. in src/hooks/ directory. Ensure proper TypeScript typing and error handling in the extracted hooks.",
+            "status": "pending",
+            "testStrategy": "Test each admin panel to ensure functionality remains unchanged after hook extraction. Verify that state management, side effects, and data flow work correctly. Run unit tests for the custom hooks to ensure they handle edge cases properly."
+          },
+          {
+            "id": 9,
+            "title": "Add Supabase type generation npm script",
+            "description": "Add npm script 'gen:types' to automatically generate TypeScript types from Supabase schema",
+            "dependencies": [],
+            "details": "Add the following script to package.json: 'gen:types': 'supabase gen types typescript --local > src/types/database.ts'. This will generate TypeScript types from the local Supabase instance and save them to the specified file. Ensure the src/types/ directory exists.",
+            "status": "pending",
+            "testStrategy": "Run `npm run gen:types` to verify the script executes successfully and generates the database.ts file. Check that the generated types are valid TypeScript and can be imported in other files. Verify the types match the current database schema."
+          },
+          {
+            "id": 10,
+            "title": "Run ESLint naming audit and fix violations",
+            "description": "Execute comprehensive naming audit using ESLint naming rules and fix any violations found",
+            "dependencies": [],
+            "details": "Configure ESLint with naming convention rules (camelCase for variables/functions, PascalCase for components/types, etc.). Run ESLint across the entire codebase to identify naming violations. Fix all violations to ensure consistent naming conventions throughout the project.",
+            "status": "pending",
+            "testStrategy": "Run `npm run lint` to verify no naming convention violations remain. Ensure all variable names, function names, component names, and file names follow established conventions. Run `npm run build` and `npm test` to confirm fixes don't break functionality."
+          },
+          {
+            "id": 11,
+            "title": "Resolve merge conflicts in profile/page.tsx",
+            "description": "Use git mergetool to resolve merge conflicts in the profile page component, ensuring proper component structure and functionality",
+            "dependencies": [],
+            "details": "Run `git mergetool` on profile/page.tsx, manually resolve conflicts by choosing appropriate code sections, test component renders correctly, commit resolved file with descriptive message",
+            "status": "pending",
+            "testStrategy": "Verify profile page loads without errors, check component props and state management work correctly"
+          },
+          {
+            "id": 12,
+            "title": "Resolve merge conflicts in StatsOverview.tsx, EvolutionChart.tsx, PositionStats.tsx",
+            "description": "Systematically resolve merge conflicts in the three statistics components using git mergetool",
+            "dependencies": [],
+            "details": "Use git mergetool for each file individually, preserve data visualization logic, ensure chart rendering and stats calculations remain intact, test all components in isolation",
+            "status": "pending",
+            "testStrategy": "Load stats dashboard, verify charts render with sample data, check component props and data flow"
+          },
+          {
+            "id": 13,
+            "title": "Implement stub route removal/implementation strategy",
+            "description": "Analyze and either remove or minimally implement the 501 stub routes for tournament/create and discovery/insert-manual",
+            "dependencies": [],
+            "details": "Review tournament/create and discovery/insert-manual routes, decide removal vs minimal implementation based on product requirements, update routing configuration, remove unused imports and components",
+            "status": "pending",
+            "testStrategy": "Test route navigation returns appropriate responses, verify no broken links, check API endpoints return expected status codes"
+          },
+          {
+            "id": 14,
+            "title": "Install Winston and create centralized logger",
+            "description": "Set up Winston logging library and create src/lib/logger.ts with centralized logging configuration",
+            "dependencies": [],
+            "details": "Run `npm install winston`, create src/lib/logger.ts with Winston configuration, implement logger.error, logger.info, logger.warn methods, set up log levels and formatting",
+            "status": "pending",
+            "testStrategy": "Unit test logger methods, verify log output format, test different log levels work correctly"
+          },
+          {
+            "id": 15,
+            "title": "Replace console.error with Winston logger across codebase",
+            "description": "Find and replace all console.error instances with the new Winston logger.error method",
+            "dependencies": [],
+            "details": "Search codebase for console.error usage, replace with logger.error imports and calls, ensure proper error context is maintained, update error handling patterns",
+            "status": "pending",
+            "testStrategy": "Verify no console.error calls remain in browser devtools, test error logging works in development and production modes"
+          },
+          {
+            "id": 16,
+            "title": "Run dependency audit and cleanup unused packages",
+            "description": "Execute depcheck to identify and remove unused dependencies, specifically removing material-symbols",
+            "dependencies": [],
+            "details": "Run `npx depcheck --ignores='@types/*,eslint*'`, review output for unused dependencies, remove material-symbols from package.json, clean up other unused packages, run npm install",
+            "status": "pending",
+            "testStrategy": "Verify build still passes after dependency removal, check bundle size reduction, ensure no missing dependency errors"
+          },
+          {
+            "id": 17,
+            "title": "Update .gitignore with additional exclusions",
+            "description": "Add ./~/, coverage/, and dist/ directories to .gitignore to prevent tracking of temporary and build files",
+            "dependencies": [],
+            "details": "Edit .gitignore file to add ./~/, coverage/, dist/ entries, ensure proper formatting and no conflicts with existing entries, test git status shows clean working directory",
+            "status": "pending",
+            "testStrategy": "Verify specified directories are ignored by git, check git status doesn't show unwanted files"
+          },
+          {
+            "id": 18,
+            "title": "Consolidate AI configurations to docs/ai-tools/",
+            "description": "Move and organize all AI-related configuration files to docs/ai-tools/ directory with CLAUDE.md as single source of truth",
+            "dependencies": [],
+            "details": "Create docs/ai-tools/ directory, move AI config files, ensure CLAUDE.md contains comprehensive AI tool documentation, remove duplicate configurations, update any references to moved files",
+            "status": "pending",
+            "testStrategy": "Verify all AI configs are accessible in new location, check CLAUDE.md completeness, ensure no broken references"
+          },
+          {
+            "id": 19,
+            "title": "Extract stateful logic from admin tab panels to custom hooks",
+            "description": "Refactor 7 admin tab panels by extracting useState and useEffect logic into reusable custom hooks",
+            "dependencies": [],
+            "details": "Identify stateful logic in each of the 7 admin panels, create custom hooks (useAdminPanel, useTabState, etc.), extract useState and useEffect patterns, ensure proper hook dependencies and cleanup",
+            "status": "pending",
+            "testStrategy": "Test admin panels maintain same functionality, verify hooks are reusable, check for memory leaks and proper cleanup"
+          },
+          {
+            "id": 20,
+            "title": "Setup type generation script and ESLint naming audit",
+            "description": "Add npm script for Supabase type generation and run ESLint naming rules audit across codebase",
+            "dependencies": [],
+            "details": "Add 'gen:types': 'supabase gen types typescript --local > src/types/database.ts' to package.json scripts, configure ESLint naming rules, run naming audit, fix naming violations",
+            "status": "pending",
+            "testStrategy": "Run npm run gen:types successfully, verify generated types are valid, check ESLint naming rules pass, validate TypeScript compilation"
+          }
+        ]
+      },
+      {
+        "id": 27,
+        "title": "Project Documentation Setup",
+        "description": "Create CONTRIBUTING.md, DEVELOPMENT.md, ARCHITECTURE.md, API.md, DATABASE.md, GitHub templates, labels, milestone, and update README.md",
+        "details": "1. Create docs/ folder structure. 2. docs/CONTRIBUTING.md: Git workflow (branch-per-task, PR checklist), dev setup, testing reqs. 3. docs/DEVELOPMENT.md: Supabase local start, env vars, migrations, seed. 4. docs/ARCHITECTURE.md: Mermaid diagram of app flow, Supabase schema. 5. docs/API.md: Table of 40+ routes (method/path/params/response). 6. docs/DATABASE.md: Schema doc, ERD Mermaid, views list. 7. .github/ISSUE_TEMPLATE/bug_report.md + feature_request.md. 8. .github/PULL_REQUEST_TEMPLATE.md with Phase 2 checklist. 9. GitHub labels: bug,feature,refactor,docs,redesign,phase-2. 10. Milestone 'Phase 2: Redesign'. 11. Update README.md with badges, quickstart, deploy links.",
+        "testStrategy": "Validate all docs render correctly in GitHub/Markdown preview, check ISSUE/PR templates appear on GitHub, verify milestone creation, run `npm run build` passes",
+        "priority": "high",
+        "dependencies": [
+          26
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create docs/ folder structure",
+            "description": "Set up the documentation folder structure with proper organization for all documentation files",
+            "dependencies": [],
+            "details": "Create docs/ directory in project root. Set up subdirectories if needed for organization. Ensure proper .gitkeep files or initial structure is in place for version control.",
+            "status": "pending",
+            "testStrategy": "Verify docs/ folder exists and is properly structured in repository"
+          },
+          {
+            "id": 2,
+            "title": "Create CONTRIBUTING.md with Git workflow",
+            "description": "Document contribution guidelines including Git workflow, branch-per-task strategy, and PR checklist requirements",
+            "dependencies": [],
+            "details": "Create docs/CONTRIBUTING.md with sections for: Git workflow (branch-per-task methodology), development setup instructions, testing requirements, code style guidelines, and pull request checklist. Include examples of proper commit messages and branch naming conventions.",
+            "status": "pending",
+            "testStrategy": "Review document renders correctly in GitHub, validate all workflow steps are clear and actionable"
+          },
+          {
+            "id": 3,
+            "title": "Create DEVELOPMENT.md with local setup",
+            "description": "Document local development environment setup including Supabase configuration and database management",
+            "dependencies": [],
+            "details": "Create docs/DEVELOPMENT.md covering: Supabase local startup procedures, environment variable configuration, database migration processes, seed data setup, and troubleshooting common development issues. Include step-by-step setup instructions.",
+            "status": "pending",
+            "testStrategy": "Follow setup instructions on clean environment to validate completeness and accuracy"
+          },
+          {
+            "id": 4,
+            "title": "Create ARCHITECTURE.md with Mermaid diagrams",
+            "description": "Document system architecture with visual diagrams showing application flow and database schema",
+            "dependencies": [],
+            "details": "Create docs/ARCHITECTURE.md with Mermaid diagrams illustrating: application flow architecture, component relationships, Supabase schema structure, and data flow patterns. Include both high-level system overview and detailed technical diagrams.",
+            "status": "pending",
+            "testStrategy": "Verify Mermaid diagrams render correctly in GitHub and accurately represent current system architecture"
+          },
+          {
+            "id": 5,
+            "title": "Create API.md route documentation",
+            "description": "Document all API routes with comprehensive table of methods, paths, parameters, and responses",
+            "dependencies": [],
+            "details": "Create docs/API.md with detailed table documenting 40+ routes including: HTTP method, endpoint path, request parameters, response format, authentication requirements, and example usage. Organize by functional areas for easy navigation.",
+            "status": "pending",
+            "testStrategy": "Cross-reference documented routes with actual codebase to ensure completeness and accuracy"
+          },
+          {
+            "id": 6,
+            "title": "Create DATABASE.md schema documentation",
+            "description": "Document database schema with ERD diagrams and comprehensive table descriptions",
+            "dependencies": [],
+            "details": "Create docs/DATABASE.md including: complete schema documentation, ERD Mermaid diagrams, database views listing, table relationships, indexes, and constraints. Document data types, nullable fields, and business logic constraints.",
+            "status": "pending",
+            "testStrategy": "Validate ERD diagrams render correctly and accurately reflect current database structure"
+          },
+          {
+            "id": 7,
+            "title": "Create bug report template",
+            "description": "Set up GitHub issue template for standardized bug reporting with required fields and formatting",
+            "dependencies": [],
+            "details": "Create .github/ISSUE_TEMPLATE/bug_report.md with structured template including: bug description, steps to reproduce, expected vs actual behavior, environment details, screenshots section, and severity classification.",
+            "status": "pending",
+            "testStrategy": "Create test issue using template to verify it appears correctly in GitHub interface"
+          },
+          {
+            "id": 8,
+            "title": "Create feature request template",
+            "description": "Set up GitHub issue template for feature requests with proper categorization and requirements gathering",
+            "dependencies": [],
+            "details": "Create .github/ISSUE_TEMPLATE/feature_request.md with sections for: feature description, use case justification, acceptance criteria, mockups/wireframes, priority level, and implementation considerations.",
+            "status": "pending",
+            "testStrategy": "Create test feature request to verify template functionality and completeness"
+          },
+          {
+            "id": 9,
+            "title": "Create PR template with Phase 2 checklist",
+            "description": "Set up pull request template with comprehensive checklist for Phase 2 development standards",
+            "dependencies": [],
+            "details": "Create .github/PULL_REQUEST_TEMPLATE.md with Phase 2 specific checklist including: code review requirements, testing verification, documentation updates, design system compliance, and deployment readiness checks.",
+            "status": "pending",
+            "testStrategy": "Create test PR to verify template appears and checklist items are comprehensive"
+          },
+          {
+            "id": 10,
+            "title": "Create GitHub labels and milestone",
+            "description": "Set up GitHub repository labels and Phase 2 milestone for project organization",
+            "dependencies": [],
+            "details": "Create GitHub labels: bug, feature, refactor, docs, redesign, phase-2 with appropriate colors and descriptions. Create 'Phase 2: Redesign' milestone with target completion date and description of scope.",
+            "status": "pending",
+            "testStrategy": "Verify all labels are created with correct naming and milestone is properly configured"
+          },
+          {
+            "id": 11,
+            "title": "Update README.md with badges and links",
+            "description": "Enhance README.md with status badges, quickstart guide, and deployment links for improved project presentation",
+            "dependencies": [],
+            "details": "Update README.md to include: build status badges, coverage badges, quickstart setup instructions, links to documentation, deployment URLs, and improved project description with current feature set.",
+            "status": "pending",
+            "testStrategy": "Verify all badges display correctly, links are functional, and quickstart instructions work for new users"
+          }
+        ]
+      },
+      {
+        "id": 28,
+        "title": "Visual Brainstorming and Design System Generation",
+        "description": "Install UI/UX Pro Max skill, create design-refs/, generate MASTER.md with complete design system specs and page specs",
+        "details": "1. `npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill --skill ui-ux-pro-max`. 2. Create design-refs/ with screenshots: VirtualNexusArena.com, 21st.dev, Dribbble esports dashboards. 3. Run UI/UX Pro Max skill targeting design-system/MASTER.md output. 4. MASTER.md sections: color palette (primary/secondary/accent/semantic), typography scale (fonts/weights/sizes), spacing scale (4px grid), component specs (button/card/modal/table/sidebar/navbar), anti-patterns. 5. Create design-system/pages/ with specs for profile.md, team.md, auth.md, etc. 6. Manual validation/adjustments. 7. Finalize primary color decision (blue/orange).",
+        "testStrategy": "Validate MASTER.md completeness against checklist, screenshot specs match references, test color contrast with WAVE tool (WCAG AA), verify all pages have spec files",
+        "priority": "high",
+        "dependencies": [
+          26
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and Configure UI/UX Pro Max Skill",
+            "description": "Install the UI/UX Pro Max skill package and verify proper configuration for design system generation",
+            "dependencies": [],
+            "details": "Execute `npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill --skill ui-ux-pro-max` command. Verify installation success, check for any configuration requirements or dependencies. Test basic skill functionality to ensure it's ready for design system generation.",
+            "status": "pending",
+            "testStrategy": "Verify skill installation with --version flag, test basic command execution, check for any error messages or missing dependencies"
+          },
+          {
+            "id": 2,
+            "title": "Create Design References Collection",
+            "description": "Establish design-refs/ directory and collect visual references from target websites and design platforms",
+            "dependencies": [],
+            "details": "Create design-refs/ directory structure. Capture high-quality screenshots from VirtualNexusArena.com, 21st.dev, and curated Dribbble esports dashboards. Organize screenshots by category (navigation, cards, forms, dashboards). Document key design patterns and visual elements for reference during system generation.",
+            "status": "pending",
+            "testStrategy": "Verify all reference screenshots are captured and properly organized, ensure image quality is sufficient for design analysis"
+          },
+          {
+            "id": 3,
+            "title": "Generate MASTER.md with Color Palette System",
+            "description": "Use UI/UX Pro Max skill to generate initial MASTER.md file focusing on comprehensive color palette definition",
+            "dependencies": [],
+            "details": "Run UI/UX Pro Max skill targeting design-system/MASTER.md output. Focus on generating complete color palette section including primary, secondary, accent, and semantic colors. Include color codes, usage guidelines, and accessibility considerations. Establish foundation for blue vs orange primary color decision.",
+            "status": "pending",
+            "testStrategy": "Validate MASTER.md file creation, verify color palette completeness, test color contrast ratios with WAVE tool for WCAG AA compliance"
+          },
+          {
+            "id": 4,
+            "title": "Define Typography and Spacing Scale Systems",
+            "description": "Expand MASTER.md with comprehensive typography hierarchy and 4px-based spacing scale system",
+            "dependencies": [],
+            "details": "Add typography scale section with font families, weights, and sizes for all text elements (page-title, section-title, body, etc.). Define 4px grid-based spacing scale for consistent layout. Include line heights, letter spacing, and responsive considerations. Integrate with design references for consistency.",
+            "status": "pending",
+            "testStrategy": "Verify typography scale covers all use cases, validate spacing scale follows 4px grid system, check readability and hierarchy effectiveness"
+          },
+          {
+            "id": 5,
+            "title": "Create Component Specifications",
+            "description": "Document comprehensive specifications for core UI components including states and variations",
+            "dependencies": [],
+            "details": "Add detailed component specs to MASTER.md for button, card, modal, table, sidebar, and navbar components. Include all states (default, hover, active, disabled, loading, error). Define sizing variants, color applications, and interaction patterns. Document anti-patterns to avoid.",
+            "status": "pending",
+            "testStrategy": "Review component specs against design references, verify all states are documented, validate consistency with established color and typography systems"
+          },
+          {
+            "id": 6,
+            "title": "Generate Page-Specific Design Specifications",
+            "description": "Create individual design specification files for each major page type in the application",
+            "dependencies": [],
+            "details": "Create design-system/pages/ directory with detailed specs for profile.md, team.md, auth.md, and other key pages. Each spec should include layout structure, component usage, specific styling requirements, and responsive behavior. Reference MASTER.md tokens and components consistently.",
+            "status": "pending",
+            "testStrategy": "Verify all major pages have corresponding spec files, check consistency with MASTER.md system, validate completeness of layout and component specifications"
+          },
+          {
+            "id": 7,
+            "title": "Manual Validation and System Finalization",
+            "description": "Conduct comprehensive design review, finalize color decisions, and complete anti-pattern documentation",
+            "dependencies": [],
+            "details": "Perform manual review of entire design system for consistency and completeness. Make final decision on primary color (blue vs orange) based on brand alignment and accessibility. Complete anti-patterns section with specific examples. Conduct design review checkpoint and make necessary adjustments to ensure system cohesion.",
+            "status": "pending",
+            "testStrategy": "Complete design system checklist validation, verify WCAG AA compliance for final color choices, test system consistency across all specifications, validate against original requirements"
+          }
+        ]
+      },
+      {
+        "id": 29,
+        "title": "Implement Design Tokens in CSS/Tailwind Config",
+        "description": "Apply MASTER.md tokens to globals.css, tailwind.config.ts, layout.tsx, convert hardcoded styles to CSS variables",
+        "details": "1. Update src/app/globals.css: add --card-hover, --surface-1/2, --position-gk/def/mid/fwd/atk tokens from MASTER.md. 2. tailwind.config.ts: extend theme with typography scale (page-title, section-title, etc.), spacing scale. 3. src/app/layout.tsx: next/font/google for main font + Fira Code (.font-data utility). 4. Replace .nav-item-active #0d7ff2 → hsl(var(--primary)). 5. Replace .glass-sidebar rgba() → CSS var tokens. 6. Add focus-visible ring styles for WCAG. 7. Create tokens audit script to find remaining hardcoded values.",
+        "testStrategy": "Run tokens audit script (0 hardcoded colors), Lighthouse accessibility 90+, keyboard navigation test (Tab/Enter/Esc), contrast check with browser devtools",
+        "priority": "high",
+        "dependencies": [
+          28
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define CSS Variables in globals.css",
+            "description": "Add semantic design tokens to globals.css including card-hover, surface variants, and position-specific color tokens from MASTER.md",
+            "dependencies": [],
+            "details": "Update src/app/globals.css with CSS custom properties: --card-hover, --surface-1, --surface-2, --position-gk, --position-def, --position-mid, --position-fwd, --position-atk tokens. Organize tokens by category (colors, surfaces, positions) with proper HSL values from MASTER.md design system specification.",
+            "status": "pending",
+            "testStrategy": "Verify CSS variables are properly defined and accessible in browser devtools, validate HSL color values match MASTER.md specification"
+          },
+          {
+            "id": 2,
+            "title": "Extend Tailwind Config Typography Scale",
+            "description": "Configure typography scale in tailwind.config.ts with page-title, section-title, and other text variants from design system",
+            "dependencies": [],
+            "details": "Extend tailwind.config.ts theme.fontSize with typography scale: page-title, section-title, body-large, body-small, caption variants. Map to CSS custom properties and include line-height values. Ensure proper font-weight mappings for each typography level.",
+            "status": "pending",
+            "testStrategy": "Test typography classes render correctly, verify font sizes and line heights match design specifications, check Tailwind IntelliSense autocomplete works"
+          },
+          {
+            "id": 3,
+            "title": "Configure Tailwind Spacing Scale",
+            "description": "Add custom spacing scale to Tailwind config for consistent layout spacing throughout the application",
+            "dependencies": [],
+            "details": "Extend tailwind.config.ts theme.spacing with design system spacing tokens. Add custom spacing values that align with 8px grid system. Include component-specific spacing like card padding, section gaps, and layout margins.",
+            "status": "pending",
+            "testStrategy": "Verify spacing classes generate correctly, test spacing consistency across components, validate 8px grid alignment"
+          },
+          {
+            "id": 4,
+            "title": "Setup Next.js Font Configuration",
+            "description": "Configure next/font/google for main font and Fira Code in layout.tsx with proper font utilities",
+            "dependencies": [],
+            "details": "Update src/app/layout.tsx to import and configure Google Fonts using next/font/google. Setup main application font and Fira Code for code/data display. Create .font-data utility class for monospace content. Apply font variables to CSS custom properties for consistent usage.",
+            "status": "pending",
+            "testStrategy": "Verify fonts load correctly, test .font-data utility class works, check font fallbacks, validate no layout shift during font loading"
+          },
+          {
+            "id": 5,
+            "title": "Replace Hardcoded Colors with CSS Variables",
+            "description": "Systematically replace hardcoded color values like #0d7ff2 and rgba() values with CSS variable tokens",
+            "dependencies": [],
+            "details": "Replace .nav-item-active #0d7ff2 with hsl(var(--primary)). Replace .glass-sidebar rgba() values with CSS variable tokens. Audit and replace other hardcoded colors throughout stylesheets. Update component styles to use semantic color tokens instead of literal values.",
+            "status": "pending",
+            "testStrategy": "Visual regression testing to ensure colors remain consistent, verify all hardcoded colors are replaced, test theme switching if applicable"
+          },
+          {
+            "id": 6,
+            "title": "Implement WCAG Focus-Visible Ring Styles",
+            "description": "Add accessible focus-visible ring styles using design tokens for keyboard navigation compliance",
+            "dependencies": [],
+            "details": "Create focus-visible ring styles using CSS custom properties for consistent focus indicators. Apply to interactive elements (buttons, links, form inputs). Ensure WCAG AA contrast requirements are met. Use design system focus ring colors and implement proper focus management.",
+            "status": "pending",
+            "testStrategy": "Keyboard navigation testing with Tab/Enter/Esc keys, contrast analysis for focus rings, WCAG accessibility audit, test focus-visible vs focus behavior"
+          },
+          {
+            "id": 7,
+            "title": "Create Token Audit Script and Validation",
+            "description": "Develop automated script to detect remaining hardcoded values and validate token usage across the codebase",
+            "dependencies": [],
+            "details": "Create Node.js script to scan CSS, TypeScript, and JSX files for hardcoded color values, font sizes, and spacing. Generate report of violations with file locations. Include validation for proper CSS variable usage and design token compliance. Add to package.json scripts for CI integration.",
+            "status": "pending",
+            "testStrategy": "Run audit script and verify 0 hardcoded colors detected, test script catches various hardcoded value patterns, validate script performance on large codebase"
+          }
+        ]
+      },
+      {
+        "id": 30,
+        "title": "Shared Components Library Expansion",
+        "description": "Add shadcn/ui components, create PageHeader, StatCard v2, EmptyState, ErrorState, LoadingSkeleton, StatusBadge, etc. with WCAG AA",
+        "details": "1. `npx shadcn@latest add dialog dropdown-menu avatar tooltip sheet breadcrumb skeleton scroll-area progress`. 2. src/components/shared/: PageHeader (title/subtitle/actions), StatCard v2 (icon/label/value/sparkline), EmptyState, ErrorState, NoPermissionState, LoadingSkeleton variants, StatusBadge (approved/pending/rejected), ScoreDisplay, PlayerAvatar, DataTable (table+sort/filter/pagination). 3. All components: WCAG AA contrast, keyboard nav (Tab/Enter/Esc), aria-labels on icons, focus-visible ring. 4. Use Fira Code for numeric data via .font-data.",
+        "testStrategy": "Component Storybook/isolated tests for all states (default/loading/disabled/hover/error), keyboard navigation test, contrast analysis, `npm run build` passes",
+        "priority": "high",
+        "dependencies": [
+          29
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Install and configure shadcn/ui components",
+            "description": "Install required shadcn/ui components and set up the foundation for the component library expansion",
+            "dependencies": [],
+            "details": "Run `npx shadcn@latest add dialog dropdown-menu avatar tooltip sheet breadcrumb skeleton scroll-area progress` to install all required shadcn/ui components. Verify installation and ensure all components are properly imported and available for use in the project.",
+            "status": "pending",
+            "testStrategy": "Verify all components install correctly, check bundle size impact, ensure no TypeScript errors"
+          },
+          {
+            "id": 2,
+            "title": "Create PageHeader component with title/subtitle/actions",
+            "description": "Build a reusable PageHeader component that displays page titles, subtitles, and action buttons",
+            "dependencies": [],
+            "details": "Create src/components/shared/PageHeader.tsx with props for title (required), subtitle (optional), and actions (optional React nodes). Include proper TypeScript interfaces, WCAG AA contrast ratios, and keyboard navigation support. Add focus-visible styling and aria-labels where needed.",
+            "status": "pending",
+            "testStrategy": "Test with various prop combinations, verify keyboard navigation, check contrast ratios, create Storybook stories"
+          },
+          {
+            "id": 3,
+            "title": "Build StatCard v2 with icon/label/value/sparkline",
+            "description": "Create an enhanced StatCard component with icon, label, value display, and optional sparkline chart",
+            "dependencies": [],
+            "details": "Create src/components/shared/StatCard.tsx with props for icon (Lucide icon), label, value, and optional sparkline data. Use Fira Code font for numeric values via .font-data class. Implement multiple variants (default, loading, error) with proper WCAG AA compliance and keyboard navigation.",
+            "status": "pending",
+            "testStrategy": "Test all variants, verify Fira Code font application, check sparkline rendering, validate accessibility features"
+          },
+          {
+            "id": 4,
+            "title": "Create state components: EmptyState, ErrorState, NoPermissionState",
+            "description": "Build reusable state components for handling empty data, errors, and permission restrictions",
+            "dependencies": [],
+            "details": "Create src/components/shared/EmptyState.tsx, ErrorState.tsx, and NoPermissionState.tsx. Each component should accept title, description, and optional action button props. Include appropriate icons, WCAG AA contrast, keyboard navigation, and aria-labels. Support customizable illustrations or icons.",
+            "status": "pending",
+            "testStrategy": "Test each state component with various props, verify accessibility features, check visual consistency"
+          },
+          {
+            "id": 5,
+            "title": "Implement LoadingSkeleton with multiple variants",
+            "description": "Create flexible LoadingSkeleton components for different loading states and content types",
+            "dependencies": [],
+            "details": "Create src/components/shared/LoadingSkeleton.tsx with variants for text, card, table, and custom shapes. Use shadcn skeleton component as base. Include props for width, height, count, and animation preferences. Ensure proper accessibility with aria-live regions and screen reader announcements.",
+            "status": "pending",
+            "testStrategy": "Test all skeleton variants, verify animation performance, check screen reader compatibility"
+          },
+          {
+            "id": 6,
+            "title": "Build StatusBadge with state variants",
+            "description": "Create StatusBadge component with predefined states for approved, pending, rejected, and custom variants",
+            "dependencies": [],
+            "details": "Create src/components/shared/StatusBadge.tsx with predefined variants (approved/pending/rejected) and support for custom states. Include proper color coding, icons, and WCAG AA contrast ratios. Add keyboard navigation support and appropriate aria-labels for screen readers.",
+            "status": "pending",
+            "testStrategy": "Test all status variants, verify color contrast ratios, check keyboard navigation and screen reader support"
+          },
+          {
+            "id": 7,
+            "title": "Create ScoreDisplay and PlayerAvatar components",
+            "description": "Build specialized components for displaying game scores and player avatars with fallbacks",
+            "dependencies": [],
+            "details": "Create src/components/shared/ScoreDisplay.tsx for match scores with home/away team display and src/components/shared/PlayerAvatar.tsx using shadcn avatar component. Include fallback initials, loading states, and proper sizing variants. Apply Fira Code font for scores and ensure WCAG AA compliance.",
+            "status": "pending",
+            "testStrategy": "Test score formatting, avatar fallback behavior, verify font application, check accessibility features"
+          },
+          {
+            "id": 8,
+            "title": "Build DataTable with sorting, filtering, and pagination",
+            "description": "Create a comprehensive DataTable component with advanced features for data display and manipulation",
+            "dependencies": [],
+            "details": "Create src/components/shared/DataTable.tsx with sorting, filtering, and pagination capabilities. Use shadcn table components as base. Include column configuration, search functionality, row selection, and loading states using LoadingSkeleton. Implement keyboard navigation (Tab/Enter/Esc) and screen reader support.",
+            "status": "pending",
+            "testStrategy": "Test sorting/filtering functionality, verify pagination, check keyboard navigation, validate screen reader compatibility"
+          },
+          {
+            "id": 9,
+            "title": "WCAG AA validation and Storybook setup",
+            "description": "Validate all components for WCAG AA compliance and create comprehensive Storybook documentation",
+            "dependencies": [],
+            "details": "Run accessibility audits on all components using axe-core or similar tools. Verify keyboard navigation (Tab/Enter/Esc), contrast ratios, and aria-labels. Set up Storybook stories for all components with various states and props. Create comprehensive documentation and usage examples.",
+            "status": "pending",
+            "testStrategy": "Run automated accessibility tests, manual keyboard navigation testing, contrast ratio validation, Storybook build verification"
+          }
+        ]
+      },
+      {
+        "id": 31,
+        "title": "Layout Shell Redesign - Sidebar + Navbar",
+        "description": "Redesign SidebarShell: migrate to Lucide icons, CSS tokens, collapsible sidebar, mobile drawer, breadcrumb, user dropdown",
+        "details": "1. src/components/layout/SidebarShell.tsx: replace Material Symbols → Lucide React (remove material-symbols pkg). 2. Replace slate-* hardcoded → CSS tokens. 3. Add collapsible state (localStorage sync). 4. Mobile drawer via shadcn Sheet. 5. Navbar: add Breadcrumb, user avatar DropdownMenu. 6. Prepare landing layout variant (no sidebar). 7. Responsive: 1440p/1080p/1366px breakpoints.",
+        "testStrategy": "Test desktop/mobile layouts, collapsible toggle persists, keyboard nav through sidebar/navbar, icon bundle size reduction verified, visual regression screenshots",
+        "priority": "high",
+        "dependencies": [
+          30
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Migrate Material Symbols to Lucide React icons",
+            "description": "Replace all Material Symbols icons with Lucide React equivalents in SidebarShell component and remove material-symbols package dependency",
+            "dependencies": [],
+            "details": "Update src/components/layout/SidebarShell.tsx to import and use Lucide React icons instead of Material Symbols. Map existing icons to appropriate Lucide equivalents (menu, home, settings, etc.). Remove material-symbols package from package.json and verify bundle size reduction. Update any icon props or styling as needed for Lucide components.",
+            "status": "pending",
+            "testStrategy": "Verify all icons render correctly, check bundle size reduction, ensure no broken icon references"
+          },
+          {
+            "id": 2,
+            "title": "Replace hardcoded slate colors with CSS tokens",
+            "description": "Replace all hardcoded slate-* color values in SidebarShell with design system CSS tokens for consistent theming",
+            "dependencies": [],
+            "details": "Identify all hardcoded slate color references (slate-100, slate-200, etc.) in SidebarShell.tsx and replace with appropriate CSS custom properties from the design token system. Update hover states, active states, and background colors to use token-based values. Ensure proper contrast ratios are maintained.",
+            "status": "pending",
+            "testStrategy": "Visual comparison before/after, verify theme consistency, test dark/light mode if applicable"
+          },
+          {
+            "id": 3,
+            "title": "Implement collapsible sidebar with localStorage persistence",
+            "description": "Add collapsible state management for sidebar with localStorage synchronization and cross-tab consistency",
+            "dependencies": [],
+            "details": "Create useState hook for sidebar collapsed state, implement toggle functionality, add localStorage sync to persist state across sessions. Handle cross-tab synchronization using storage events. Add smooth CSS transitions for collapse/expand animations. Include keyboard shortcut support for accessibility.",
+            "status": "pending",
+            "testStrategy": "Test state persistence across browser sessions, verify cross-tab sync, check smooth animations, test keyboard shortcuts"
+          },
+          {
+            "id": 4,
+            "title": "Create mobile drawer using shadcn Sheet component",
+            "description": "Implement mobile-responsive drawer navigation using shadcn Sheet component for small screen devices",
+            "dependencies": [],
+            "details": "Import and configure shadcn Sheet component for mobile navigation. Add responsive breakpoint logic to show/hide desktop sidebar vs mobile drawer. Implement hamburger menu trigger in navbar. Ensure proper touch gestures and swipe-to-close functionality. Add backdrop overlay and proper z-index stacking.",
+            "status": "pending",
+            "testStrategy": "Test on various mobile devices, verify touch interactions, check responsive breakpoints, test accessibility with screen readers"
+          },
+          {
+            "id": 5,
+            "title": "Add Breadcrumb navigation and user DropdownMenu to Navbar",
+            "description": "Enhance navbar with breadcrumb navigation component and user avatar dropdown menu with profile options",
+            "dependencies": [],
+            "details": "Implement breadcrumb component showing current page hierarchy with proper navigation links. Add user avatar with dropdown menu containing profile, settings, and logout options. Use shadcn DropdownMenu component for consistent styling. Ensure proper keyboard navigation and ARIA labels for accessibility.",
+            "status": "pending",
+            "testStrategy": "Test breadcrumb navigation accuracy, verify dropdown menu interactions, check keyboard navigation, test user avatar display"
+          },
+          {
+            "id": 6,
+            "title": "Create landing layout variant without sidebar",
+            "description": "Develop alternative layout variant for landing pages that excludes the sidebar component",
+            "dependencies": [],
+            "details": "Create new layout component or conditional logic to render pages without sidebar for landing/marketing pages. Ensure navbar remains functional and properly styled. Update routing logic to determine when to use landing vs dashboard layout. Maintain consistent spacing and typography across both layouts.",
+            "status": "pending",
+            "testStrategy": "Test layout switching logic, verify landing pages render correctly, check navbar functionality without sidebar"
+          },
+          {
+            "id": 7,
+            "title": "Implement responsive design for 1440p/1080p/1366px breakpoints",
+            "description": "Ensure layout works correctly across specified breakpoints with visual regression testing",
+            "dependencies": [],
+            "details": "Test and optimize layout for 1440p (2560x1440), 1080p (1920x1080), and 1366px (1366x768) screen resolutions. Adjust sidebar width, navbar height, and content spacing for each breakpoint. Implement CSS media queries for smooth transitions. Set up visual regression testing with screenshot comparisons for each breakpoint.",
+            "status": "pending",
+            "testStrategy": "Visual regression testing with screenshots at each breakpoint, manual testing on different screen sizes, verify smooth responsive transitions"
+          }
+        ]
+      },
+      {
+        "id": 32,
+        "title": "Auth Pages Redesign",
+        "description": "Redesign /login, /register, /forgot-password with background pattern, branded cards, consistent states (loading/error/success)",
+        "details": "1. Apply design-system/pages/auth.md spec. 2. Add subtle grid/texture background via CSS. 3. Auth cards use new tokens + branding (P.I.T logo). 4. Consistent layout across 3 pages. 5. States: loading skeleton, error boundary, success redirect. 6. Form validation with shadcn Input/Label. 7. WCAG AA keyboard focus.",
+        "testStrategy": "Test all 3 pages with real Supabase auth flow, loading/error/success states, keyboard form navigation, mobile responsiveness, visual consistency check",
+        "priority": "high",
+        "dependencies": [
+          29,
+          30
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Apply Design System Specification",
+            "description": "Implement the design-system/pages/auth.md specification across all authentication pages",
+            "dependencies": [],
+            "details": "Review and implement the auth.md design specification including layout structure, spacing, typography, and component hierarchy. Ensure consistent application of design tokens and establish the foundation for all three auth pages.",
+            "status": "pending",
+            "testStrategy": "Verify design spec compliance through visual comparison and design token usage validation"
+          },
+          {
+            "id": 2,
+            "title": "Implement Background Pattern CSS",
+            "description": "Create subtle grid/texture background pattern using CSS for all authentication pages",
+            "dependencies": [],
+            "details": "Design and implement a subtle background pattern using CSS grid or texture that enhances the visual appeal without interfering with readability. Ensure the pattern works across different screen sizes and maintains performance.",
+            "status": "pending",
+            "testStrategy": "Test background rendering across different devices and browsers, verify performance impact"
+          },
+          {
+            "id": 3,
+            "title": "Build Auth Card Component with P.I.T Branding",
+            "description": "Create reusable auth card component with P.I.T logo and branded styling using design tokens",
+            "dependencies": [],
+            "details": "Develop a centralized auth card component that incorporates the P.I.T logo, uses new design tokens for consistent branding, and provides a clean container for form content. Ensure the component is responsive and accessible.",
+            "status": "pending",
+            "testStrategy": "Test component reusability, branding consistency, and responsive behavior across screen sizes"
+          },
+          {
+            "id": 4,
+            "title": "Implement Login Page with Form Validation",
+            "description": "Build /login page with shadcn Input/Label components, form validation, and state management",
+            "dependencies": [],
+            "details": "Create the login page using the auth card component, implement form validation with shadcn Input/Label components, handle loading states, error display, and success redirects. Integrate with Supabase authentication flow.",
+            "status": "pending",
+            "testStrategy": "Test form validation rules, error handling, successful login flow, and keyboard navigation"
+          },
+          {
+            "id": 5,
+            "title": "Implement Register Page with Form Validation",
+            "description": "Build /register page with shadcn Input/Label components, form validation, and state management",
+            "dependencies": [],
+            "details": "Create the registration page using the auth card component, implement comprehensive form validation for user registration fields, handle loading states, error display, and success redirects. Integrate with Supabase user creation flow.",
+            "status": "pending",
+            "testStrategy": "Test registration form validation, password requirements, email verification flow, and error states"
+          },
+          {
+            "id": 6,
+            "title": "Implement Forgot Password Page with Form Validation",
+            "description": "Build /forgot-password page with shadcn Input/Label components, form validation, and state management",
+            "dependencies": [],
+            "details": "Create the forgot password page using the auth card component, implement email validation, handle loading states during password reset request, display appropriate success/error messages, and integrate with Supabase password reset flow.",
+            "status": "pending",
+            "testStrategy": "Test email validation, password reset flow, success/error message display, and user feedback"
+          },
+          {
+            "id": 7,
+            "title": "Implement State Handling and WCAG AA Compliance",
+            "description": "Add loading skeletons, error boundaries, success redirects, and ensure WCAG AA keyboard focus compliance",
+            "dependencies": [],
+            "details": "Implement comprehensive state management including loading skeletons for all auth operations, error boundary components for graceful error handling, success redirect logic, and ensure WCAG AA compliance with proper keyboard focus management and mobile responsiveness across all three pages.",
+            "status": "pending",
+            "testStrategy": "Test keyboard navigation, screen reader compatibility, loading states, error boundaries, mobile responsiveness, and accessibility compliance using automated tools"
+          }
+        ]
+      },
+      {
+        "id": 33,
+        "title": "Profile Page Redesign",
+        "description": "Redesign /profile using page spec: PlayerHeader, StatsOverview (StatCard v2), EvolutionChart, MatchHistory (DataTable), all states",
+        "details": "1. Follow design-system/pages/profile.md. 2. PlayerHeader: larger PlayerAvatar + PositionBadge. 3. StatsOverview: StatCard v2 grid + trends. 4. EvolutionChart: branded colors + tooltip. 5. MatchHistory: DataTable sorting. 6. PositionStats: visual map/spider chart. 7. PendingInvitesCard/QuickClubRefreshCard with StatusBadge. 8. Suspense + LoadingSkeleton per section.",
+        "testStrategy": "Test with real player data + empty data, all states (loading/empty/error), DataTable sort/filter, chart interactions, Lighthouse 90+ on page",
+        "priority": "high",
+        "dependencies": [
+          30,
+          31
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "PlayerHeader with larger avatar and position badge",
+            "description": "Implement PlayerHeader component with larger PlayerAvatar and PositionBadge following design system specifications",
+            "dependencies": [],
+            "details": "Create PlayerHeader component using larger PlayerAvatar size and integrate PositionBadge. Follow design-system/pages/profile.md specifications for layout and styling. Ensure proper responsive behavior and accessibility.",
+            "status": "pending",
+            "testStrategy": "Test with different player data, verify avatar sizing, position badge display, and responsive layout"
+          },
+          {
+            "id": 2,
+            "title": "StatsOverview with StatCard v2 grid and trend indicators",
+            "description": "Build StatsOverview section using StatCard v2 components in grid layout with trend indicators",
+            "dependencies": [],
+            "details": "Implement StatsOverview using StatCard v2 components arranged in responsive grid. Add trend indicators to show performance changes. Use design tokens for consistent spacing and colors.",
+            "status": "pending",
+            "testStrategy": "Test grid responsiveness, trend indicator calculations, empty stats handling, and visual consistency"
+          },
+          {
+            "id": 3,
+            "title": "EvolutionChart with branded colors and tooltip",
+            "description": "Create EvolutionChart component with branded color scheme and interactive tooltips",
+            "dependencies": [],
+            "details": "Develop EvolutionChart using data visualization library with branded colors from design tokens. Implement interactive tooltips showing detailed stats. Ensure chart is responsive and accessible.",
+            "status": "pending",
+            "testStrategy": "Test chart rendering with various data sets, tooltip interactions, color consistency, and performance"
+          },
+          {
+            "id": 4,
+            "title": "MatchHistory DataTable with sorting functionality",
+            "description": "Implement MatchHistory section using DataTable component with sorting capabilities",
+            "dependencies": [],
+            "details": "Build MatchHistory using DataTable component with sortable columns for date, opponent, result, and score. Implement proper state management for sorting and pagination.",
+            "status": "pending",
+            "testStrategy": "Test sorting functionality, pagination, empty state handling, and data loading performance"
+          },
+          {
+            "id": 5,
+            "title": "PositionStats visual map/spider chart",
+            "description": "Create PositionStats component with visual map or spider chart representation",
+            "dependencies": [],
+            "details": "Develop PositionStats component using spider/radar chart to visualize player position statistics. Use branded colors and ensure chart is interactive and responsive.",
+            "status": "pending",
+            "testStrategy": "Test chart rendering with different position data, interactivity, visual accuracy, and responsive behavior"
+          },
+          {
+            "id": 6,
+            "title": "PendingInvitesCard and QuickClubRefreshCard with StatusBadge",
+            "description": "Implement PendingInvitesCard and QuickClubRefreshCard components with StatusBadge integration",
+            "dependencies": [],
+            "details": "Create PendingInvitesCard and QuickClubRefreshCard components incorporating StatusBadge for visual status indication. Follow design system patterns for card layout and badge styling.",
+            "status": "pending",
+            "testStrategy": "Test card rendering with different states, StatusBadge display, interaction handling, and empty states"
+          },
+          {
+            "id": 7,
+            "title": "Suspense boundaries and LoadingSkeleton per section",
+            "description": "Implement Suspense boundaries and LoadingSkeleton components for each profile section",
+            "dependencies": [],
+            "details": "Add React 18 Suspense boundaries around each profile section with corresponding LoadingSkeleton components. Ensure proper error boundaries and loading states for optimal user experience.",
+            "status": "pending",
+            "testStrategy": "Test loading states, error boundaries, skeleton animations, and transition between loading and loaded states"
+          },
+          {
+            "id": 8,
+            "title": "Comprehensive testing and Lighthouse 90+ performance validation",
+            "description": "Conduct comprehensive testing with real/empty data and validate Lighthouse performance score of 90+",
+            "dependencies": [],
+            "details": "Test entire profile page with real player data and empty data scenarios. Cover all loading, error, and success states. Run Lighthouse audits and optimize for 90+ performance score. Include accessibility and mobile testing.",
+            "status": "pending",
+            "testStrategy": "Execute full test suite including unit tests, integration tests, performance audits, accessibility checks, and cross-browser compatibility testing"
+          }
+        ]
+      },
+      {
+        "id": 34,
+        "title": "Profile Sub-Pages Redesign",
+        "description": "Redesign /profile/matches (DataTable filters) and /profile/settings (forms layout)",
+        "details": "1. /profile/matches: DataTable with filters (match type/result/date). 2. /profile/settings: PlayerIdentityForm + PositionSettingsForm in clean layout. 3. Use shared components + states. 4. Breadcrumb navigation. 5. Form validation + loading states.",
+        "testStrategy": "Test DataTable filters work with real data, form submission/validation, empty states, keyboard navigation, consistency with main profile page",
+        "priority": "medium",
+        "dependencies": [
+          33
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement /profile/matches DataTable with filters",
+            "description": "Create the matches page with DataTable component featuring filters for match type, result, and date",
+            "dependencies": [],
+            "details": "Build /profile/matches page using DataTable component with three filter options: match type (friendly, league, tournament), result (win, loss, draw), and date range picker. Implement filter state management and ensure proper data loading/pagination. Include sorting functionality and responsive design.",
+            "status": "pending",
+            "testStrategy": "Test filter combinations work correctly, DataTable sorting functions properly, pagination handles large datasets, and filters persist during navigation"
+          },
+          {
+            "id": 2,
+            "title": "Design /profile/settings form layout with dual forms",
+            "description": "Create the settings page layout containing PlayerIdentityForm and PositionSettingsForm in a clean, organized structure",
+            "dependencies": [],
+            "details": "Build /profile/settings page with two main form sections: PlayerIdentityForm (name, email, avatar upload) and PositionSettingsForm (preferred positions, playing style). Use consistent spacing, typography, and form field styling. Implement proper form section separation and responsive layout for mobile devices.",
+            "status": "pending",
+            "testStrategy": "Test form layout responsiveness across devices, form field validation works correctly, and both forms can be submitted independently or together"
+          },
+          {
+            "id": 3,
+            "title": "Integrate shared components and breadcrumb navigation",
+            "description": "Implement breadcrumb navigation and integrate shared components across both profile sub-pages",
+            "dependencies": [],
+            "details": "Add breadcrumb navigation component to both /profile/matches and /profile/settings pages showing 'Profile > [Current Page]' structure. Integrate shared components like LoadingSkeleton, ErrorBoundary, and StatusBadge. Ensure consistent header styling and navigation patterns match the main profile page design.",
+            "status": "pending",
+            "testStrategy": "Test breadcrumb navigation links work correctly, shared components render consistently, and navigation maintains proper focus management for accessibility"
+          },
+          {
+            "id": 4,
+            "title": "Implement loading states and empty data handling",
+            "description": "Add comprehensive loading states, empty data states, and error handling for both profile sub-pages",
+            "dependencies": [],
+            "details": "Implement LoadingSkeleton components for initial page loads, empty state illustrations for when no matches exist or settings are incomplete, and error boundaries for API failures. Add loading indicators for form submissions and filter operations. Include proper retry mechanisms and user feedback messages.",
+            "status": "pending",
+            "testStrategy": "Test loading states appear correctly during data fetching, empty states display appropriate messaging and actions, error states provide clear recovery options, and loading indicators work for all async operations"
+          },
+          {
+            "id": 5,
+            "title": "Ensure keyboard navigation and consistency testing",
+            "description": "Implement keyboard navigation support and perform consistency testing with the main profile page",
+            "dependencies": [],
+            "details": "Add proper keyboard navigation support including tab order, focus management, and keyboard shortcuts for filters and forms. Conduct comprehensive consistency testing to ensure visual design, interaction patterns, and component behavior match the main profile page. Verify WCAG AA compliance and cross-browser compatibility.",
+            "status": "pending",
+            "testStrategy": "Test complete keyboard navigation flow, verify focus indicators are visible, ensure consistent styling with main profile page, validate accessibility compliance, and test across different browsers and devices"
+          }
+        ]
+      },
+      {
+        "id": 35,
+        "title": "Team Page Redesign",
+        "description": "Redesign /team with 4 tabs: Roster (DataTable), History (DataTable), Matchmaking (EmptyState), Lineup (visual field)",
+        "details": "1. Tabs: underline style (not pill). 2. Roster tab: TeamDashboard (StatCard grid), RosterTable (DataTable + PlayerAvatar). 3. History: MatchHistoryTable + ScoreDisplay. 4. Matchmaking: EmptyState → /matchmaking. 5. Lineup: LineupVisual polished field. 6. Invite Dialog (shadcn). 7. All states implemented.",
+        "testStrategy": "Test tab switching, DataTable functionality, LineupVisual interactions, Dialog modal keyboard escape, empty/full data states, visual consistency",
+        "priority": "high",
+        "dependencies": [
+          30,
+          31
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Tab Navigation Setup with Underline Style",
+            "description": "Implement the main tab navigation component for the team page with underline styling instead of pill style",
+            "dependencies": [],
+            "details": "Create TabNavigation component with underline active state styling. Implement tab switching logic with proper state management. Ensure keyboard navigation support and ARIA accessibility. Style tabs according to design tokens with underline indicator for active tab.",
+            "status": "pending",
+            "testStrategy": "Test tab switching with keyboard and mouse, verify underline styling appears correctly, test accessibility with screen readers"
+          },
+          {
+            "id": 2,
+            "title": "Roster Tab Implementation",
+            "description": "Build the Roster tab with TeamDashboard StatCard grid and RosterTable DataTable with PlayerAvatar components",
+            "dependencies": [],
+            "details": "Implement TeamDashboard with StatCard v2 grid layout showing team statistics. Create RosterTable using DataTable component with PlayerAvatar integration. Add sorting, filtering, and pagination functionality. Handle loading and empty states for roster data.",
+            "status": "pending",
+            "testStrategy": "Test DataTable sorting/filtering with roster data, verify PlayerAvatar displays correctly, test loading and empty states"
+          },
+          {
+            "id": 3,
+            "title": "History Tab with Match Data",
+            "description": "Create History tab featuring MatchHistoryTable and ScoreDisplay components for team match history",
+            "dependencies": [],
+            "details": "Build MatchHistoryTable using DataTable with match data including dates, opponents, and results. Integrate ScoreDisplay component for match scores. Add filtering by match type, date range, and result. Implement pagination for large match history datasets.",
+            "status": "pending",
+            "testStrategy": "Test match history filtering and sorting, verify ScoreDisplay formatting, test pagination with large datasets"
+          },
+          {
+            "id": 4,
+            "title": "Matchmaking Tab with EmptyState",
+            "description": "Implement Matchmaking tab with EmptyState component and navigation to matchmaking page",
+            "dependencies": [],
+            "details": "Create EmptyState component for matchmaking tab with appropriate messaging and call-to-action button. Implement navigation to /matchmaking route when user clicks the action button. Style according to design system with proper spacing and typography.",
+            "status": "pending",
+            "testStrategy": "Test EmptyState display and navigation to matchmaking page, verify styling consistency"
+          },
+          {
+            "id": 5,
+            "title": "Lineup Tab with Visual Field",
+            "description": "Build Lineup tab featuring polished LineupVisual field component for team formation display",
+            "dependencies": [],
+            "details": "Implement LineupVisual component with interactive field visualization. Display player positions with PlayerAvatar components. Add hover states and position labels. Ensure responsive design for different screen sizes. Polish visual styling with proper field graphics and player positioning.",
+            "status": "pending",
+            "testStrategy": "Test LineupVisual interactions and hover states, verify responsive behavior, test player position accuracy"
+          },
+          {
+            "id": 6,
+            "title": "Invite Dialog Implementation",
+            "description": "Create team invite dialog using shadcn components with proper modal state management",
+            "dependencies": [],
+            "details": "Build InviteDialog component using shadcn Dialog primitives. Include form fields for player invitation (email, message). Implement form validation and submission handling. Add loading states and success/error feedback. Ensure proper focus management and keyboard escape functionality.",
+            "status": "pending",
+            "testStrategy": "Test dialog open/close functionality, form validation, keyboard escape, focus management, and invitation submission"
+          },
+          {
+            "id": 7,
+            "title": "State Management and Data Loading",
+            "description": "Implement comprehensive state management for all tabs including data fetching, loading states, and error handling",
+            "dependencies": [],
+            "details": "Create state management system for tab data using React Query or similar. Implement data fetching for roster, history, and lineup data. Add loading skeletons for each tab. Handle error states with proper error boundaries. Ensure data persistence across tab switches.",
+            "status": "pending",
+            "testStrategy": "Test data loading for all tabs, verify loading states display correctly, test error handling and recovery"
+          },
+          {
+            "id": 8,
+            "title": "Integration Testing and Visual Consistency",
+            "description": "Comprehensive testing of tab switching, DataTable functionality, and overall visual consistency across the team page",
+            "dependencies": [],
+            "details": "Perform end-to-end testing of all tab functionality. Verify DataTable operations work correctly across Roster and History tabs. Test LineupVisual interactions and InviteDialog modal behavior. Ensure visual consistency with design system tokens and responsive behavior across devices.",
+            "status": "pending",
+            "testStrategy": "Run comprehensive E2E tests covering all tab interactions, DataTable functionality, modal behavior, and responsive design validation"
+          }
+        ]
+      },
+      {
+        "id": 36,
+        "title": "Team Sub-Pages Redesign",
+        "description": "Redesign /team/claim wizard (3-step progress indicator), /team/lineup drag-drop field, and other team sub-pages. Apply design tokens and shared components.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          35
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement /team/claim wizard with 3-step progress indicator",
+            "description": "Create the team claim wizard with a 3-step progress flow including form validation and progress tracking",
+            "dependencies": [],
+            "details": "Build a multi-step wizard component with: (1) Step indicator showing current/completed steps, (2) Form validation for each step, (3) Navigation between steps with data persistence, (4) Final submission handling, (5) Error states and loading indicators throughout the flow",
+            "status": "pending",
+            "testStrategy": "Test step navigation, form validation on each step, data persistence between steps, error handling, and complete wizard flow submission"
+          },
+          {
+            "id": 2,
+            "title": "Implement /team/lineup drag-drop field functionality",
+            "description": "Create interactive drag-and-drop field for team lineup management with accessibility support",
+            "dependencies": [],
+            "details": "Develop drag-drop interface with: (1) Visual field representation, (2) Player cards that can be dragged to positions, (3) Drop zones with visual feedback, (4) Keyboard accessibility for drag-drop, (5) Position validation and constraints, (6) Save/reset functionality for lineup changes",
+            "status": "pending",
+            "testStrategy": "Test drag-drop interactions, keyboard navigation, position constraints, visual feedback, mobile touch support, and accessibility compliance"
+          },
+          {
+            "id": 3,
+            "title": "Identify and specify other team sub-pages requirements",
+            "description": "Audit existing team sub-pages and create specifications for redesign beyond claim wizard and lineup",
+            "dependencies": [],
+            "details": "Conduct comprehensive review of: (1) All current team sub-pages and routes, (2) User flows and functionality requirements, (3) Design specifications for each identified page, (4) Priority ranking for implementation, (5) Integration points with main team page tabs",
+            "status": "pending",
+            "testStrategy": "Review current pages for completeness, validate specifications with stakeholders, ensure consistency with main team page design"
+          },
+          {
+            "id": 4,
+            "title": "Apply design tokens and shared components across team sub-pages",
+            "description": "Implement consistent design system application across all team sub-pages using established tokens and components",
+            "dependencies": [],
+            "details": "Systematically apply: (1) Design tokens for colors, spacing, typography, (2) Shared components from component library, (3) Consistent layout patterns and navigation, (4) Responsive design implementation, (5) Brand consistency with main team page, (6) Performance optimization for component reuse",
+            "status": "pending",
+            "testStrategy": "Visual consistency audit, component library usage verification, responsive design testing, performance benchmarking, cross-browser compatibility"
+          },
+          {
+            "id": 5,
+            "title": "Comprehensive testing of wizard flow and drag-drop interactions",
+            "description": "Execute thorough testing of all interactive elements including wizard progression and drag-drop functionality",
+            "dependencies": [],
+            "details": "Comprehensive testing including: (1) End-to-end wizard flow testing with various data scenarios, (2) Drag-drop interaction testing across devices, (3) Form validation testing with edge cases, (4) Accessibility testing with screen readers, (5) Performance testing under load, (6) Integration testing with backend APIs",
+            "status": "pending",
+            "testStrategy": "Automated E2E tests for wizard flow, manual accessibility testing, cross-device drag-drop testing, form validation edge cases, performance profiling, user acceptance testing"
+          }
+        ]
+      },
+      {
+        "id": 37,
+        "title": "Matchmaking Page Redesign",
+        "description": "Redesign /matchmaking with animated QueuePanel, styled ConfrontationChat with message bubbles, visual countdown, and status indicators (searching, matched, confirmed, expired).",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30,
+          31
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "QueuePanel with Animated State Transitions",
+            "description": "Create an animated QueuePanel component that smoothly transitions between different matchmaking states with visual feedback and loading animations.",
+            "dependencies": [],
+            "details": "Implement QueuePanel component with CSS animations or Framer Motion for state transitions (idle → searching → matched → confirmed). Include pulse animations for searching state, smooth fade transitions between states, and loading spinners. Optimize performance with proper animation cleanup and reduced motion preferences.",
+            "status": "pending",
+            "testStrategy": "Test all state transitions, animation performance, reduced motion accessibility, and visual consistency across different screen sizes"
+          },
+          {
+            "id": 2,
+            "title": "ConfrontationChat with Message Bubbles and Styling",
+            "description": "Design and implement a styled chat interface with message bubbles, user avatars, timestamps, and proper message formatting for matchmaking conversations.",
+            "dependencies": [],
+            "details": "Create ConfrontationChat component with message bubble styling (different colors for self/other), user avatars, timestamps, message status indicators (sent/delivered/read). Implement auto-scroll to latest messages, message input field with send button, and proper text wrapping for long messages.",
+            "status": "pending",
+            "testStrategy": "Test message display with various text lengths, emoji support, timestamp formatting, auto-scroll behavior, and keyboard navigation for message input"
+          },
+          {
+            "id": 3,
+            "title": "Visual Countdown Timer Implementation",
+            "description": "Implement a visual countdown timer that displays remaining time for matchmaking actions with progress indicators and time-based visual feedback.",
+            "dependencies": [],
+            "details": "Create countdown timer component with circular progress bar or linear progress indicator. Display time in MM:SS format, change colors as time runs low (green → yellow → red), and trigger visual/audio alerts at specific intervals. Handle timer pause/resume and cleanup on component unmount.",
+            "status": "pending",
+            "testStrategy": "Test timer accuracy, visual progress updates, color transitions, alert triggers, and proper cleanup when component unmounts or timer expires"
+          },
+          {
+            "id": 4,
+            "title": "Status Indicators with Visual Feedback",
+            "description": "Create comprehensive status indicator system for matchmaking states (searching, matched, confirmed, expired) with clear visual feedback and state-specific styling.",
+            "dependencies": [],
+            "details": "Implement status indicator components with distinct visual styles for each state: searching (animated spinner), matched (success checkmark), confirmed (double checkmark), expired (warning/error icon). Include status text, appropriate colors from design system, and smooth transitions between states.",
+            "status": "pending",
+            "testStrategy": "Test all status states display correctly, transitions are smooth, colors meet accessibility contrast requirements, and status changes are clearly communicated to users"
+          },
+          {
+            "id": 5,
+            "title": "Real-time State Management and WebSocket Integration",
+            "description": "Implement real-time state management for matchmaking with WebSocket integration to handle live updates, match notifications, and synchronized state across clients.",
+            "dependencies": [],
+            "details": "Set up WebSocket connection for real-time matchmaking updates, implement state management (Redux/Zustand) for matchmaking flow, handle connection/disconnection gracefully, sync timer states across clients, and manage message delivery in ConfrontationChat with proper error handling and reconnection logic.",
+            "status": "pending",
+            "testStrategy": "Test WebSocket connection stability, state synchronization across multiple clients, reconnection handling, message delivery reliability, and error scenarios"
+          },
+          {
+            "id": 6,
+            "title": "Testing Animations, State Transitions, and User Interactions",
+            "description": "Comprehensive testing suite for all matchmaking page animations, state transitions, user interactions, and edge cases to ensure smooth user experience.",
+            "dependencies": [],
+            "details": "Create automated tests for animation performance, state transition logic, user interaction flows (accept/decline matches), edge cases (network disconnection, timer expiry), accessibility compliance (keyboard navigation, screen readers), and cross-browser compatibility. Include visual regression tests for UI consistency.",
+            "status": "pending",
+            "testStrategy": "Run comprehensive test suite covering unit tests for components, integration tests for state management, E2E tests for complete user flows, performance tests for animations, and accessibility audits"
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "title": "Tournament Pages Redesign",
+        "description": "Redesign /tournaments list with banner-style TournamentCard (VirtualNexusArena inspiration), and /tournaments/[id] detail page migrating inline styles to Tailwind tokens. Refine BracketView, HallOfFameCard, EnrollButton.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30,
+          31
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create banner-style TournamentCard component",
+            "description": "Design and implement a new TournamentCard component with banner-style layout inspired by VirtualNexusArena, featuring tournament image, title, status, and call-to-action button",
+            "dependencies": [],
+            "details": "Create TournamentCard component with responsive banner layout including tournament hero image, tournament title overlay, status badge (upcoming/active/completed), participant count, prize pool display, and prominent CTA button. Use Tailwind tokens for consistent styling and ensure mobile responsiveness.",
+            "status": "pending",
+            "testStrategy": "Test component rendering with various tournament data states, responsive behavior across screen sizes, image loading states, and CTA button interactions"
+          },
+          {
+            "id": 2,
+            "title": "Redesign /tournaments list page layout",
+            "description": "Implement the tournaments list page using the new banner-style TournamentCard components in a grid layout with filtering and search capabilities",
+            "dependencies": [],
+            "details": "Update /tournaments page to display tournaments in a responsive grid using the new TournamentCard component. Add search functionality, status filters (upcoming/active/completed), and pagination. Implement loading states with skeleton components and empty state handling.",
+            "status": "pending",
+            "testStrategy": "Test page with real tournament data, search and filter functionality, pagination, loading states, and empty state display"
+          },
+          {
+            "id": 3,
+            "title": "Migrate /tournaments/[id] inline styles to Tailwind tokens",
+            "description": "Systematically refactor the tournament detail page by replacing all inline styles with Tailwind utility classes and design system tokens",
+            "dependencies": [],
+            "details": "Audit existing /tournaments/[id] page for inline styles, create mapping to equivalent Tailwind classes using design system tokens. Replace all style attributes with Tailwind utilities, ensure consistent spacing, colors, and typography. Update any custom CSS to use Tailwind approach.",
+            "status": "pending",
+            "testStrategy": "Visual regression testing to ensure no styling changes, validate all interactive elements maintain functionality, test responsive behavior"
+          },
+          {
+            "id": 4,
+            "title": "Refine BracketView component with enhanced interactions",
+            "description": "Improve the BracketView component with better visual design, smooth animations, and enhanced user interactions for tournament bracket navigation",
+            "dependencies": [],
+            "details": "Enhance BracketView with improved node styling using Tailwind tokens, add smooth transitions for bracket progression, implement zoom and pan functionality for large brackets, add match result tooltips, and improve mobile bracket navigation with touch gestures.",
+            "status": "pending",
+            "testStrategy": "Test bracket rendering with various tournament sizes, zoom/pan interactions, touch gestures on mobile, match result display, and performance with large bracket trees"
+          },
+          {
+            "id": 5,
+            "title": "Redesign HallOfFameCard and EnrollButton components",
+            "description": "Update HallOfFameCard and EnrollButton components with new design system tokens and improved visual hierarchy",
+            "dependencies": [],
+            "details": "Redesign HallOfFameCard with better player showcase layout, winner badges, achievement highlights using Tailwind tokens. Update EnrollButton with consistent styling, loading states, disabled states, and proper accessibility attributes. Ensure both components follow design system guidelines.",
+            "status": "pending",
+            "testStrategy": "Test HallOfFameCard with various winner data, EnrollButton states (enabled/disabled/loading), accessibility with keyboard navigation, and visual consistency with design system"
+          },
+          {
+            "id": 6,
+            "title": "Comprehensive testing and responsive design validation",
+            "description": "Conduct thorough testing of all tournament page components including card rendering, bracket interactions, and responsive design across devices",
+            "dependencies": [],
+            "details": "Perform end-to-end testing of tournament list and detail pages, validate TournamentCard rendering with edge cases, test BracketView interactions across devices, verify responsive design breakpoints, conduct accessibility audit, and perform cross-browser compatibility testing.",
+            "status": "pending",
+            "testStrategy": "Execute comprehensive test suite covering component rendering, user interactions, responsive breakpoints, accessibility compliance, performance metrics, and cross-browser functionality"
+          }
+        ]
+      },
+      {
+        "id": 39,
+        "title": "Detail Pages Redesign - Players and Matches",
+        "description": "Redesign /players/[id] with player profile card, StatCard v2 grid, DataTable history. Redesign /matches/[id] with ScoreDisplay, home/away DataTables. Add Breadcrumb navigation to both.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Player Profile Card Layout for /players/[id]",
+            "description": "Create the main player profile card component with player information display for the player detail page",
+            "dependencies": [],
+            "details": "Implement PlayerProfileCard component with PlayerAvatar, player name, position badge, and key stats. Use design tokens for consistent spacing and typography. Include loading skeleton state and error handling for missing player data.",
+            "status": "pending",
+            "testStrategy": "Test with real player data, empty states, loading skeleton, and responsive layout across different screen sizes"
+          },
+          {
+            "id": 2,
+            "title": "StatCard v2 Grid for Player Statistics",
+            "description": "Implement StatCard v2 grid layout to display comprehensive player statistics on the player detail page",
+            "dependencies": [],
+            "details": "Create a responsive grid of StatCard v2 components showing player performance metrics like goals, assists, matches played, win rate, etc. Use consistent spacing and ensure proper data formatting with trend indicators where applicable.",
+            "status": "pending",
+            "testStrategy": "Test grid responsiveness, data accuracy, loading states, and visual consistency with other StatCard implementations"
+          },
+          {
+            "id": 3,
+            "title": "DataTable for Player Match History",
+            "description": "Implement DataTable component to display the player's match history with sorting and filtering capabilities",
+            "dependencies": [],
+            "details": "Create MatchHistoryTable using DataTable component with columns for date, opponent, result, score, and performance stats. Include sorting functionality, pagination, and empty state handling. Integrate with ScoreDisplay for match results.",
+            "status": "pending",
+            "testStrategy": "Test DataTable sorting, pagination, empty states, and data accuracy with real match history data"
+          },
+          {
+            "id": 4,
+            "title": "ScoreDisplay Component for /matches/[id]",
+            "description": "Implement ScoreDisplay component to show match scores and results on the match detail page",
+            "dependencies": [],
+            "details": "Create ScoreDisplay component showing home vs away team scores, match status, date/time, and venue information. Include proper styling for different match states (upcoming, live, completed) and team branding elements.",
+            "status": "pending",
+            "testStrategy": "Test with different match states, team data, and responsive design across various screen sizes"
+          },
+          {
+            "id": 5,
+            "title": "Home/Away DataTables for Match Details",
+            "description": "Implement separate DataTables for home and away team player statistics on the match detail page",
+            "dependencies": [],
+            "details": "Create two DataTable components displaying player statistics for home and away teams. Include columns for player name, position, goals, assists, and other match-specific stats. Ensure consistent styling and proper data organization.",
+            "status": "pending",
+            "testStrategy": "Test both DataTables with real match data, sorting functionality, and visual consistency between home/away sections"
+          },
+          {
+            "id": 6,
+            "title": "Breadcrumb Navigation and Consistency Testing",
+            "description": "Implement Breadcrumb navigation component and ensure consistency across both player and match detail pages",
+            "dependencies": [],
+            "details": "Add Breadcrumb component to both /players/[id] and /matches/[id] pages showing proper navigation hierarchy. Ensure consistent layout, spacing, and component behavior across both pages. Implement proper routing and accessibility features.",
+            "status": "pending",
+            "testStrategy": "Test breadcrumb navigation functionality, keyboard accessibility, visual consistency between pages, and proper routing behavior"
+          }
+        ]
+      },
+      {
+        "id": 40,
+        "title": "Public Pages - Rankings and Hall of Fame",
+        "description": "Build /rankings from scratch: filterable leaderboard (players by Pit Rating, clubs by wins) with DataTable. Build /hall-of-fame from scratch: award categories, champions per season. Currently stubs.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "/rankings page layout and design",
+            "description": "Create the basic layout and visual design for the rankings page including header, navigation, and overall structure",
+            "dependencies": [],
+            "details": "Design and implement the page layout for /rankings with proper header, navigation breadcrumbs, and responsive grid structure. Include sections for player rankings and club rankings with appropriate styling and spacing. Ensure the layout follows the existing design system and is mobile-responsive.",
+            "status": "pending",
+            "testStrategy": "Visual testing across different screen sizes and devices to ensure responsive design works correctly"
+          },
+          {
+            "id": 2,
+            "title": "Filterable leaderboard DataTable for players (Pit Rating)",
+            "description": "Implement a DataTable component showing players ranked by Pit Rating with filtering and sorting capabilities",
+            "dependencies": [],
+            "details": "Build a DataTable component that displays players sorted by Pit Rating. Include columns for rank, player name, Pit Rating, games played, and other relevant stats. Implement filtering by player name, rating range, and sorting by different columns. Add pagination and search functionality using the existing DataTable component patterns.",
+            "status": "pending",
+            "testStrategy": "Test filtering, sorting, pagination, and data loading. Verify correct ranking calculations and responsive table behavior"
+          },
+          {
+            "id": 3,
+            "title": "Filterable leaderboard DataTable for clubs (wins)",
+            "description": "Implement a DataTable component showing clubs ranked by total wins with filtering and sorting capabilities",
+            "dependencies": [],
+            "details": "Create a DataTable component displaying clubs ranked by total wins. Include columns for rank, club name, total wins, total games, win percentage, and active members. Implement filtering by club name, win count range, and sorting capabilities. Add toggle between player and club rankings views.",
+            "status": "pending",
+            "testStrategy": "Test club ranking calculations, filtering functionality, and seamless switching between player and club views"
+          },
+          {
+            "id": 4,
+            "title": "/hall-of-fame page layout and design",
+            "description": "Create the basic layout and visual design for the hall of fame page showcasing award categories and champions",
+            "dependencies": [],
+            "details": "Design and implement the hall of fame page layout with sections for different award categories, seasonal champions, and historical achievements. Create an elegant, trophy-focused design with proper spacing and visual hierarchy. Include navigation breadcrumbs and ensure mobile responsiveness.",
+            "status": "pending",
+            "testStrategy": "Visual testing for design consistency and responsive behavior across devices"
+          },
+          {
+            "id": 5,
+            "title": "Award categories and champions per season display",
+            "description": "Implement the display logic for award categories and seasonal champions with proper data organization",
+            "dependencies": [],
+            "details": "Build components to display different award categories (e.g., Season Champion, Most Improved Player, Best Newcomer) and their respective winners per season. Create a season selector dropdown and organize champions by year. Include player/club profiles links and achievement descriptions with proper data fetching and state management.",
+            "status": "pending",
+            "testStrategy": "Test season filtering, award category display, and data accuracy for historical champions"
+          },
+          {
+            "id": 6,
+            "title": "Testing filters, data loading, and responsive design",
+            "description": "Comprehensive testing of all filtering functionality, data loading performance, and responsive design across both pages",
+            "dependencies": [],
+            "details": "Perform end-to-end testing of both rankings and hall of fame pages. Test all filtering and sorting functionality, data loading performance with large datasets, error handling for failed requests, and responsive design across mobile, tablet, and desktop. Verify SEO-friendly URLs and proper meta tags for public pages.",
+            "status": "pending",
+            "testStrategy": "Automated testing for filters and sorting, performance testing for data loading, manual testing for responsive design, and SEO validation"
+          }
+        ]
+      },
+      {
+        "id": 41,
+        "title": "Public Landing Page",
+        "description": "New pre-login public page: hero/CTA, open tournaments (reuse TournamentCard), top rankings, latest results, position highlights. Own layout without sidebar. SEO with Open Graph dynamic meta tags and JSON-LD for tournaments. Inspiration: VirtualNexusArena homepage.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          31,
+          38,
+          40
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Landing Page Layout Without Sidebar",
+            "description": "Design and implement a custom layout for the public landing page that doesn't include the standard sidebar navigation used in authenticated pages.",
+            "dependencies": [],
+            "details": "Create a new layout component specifically for the landing page that provides full-width content area without sidebar. Implement responsive design patterns and ensure proper header/footer integration. Use Tailwind CSS for styling consistency.",
+            "status": "pending",
+            "testStrategy": "Test layout responsiveness across different screen sizes and verify proper spacing and alignment"
+          },
+          {
+            "id": 2,
+            "title": "Build Hero Section with Call-to-Action",
+            "description": "Implement the main hero section featuring compelling copy, visual elements, and prominent call-to-action buttons to drive user engagement.",
+            "dependencies": [],
+            "details": "Design hero section with engaging headline, subtext, and primary CTA button (likely 'Join Tournament' or 'Get Started'). Include background imagery or graphics inspired by VirtualNexusArena. Implement hover effects and ensure mobile responsiveness.",
+            "status": "pending",
+            "testStrategy": "Test CTA button functionality, visual hierarchy, and conversion tracking setup"
+          },
+          {
+            "id": 3,
+            "title": "Implement Open Tournaments Section with TournamentCard Reuse",
+            "description": "Create a section displaying currently open tournaments by reusing the existing TournamentCard component from the tournaments redesign.",
+            "dependencies": [],
+            "details": "Fetch and display open tournaments using the redesigned TournamentCard component. Implement proper data fetching, loading states, and error handling. Ensure responsive grid layout and limit to featured tournaments for landing page optimization.",
+            "status": "pending",
+            "testStrategy": "Verify tournament data accuracy, card responsiveness, and proper handling of empty states"
+          },
+          {
+            "id": 4,
+            "title": "Create Top Rankings Section",
+            "description": "Build a section showcasing top-ranked players and clubs to highlight competitive achievements and encourage participation.",
+            "dependencies": [],
+            "details": "Display top players by Pit Rating and top clubs by wins using data from the rankings system. Create compact ranking cards with player/club avatars, names, and key stats. Implement 'View All Rankings' link to full rankings page.",
+            "status": "pending",
+            "testStrategy": "Test ranking data accuracy, proper sorting, and navigation to full rankings page"
+          },
+          {
+            "id": 5,
+            "title": "Build Latest Results Section",
+            "description": "Implement a section displaying recent tournament results and match outcomes to showcase platform activity and engagement.",
+            "dependencies": [],
+            "details": "Create a feed of recent tournament completions, notable matches, and championship results. Design result cards with tournament names, winners, dates, and key highlights. Implement proper date formatting and result categorization.",
+            "status": "pending",
+            "testStrategy": "Verify result data freshness, proper chronological ordering, and result card formatting"
+          },
+          {
+            "id": 6,
+            "title": "Implement Position Highlights Section",
+            "description": "Create a section featuring notable chess positions, tactical puzzles, or game highlights to engage chess enthusiasts.",
+            "dependencies": [],
+            "details": "Design and implement position showcase with chess board diagrams, position descriptions, and educational content. Include interactive elements or links to related tournaments/players. Ensure proper chess notation display and mobile optimization.",
+            "status": "pending",
+            "testStrategy": "Test chess position rendering, notation accuracy, and interactive element functionality"
+          },
+          {
+            "id": 7,
+            "title": "Implement SEO with Open Graph and JSON-LD",
+            "description": "Add comprehensive SEO optimization including dynamic Open Graph meta tags, JSON-LD structured data for tournaments, and robots.txt configuration.",
+            "dependencies": [],
+            "details": "Implement Next.js metadata API for dynamic meta tags, create Open Graph images for social sharing, add JSON-LD structured data for tournaments and events, configure robots.txt for proper crawling, and implement sitemap integration for the landing page.",
+            "status": "pending",
+            "testStrategy": "Validate meta tags with social media debuggers, test JSON-LD with Google's structured data testing tool, and verify robots.txt accessibility"
+          }
+        ]
+      },
+      {
+        "id": 42,
+        "title": "Admin Panel Redesign",
+        "description": "Redesign /admin 7 tabs: DashboardMetrics with StatCard v2, CollectControl/DiscoveryControl with StatusBadge, FinancialDashboard with charts/DataTable, GlobalSettings/SubscriptionManager/ManualClubId with updated form tokens.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30
+        ],
+        "priority": "low",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "DashboardMetrics Tab with StatCard v2 Grid",
+            "description": "Implement the DashboardMetrics tab featuring a grid layout of StatCard v2 components to display key admin metrics and KPIs.",
+            "dependencies": [],
+            "details": "Create DashboardMetrics component with responsive grid layout using StatCard v2 components. Display admin-relevant metrics like user counts, activity stats, system health indicators. Implement proper loading states and error handling for metric data fetching.",
+            "status": "pending",
+            "testStrategy": "Test StatCard v2 grid responsiveness, loading states, metric data accuracy, and empty state handling"
+          },
+          {
+            "id": 2,
+            "title": "CollectControl Tab with StatusBadge Integration",
+            "description": "Build the CollectControl tab with StatusBadge components to manage collection-related administrative functions.",
+            "dependencies": [],
+            "details": "Implement CollectControl interface with StatusBadge components to show collection statuses (active, pending, disabled). Include controls for managing collection settings, viewing collection metrics, and updating collection states with proper form validation.",
+            "status": "pending",
+            "testStrategy": "Test StatusBadge display accuracy, collection control functionality, form validation, and state updates"
+          },
+          {
+            "id": 3,
+            "title": "DiscoveryControl Tab with StatusBadge Components",
+            "description": "Create the DiscoveryControl tab utilizing StatusBadge components for managing discovery features and settings.",
+            "dependencies": [],
+            "details": "Build DiscoveryControl panel with StatusBadge components to display discovery feature statuses. Include administrative controls for enabling/disabling discovery features, monitoring discovery metrics, and managing discovery-related configurations.",
+            "status": "pending",
+            "testStrategy": "Test StatusBadge functionality, discovery control operations, configuration updates, and status synchronization"
+          },
+          {
+            "id": 4,
+            "title": "FinancialDashboard Tab with Charts and DataTable",
+            "description": "Develop the FinancialDashboard tab featuring interactive charts and DataTable components for financial data visualization and management.",
+            "dependencies": [],
+            "details": "Create comprehensive FinancialDashboard with chart components for revenue trends, expense tracking, and financial KPIs. Implement DataTable for detailed financial records with sorting, filtering, and pagination. Use branded colors and ensure proper data formatting.",
+            "status": "pending",
+            "testStrategy": "Test chart interactivity, DataTable functionality, financial data accuracy, sorting/filtering, and responsive design"
+          },
+          {
+            "id": 5,
+            "title": "GlobalSettings Tab with Updated Form Tokens",
+            "description": "Implement the GlobalSettings tab with modernized form components using updated design tokens for system-wide configuration management.",
+            "dependencies": [],
+            "details": "Build GlobalSettings interface with form components styled using updated design tokens. Include settings for system configuration, feature toggles, and global parameters. Implement proper form validation, loading states, and success/error feedback.",
+            "status": "pending",
+            "testStrategy": "Test form validation, settings persistence, token styling consistency, and configuration update functionality"
+          },
+          {
+            "id": 6,
+            "title": "SubscriptionManager Tab with Form Token Updates",
+            "description": "Create the SubscriptionManager tab with form components utilizing updated design tokens for subscription administration.",
+            "dependencies": [],
+            "details": "Develop SubscriptionManager interface with forms styled using updated design tokens. Include subscription management features, billing controls, and user subscription oversight. Implement form validation, loading states, and proper error handling.",
+            "status": "pending",
+            "testStrategy": "Test subscription management operations, form validation, token styling, and billing integration functionality"
+          },
+          {
+            "id": 7,
+            "title": "ManualClubId Tab and Admin Panel State Management",
+            "description": "Implement the ManualClubId tab with updated form tokens and establish comprehensive state management for the entire admin panel.",
+            "dependencies": [],
+            "details": "Create ManualClubId management interface with form components using updated design tokens. Implement global state management for admin panel tab navigation, data sharing between tabs, and centralized loading/error states. Include comprehensive testing coverage.",
+            "status": "pending",
+            "testStrategy": "Test ManualClubId functionality, tab navigation, state management across all tabs, data persistence, and overall admin panel integration"
+          }
+        ]
+      },
+      {
+        "id": 43,
+        "title": "Moderation Panel Redesign",
+        "description": "Redesign /moderation 4 tabs: ClaimQueue with card-based review, DisputeViewer with evidence display, TournamentManager forms, UserManagement table with role badges and StatusBadge.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          30
+        ],
+        "priority": "low",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "ClaimQueue Tab with Card-Based Review Layout",
+            "description": "Implement the ClaimQueue tab with card-based layout for reviewing claims in the moderation panel",
+            "dependencies": [],
+            "details": "Create ClaimQueue tab component with card-based layout for claim review. Implement claim cards with essential information display, action buttons for approve/reject/pending, and pagination for large datasets. Use shadcn Card components and ensure responsive design. Include claim status indicators and timestamps.",
+            "status": "pending",
+            "testStrategy": "Test claim card rendering, action button functionality, pagination controls, responsive layout on different screen sizes, and claim status updates"
+          },
+          {
+            "id": 2,
+            "title": "DisputeViewer Tab with Evidence Display",
+            "description": "Build the DisputeViewer tab with organized evidence display and dispute management features",
+            "dependencies": [],
+            "details": "Develop DisputeViewer tab with evidence organization and display capabilities. Implement evidence gallery with image/document preview, dispute timeline, participant information, and resolution actions. Use proper file handling and preview components. Include filtering and sorting options for disputes.",
+            "status": "pending",
+            "testStrategy": "Test evidence file display, dispute timeline rendering, filtering functionality, file preview modals, and dispute resolution workflow"
+          },
+          {
+            "id": 3,
+            "title": "TournamentManager Tab with Forms",
+            "description": "Create the TournamentManager tab with tournament creation and management forms",
+            "dependencies": [],
+            "details": "Build TournamentManager tab with comprehensive tournament management forms. Include tournament creation form, bracket management, participant registration, and tournament settings. Implement form validation, date/time pickers, and tournament status management. Use shadcn form components for consistency.",
+            "status": "pending",
+            "testStrategy": "Test form validation, tournament creation workflow, bracket generation, participant management, and tournament status updates"
+          },
+          {
+            "id": 4,
+            "title": "UserManagement Tab with Role Badges and StatusBadge",
+            "description": "Implement the UserManagement tab with user table, role badges, and status indicators",
+            "dependencies": [],
+            "details": "Create UserManagement tab with DataTable for user management. Implement role badges (admin, moderator, user), StatusBadge component for user status (active, suspended, banned), user search and filtering, and bulk actions. Include user profile quick view and role assignment functionality.",
+            "status": "pending",
+            "testStrategy": "Test DataTable functionality, role badge display, status badge updates, user search/filtering, bulk actions, and role assignment workflow"
+          },
+          {
+            "id": 5,
+            "title": "Testing Review Workflows and Integration",
+            "description": "Comprehensive testing of all moderation panel workflows, form submissions, and data display integration",
+            "dependencies": [],
+            "details": "Conduct end-to-end testing of all moderation panel tabs and workflows. Test tab switching, data consistency across tabs, form submissions, review workflows, and integration with backend APIs. Verify responsive design, accessibility compliance, and error handling across all components.",
+            "status": "pending",
+            "testStrategy": "Perform comprehensive E2E testing including tab navigation, cross-tab data consistency, form submission flows, API integration, responsive design testing, and accessibility audit"
+          }
+        ]
+      },
+      {
+        "id": 44,
+        "title": "Utility Pages Redesign",
+        "description": "Apply design system to payment pages (remove bg-gray-950 hardcoded), /settings/notifications with toggle components, /unauthorized error page with P.I.T branding, 404/500 pages.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          29
+        ],
+        "priority": "low",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Remove hardcoded colors from payment pages and apply design tokens",
+            "description": "Replace hardcoded bg-gray-950 and other hardcoded colors in payment pages with design system tokens",
+            "dependencies": [],
+            "details": "Audit all payment-related pages to identify hardcoded colors like bg-gray-950. Replace with appropriate design system tokens from the color palette. Ensure consistent theming across all payment flows including checkout, billing, and payment history pages.",
+            "status": "pending",
+            "testStrategy": "Test payment pages in both light and dark themes to ensure proper token application and visual consistency"
+          },
+          {
+            "id": 2,
+            "title": "Implement /settings/notifications page with toggle components",
+            "description": "Create notifications settings page with proper toggle components using design system",
+            "dependencies": [],
+            "details": "Build the /settings/notifications page using shadcn toggle components. Include notification preferences for email, push, and in-app notifications. Apply proper spacing, typography, and color tokens. Ensure accessibility with proper ARIA labels and keyboard navigation.",
+            "status": "pending",
+            "testStrategy": "Test toggle functionality, keyboard navigation, screen reader compatibility, and state persistence"
+          },
+          {
+            "id": 3,
+            "title": "Design /unauthorized error page with P.I.T branding",
+            "description": "Create branded unauthorized access error page with P.I.T visual identity",
+            "dependencies": [],
+            "details": "Design and implement /unauthorized error page featuring P.I.T logo, brand colors, and consistent typography. Include clear messaging about access restrictions and navigation options back to authorized areas. Apply design system tokens for spacing and colors.",
+            "status": "pending",
+            "testStrategy": "Test page rendering, branding consistency, and navigation links functionality"
+          },
+          {
+            "id": 4,
+            "title": "Create 404 error page with P.I.T branding",
+            "description": "Design and implement 404 not found page with consistent P.I.T branding and helpful navigation",
+            "dependencies": [],
+            "details": "Build 404 error page with P.I.T logo, brand colors, and user-friendly messaging. Include search functionality or popular page links to help users find what they're looking for. Use design system tokens for consistent styling and spacing.",
+            "status": "pending",
+            "testStrategy": "Test 404 page triggers correctly for invalid URLs, branding displays properly, and navigation links work"
+          },
+          {
+            "id": 5,
+            "title": "Develop 500 error page with branding and support information",
+            "description": "Create server error page with P.I.T branding and support contact information",
+            "dependencies": [],
+            "details": "Implement 500 server error page featuring P.I.T branding, apologetic messaging, and clear support contact information. Include error reporting mechanism and estimated resolution timeframes. Apply design system tokens for consistent visual treatment.",
+            "status": "pending",
+            "testStrategy": "Test error page displays during server errors, support links are functional, and branding is consistent"
+          }
+        ]
+      },
+      {
+        "id": 45,
+        "title": "SEO, OG Images and Social Engine",
+        "description": "Dynamic Open Graph for player profiles, tournaments, teams. Sitemap XML for public pages. JSON-LD for tournaments with dates. Dynamic meta tags via Next.js metadata API. robots.txt configuration.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          41
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Dynamic Open Graph meta tags for player profiles",
+            "description": "Implement dynamic Open Graph meta tags for player profile pages using Next.js metadata API",
+            "dependencies": [],
+            "details": "Create dynamic meta tags for player profiles including og:title, og:description, og:image, og:url. Use Next.js generateMetadata function to fetch player data and generate appropriate meta tags. Include player name, stats, and profile image in the Open Graph data.",
+            "status": "pending",
+            "testStrategy": "Test meta tags appear correctly in social media preview tools, verify dynamic data loads properly for different player profiles"
+          },
+          {
+            "id": 2,
+            "title": "Dynamic Open Graph meta tags for tournaments and teams",
+            "description": "Implement dynamic Open Graph meta tags for tournament and team pages using Next.js metadata API",
+            "dependencies": [],
+            "details": "Create dynamic meta tags for tournament and team pages including og:title, og:description, og:image, og:url. Use Next.js generateMetadata function to fetch tournament/team data and generate appropriate meta tags. Include tournament dates, team names, and relevant images in the Open Graph data.",
+            "status": "pending",
+            "testStrategy": "Test meta tags appear correctly for tournaments and teams in social media preview tools, verify dynamic content loads for different entities"
+          },
+          {
+            "id": 3,
+            "title": "Sitemap XML generation for public pages",
+            "description": "Generate dynamic sitemap.xml for all public pages including tournaments, players, and teams",
+            "dependencies": [],
+            "details": "Create sitemap.xml generation using Next.js API routes or static generation. Include all public pages: landing page, tournament pages, player profiles, team pages. Set appropriate priority and changefreq values. Ensure sitemap updates automatically when new content is added.",
+            "status": "pending",
+            "testStrategy": "Verify sitemap.xml is accessible at /sitemap.xml, contains all public pages, validates against XML sitemap standards"
+          },
+          {
+            "id": 4,
+            "title": "JSON-LD structured data for tournaments with dates",
+            "description": "Implement JSON-LD structured data for tournament pages including event dates and details",
+            "dependencies": [],
+            "details": "Add JSON-LD structured data to tournament pages using schema.org Event markup. Include tournament name, start/end dates, location, description, and organizer information. Embed JSON-LD in the head section of tournament pages using Next.js metadata API.",
+            "status": "pending",
+            "testStrategy": "Validate JSON-LD markup using Google's Rich Results Test tool, verify structured data appears correctly in search results"
+          },
+          {
+            "id": 5,
+            "title": "robots.txt configuration and SEO optimization",
+            "description": "Configure robots.txt file and implement additional SEO optimizations across the application",
+            "dependencies": [],
+            "details": "Create robots.txt file with appropriate directives for search engine crawlers. Include sitemap reference, disallow private pages, allow public content. Add canonical URLs, meta descriptions, and title tags optimization across all public pages. Ensure proper URL structure and internal linking.",
+            "status": "pending",
+            "testStrategy": "Verify robots.txt is accessible and properly formatted, test SEO improvements with tools like Google Search Console, check canonical URLs are correct"
+          }
+        ]
+      },
+      {
+        "id": 46,
+        "title": "Performance Budget and Optimization",
+        "description": "Define JS budget per critical page. Validate lazy-load in admin/moderation. Optimize Recharts and large tables with virtualization. Lighthouse audit for landing and profile (target: 90+ performance, 90+ accessibility). Remove heavy dependencies. Analyze bundle with next/bundle-analyzer.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          44
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define JavaScript Budget for Critical Pages",
+            "description": "Establish performance budgets for JavaScript bundle sizes on critical pages including landing, profile, and team pages",
+            "dependencies": [],
+            "details": "Define specific JS bundle size limits for each critical page (landing, profile, team). Research industry standards and current bundle sizes. Set realistic but ambitious targets for initial JS load, total JS size, and third-party scripts. Document budget thresholds and create monitoring alerts.",
+            "status": "pending",
+            "testStrategy": "Measure current bundle sizes and validate budget enforcement through automated checks"
+          },
+          {
+            "id": 2,
+            "title": "Validate Lazy-Loading in Admin/Moderation Pages",
+            "description": "Implement and validate lazy-loading functionality for admin and moderation interface components",
+            "dependencies": [],
+            "details": "Audit current admin/moderation pages for lazy-loading opportunities. Implement code splitting for heavy admin components, moderation tools, and data tables. Validate that lazy-loaded components load correctly and don't impact user experience. Ensure proper loading states and error handling.",
+            "status": "pending",
+            "testStrategy": "Test lazy-loading behavior with network throttling and verify component loading in different scenarios"
+          },
+          {
+            "id": 3,
+            "title": "Optimize Recharts for Large Datasets",
+            "description": "Implement performance optimizations for Recharts components handling large datasets",
+            "dependencies": [],
+            "details": "Analyze current Recharts usage and identify performance bottlenecks with large datasets. Implement data sampling, virtualization, or pagination for charts. Consider chart-specific optimizations like reducing animation complexity, optimizing re-renders, and implementing proper memoization. Test with realistic large datasets.",
+            "status": "pending",
+            "testStrategy": "Performance testing with large datasets and memory usage monitoring during chart interactions"
+          },
+          {
+            "id": 4,
+            "title": "Implement Large Table Virtualization",
+            "description": "Add virtualization to large data tables to improve rendering performance and memory usage",
+            "dependencies": [],
+            "details": "Identify tables that render large amounts of data and implement virtualization using libraries like react-window or react-virtualized. Ensure proper scrolling behavior, maintain accessibility features, and handle dynamic row heights. Optimize table re-rendering and state management for virtualized tables.",
+            "status": "pending",
+            "testStrategy": "Test table performance with large datasets, verify scrolling behavior, and validate accessibility compliance"
+          },
+          {
+            "id": 5,
+            "title": "Conduct Lighthouse Audits and Optimization",
+            "description": "Perform comprehensive Lighthouse audits on landing and profile pages targeting 90+ scores for performance and accessibility",
+            "dependencies": [],
+            "details": "Run baseline Lighthouse audits on landing and profile pages. Identify and fix performance issues including LCP, FID, CLS metrics. Address accessibility violations and ensure 90+ scores. Implement optimizations like image optimization, critical CSS inlining, and resource preloading. Set up automated Lighthouse monitoring.",
+            "status": "pending",
+            "testStrategy": "Automated Lighthouse CI checks and manual audits across different devices and network conditions"
+          },
+          {
+            "id": 6,
+            "title": "Bundle Analysis and Heavy Dependency Removal",
+            "description": "Analyze application bundle with next/bundle-analyzer and remove or replace heavy dependencies",
+            "dependencies": [],
+            "details": "Set up next/bundle-analyzer to visualize bundle composition. Identify heavy dependencies and unused code. Replace heavy libraries with lighter alternatives where possible. Implement tree-shaking optimizations and remove dead code. Document dependency decisions and maintain bundle size monitoring.",
+            "status": "pending",
+            "testStrategy": "Compare bundle sizes before and after optimizations, verify functionality remains intact after dependency changes"
+          }
+        ]
+      },
+      {
+        "id": 47,
+        "title": "Visual Regression Tests and Component Gallery",
+        "description": "Create /dev/components route (dev only) to visualize all shared components with states (default, loading, disabled, hover, error, empty). Screenshot tests for critical pages (profile, team, tournaments, landing). Before/after comparison to protect design system.",
+        "details": "",
+        "testStrategy": "",
+        "status": "pending",
+        "dependencies": [
+          46
+        ],
+        "priority": "medium",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create /dev/components route (dev-only) for component gallery",
+            "description": "Set up a development-only route that displays all shared components in an organized gallery format for visual inspection and testing.",
+            "dependencies": [],
+            "details": "Create src/app/dev/components/page.tsx with conditional rendering (process.env.NODE_ENV === 'development'). Build component gallery layout with navigation sidebar listing all components. Import and display shared components from components/ directory. Add route protection middleware to prevent access in production builds.",
+            "status": "pending",
+            "testStrategy": "Verify route is accessible in development mode only, test that all shared components are properly imported and displayed, confirm production builds exclude the route"
+          },
+          {
+            "id": 2,
+            "title": "Implement component state showcase (default, loading, disabled, hover, error, empty)",
+            "description": "Build comprehensive state visualization for each component showing all possible states and variations in the component gallery.",
+            "dependencies": [],
+            "details": "For each component, create state showcase sections displaying: default state, loading state with skeleton/spinner, disabled state with reduced opacity, hover state simulation, error state with error messages, empty state with placeholder content. Use React state management to toggle between states. Add interactive controls for state switching.",
+            "status": "pending",
+            "testStrategy": "Test all state transitions work correctly, verify visual consistency across states, ensure hover states are properly simulated, validate error and empty states display appropriate content"
+          },
+          {
+            "id": 3,
+            "title": "Screenshot tests for critical pages (profile, team, tournaments, landing)",
+            "description": "Implement automated screenshot testing for key application pages to detect visual regressions and maintain design consistency.",
+            "dependencies": [],
+            "details": "Set up Playwright or Puppeteer for screenshot testing. Create test suites for profile page, team page, tournaments page, and landing page. Configure viewport sizes (desktop, tablet, mobile). Implement screenshot capture with consistent browser settings. Store baseline screenshots in version control. Add test scripts to package.json.",
+            "status": "pending",
+            "testStrategy": "Run screenshot tests across different viewport sizes, verify baseline screenshots are captured correctly, test screenshot comparison functionality, ensure tests run consistently in CI environment"
+          },
+          {
+            "id": 4,
+            "title": "Before/after comparison setup for design system protection",
+            "description": "Establish automated visual comparison system to detect design system changes and protect against unintended visual regressions.",
+            "dependencies": [],
+            "details": "Implement visual diff comparison using tools like Percy, Chromatic, or custom solution with pixelmatch. Set up baseline image management system. Configure threshold settings for acceptable differences. Create reporting system for visual changes. Add approval workflow for intentional design changes. Store comparison results and history.",
+            "status": "pending",
+            "testStrategy": "Test visual diff detection with intentional changes, verify threshold settings catch regressions but allow minor acceptable differences, validate approval workflow for design updates, ensure baseline management works correctly"
+          },
+          {
+            "id": 5,
+            "title": "CI/CD integration for automated visual regression testing",
+            "description": "Integrate visual regression tests into the continuous integration pipeline to automatically detect visual changes on every pull request and deployment.",
+            "dependencies": [],
+            "details": "Add visual regression tests to GitHub Actions workflow. Configure test execution on pull requests and main branch pushes. Set up artifact storage for screenshots and comparison results. Implement PR status checks that block merging on visual regressions. Add notification system for test failures. Configure parallel test execution for faster feedback.",
+            "status": "pending",
+            "testStrategy": "Test CI/CD pipeline triggers visual tests correctly, verify PR blocking works for failed visual tests, ensure screenshot artifacts are properly stored and accessible, validate notification system sends alerts for failures"
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-03-20T00:33:14.597Z",
+      "updated": "2026-03-20T00:35:13.488Z",
+      "description": "Tasks for master context"
+    }
+  }
+}
