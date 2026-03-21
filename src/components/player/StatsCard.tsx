@@ -1,6 +1,9 @@
 import { Card, CardContent } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
 
+/**
+ * @deprecated Use `@/components/shared/StatCard` for the token-compliant shared version.
+ */
 type StatsCardProps = {
   label: string
   value: string
