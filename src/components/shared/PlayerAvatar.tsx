@@ -20,13 +20,17 @@ export function PlayerAvatar({
   size = "md",
   className,
 }: PlayerAvatarProps) {
-  const fallbackInitial = name.trim().charAt(0).toUpperCase() || "?"
+  const normalizedName = name.trim()
+  const accessibleName = normalizedName || "Usuário"
+  const fallbackInitial = normalizedName.charAt(0).toUpperCase() || "U"
 
   return (
     <Avatar className={cn(sizeClasses[size], className)}>
-      {src ? <AvatarImage alt={name} className="object-cover" src={src} /> : null}
+      {src ? (
+        <AvatarImage alt={accessibleName} className="object-cover" src={src} />
+      ) : null}
       <AvatarFallback
-        aria-label={name}
+        aria-label={accessibleName}
         className="border border-primary/20 bg-primary/10 font-semibold text-primary"
       >
         {fallbackInitial}

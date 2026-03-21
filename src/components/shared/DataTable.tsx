@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils"
 export type DataTableProps<TData> = {
   columns: ColumnDef<TData, unknown>[]
   data: TData[]
+  caption?: string
   pageSize?: number
   searchable?: boolean
   searchPlaceholder?: string
@@ -79,6 +80,7 @@ function getSortIcon(sortState: false | "asc" | "desc") {
 export function DataTable<TData>({
   columns,
   data,
+  caption,
   pageSize = 10,
   searchable = false,
   searchPlaceholder = "Buscar...",
@@ -166,6 +168,7 @@ export function DataTable<TData>({
 
       <ScrollArea className="w-full whitespace-nowrap rounded-lg border border-border/15">
         <Table>
+          {caption ? <caption className="sr-only">{caption}</caption> : null}
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow className="border-border/15" key={headerGroup.id}>

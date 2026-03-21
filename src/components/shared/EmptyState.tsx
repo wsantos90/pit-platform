@@ -1,4 +1,5 @@
 import * as React from "react"
+import Link from "next/link"
 import { Inbox } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -7,6 +8,7 @@ import { cn } from "@/lib/utils"
 type EmptyStateAction = {
   label: string
   onClick?: () => void
+  href?: string
 }
 
 export type EmptyStateProps = {
@@ -59,15 +61,28 @@ export function EmptyState({
       </div>
 
       {action ? (
-        <Button
-          className="border-border/15 bg-transparent text-primary hover:bg-surface-raised hover:text-primary"
-          onClick={action.onClick}
-          size="sm"
-          type="button"
-          variant="outline"
-        >
-          {action.label}
-        </Button>
+        action.href ? (
+          <Button
+            asChild
+            className="border-border/15 bg-transparent text-primary hover:bg-surface-raised hover:text-primary"
+            variant="outline"
+            size="sm"
+          >
+            <Link href={action.href} onClick={action.onClick}>
+              {action.label}
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            className="border-border/15 bg-transparent text-primary hover:bg-surface-raised hover:text-primary"
+            onClick={action.onClick}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {action.label}
+          </Button>
+        )
       ) : null}
     </div>
   )
