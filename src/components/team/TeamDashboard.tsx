@@ -13,7 +13,7 @@ type StatCardProps = {
 function StatCard({ icon, iconColor, iconBg, label, value, trend, trendPositive }: StatCardProps) {
   return (
     <div
-      className="glass-card rounded-xl p-5"
+      className="rounded-xl border border-border/15 bg-card p-5"
     >
       <div className="flex items-center justify-between mb-3">
         <div className={`size-10 rounded-lg flex items-center justify-center ${iconBg}`}>
