@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,7 +20,6 @@ import { createClient } from "@/lib/supabase/client";
 import { isEmailValid } from "@/lib/utils";
 
 export default function ForgotPasswordPage() {
-  const supabase = useMemo(() => createClient(), []);
   const [email, setEmail] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -38,6 +37,7 @@ export default function ForgotPasswordPage() {
     }
 
     setIsSubmitting(true);
+    const supabase = createClient();
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(cleanEmail);
 
     if (resetError) {

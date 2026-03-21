@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,6 @@ import { isEmailValid } from "@/lib/utils";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const supabase = useMemo(() => createClient(), []);
 
   const [email, setEmail] = useState("");
   const [gamertag, setGamertag] = useState("");
@@ -58,6 +57,7 @@ export default function RegisterPage() {
     }
 
     setIsSubmitting(true);
+    const supabase = createClient();
 
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
