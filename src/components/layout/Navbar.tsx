@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Fragment } from 'react';
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import { ChevronDown, LogOut, Menu, Settings, User } from 'lucide-react';
@@ -98,27 +99,31 @@ export function Navbar() {
                 {breadcrumbs.length > 0 && (
                     <Breadcrumb>
                         <BreadcrumbList className="flex-nowrap">
-                            {breadcrumbs.map(({ href, label, isLast }) =>
-                                isLast ? (
-                                    <BreadcrumbItem key={href}>
-                                        <BreadcrumbPage className="max-w-[120px] truncate text-body-sm font-semibold text-foreground sm:max-w-none">
-                                            {label}
-                                        </BreadcrumbPage>
-                                    </BreadcrumbItem>
-                                ) : (
-                                    <BreadcrumbItem key={href}>
-                                        <BreadcrumbLink asChild>
-                                            <Link
-                                                href={href}
-                                                className="text-body-sm text-foreground-secondary transition-colors hover:text-foreground"
-                                            >
+                            {breadcrumbs.map(({ href, label, isLast }) => (
+                                <Fragment key={href}>
+                                    {isLast ? (
+                                        <BreadcrumbItem>
+                                            <BreadcrumbPage className="max-w-[120px] truncate text-body-sm font-semibold text-foreground sm:max-w-none">
                                                 {label}
-                                            </Link>
-                                        </BreadcrumbLink>
-                                        <BreadcrumbSeparator />
-                                    </BreadcrumbItem>
-                                ),
-                            )}
+                                            </BreadcrumbPage>
+                                        </BreadcrumbItem>
+                                    ) : (
+                                        <>
+                                            <BreadcrumbItem>
+                                                <BreadcrumbLink asChild>
+                                                    <Link
+                                                        href={href}
+                                                        className="text-body-sm text-foreground-secondary transition-colors hover:text-foreground"
+                                                    >
+                                                        {label}
+                                                    </Link>
+                                                </BreadcrumbLink>
+                                            </BreadcrumbItem>
+                                            <BreadcrumbSeparator />
+                                        </>
+                                    )}
+                                </Fragment>
+                            ))}
                         </BreadcrumbList>
                     </Breadcrumb>
                 )}
