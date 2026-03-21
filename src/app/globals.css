@@ -16,22 +16,6 @@
   }
 }
 
-.glass-sidebar {
-  background: hsl(var(--background));
-  border-right: 1px solid hsl(var(--border) / 0.15);
-}
-
-/* @deprecated - Use bg-card directly. Glassmorphism prohibited per design system. */
-.glass-card {
-  background: hsl(var(--card));
-  border: 1px solid hsl(var(--border) / 0.15);
-}
-
-.nav-item-active {
-  background: hsl(var(--primary) / 0.12);
-  border-left: 3px solid hsl(var(--primary));
-  color: hsl(var(--primary));
-}
 
 .custom-scrollbar::-webkit-scrollbar {
   width: 4px;
@@ -187,5 +171,16 @@
 
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

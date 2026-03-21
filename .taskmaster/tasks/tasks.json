@@ -347,7 +347,7 @@
         "dependencies": [
           "28"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -355,7 +355,7 @@
             "description": "Add all missing design token CSS variables to src/app/globals.css, including --card-hover, --surface-1, --surface-2, and position tokens (--position-gk, --position-def, --position-mid, --position-fwd, --position-atk) from MASTER.md, organized under :root and dark mode selectors.",
             "dependencies": [],
             "details": "Open src/app/globals.css and add the following token groups under :root: (1) Surface tokens: --surface-1, --surface-2 with appropriate HSL values. (2) Interaction tokens: --card-hover with hover state color. (3) Position tokens: --position-gk, --position-def, --position-mid, --position-fwd, --position-atk each with distinct HSL color values matching MASTER.md spec. Ensure dark mode overrides are placed inside a [data-theme='dark'] or .dark selector block. Maintain alphabetical/grouped ordering for maintainability. Cross-reference MASTER.md for exact token values and naming conventions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Visually inspect token values in browser DevTools under :root computed styles. Run the token audit script (subtask 7) to confirm all MASTER.md tokens are present. Check dark mode toggle applies correct overrides.",
             "parentId": "undefined"
           },
@@ -365,7 +365,7 @@
             "description": "Update tailwind.config.ts to extend the theme with a custom typography scale including page-title, section-title, card-title, body-lg, body-sm, label, and data-value font size/line-height/weight definitions.",
             "dependencies": [],
             "details": "In tailwind.config.ts, under theme.extend.fontSize (or theme.extend.typography), add named entries: page-title (e.g., ['2rem', { lineHeight: '2.5rem', fontWeight: '700' }]), section-title (e.g., ['1.5rem', { lineHeight: '2rem', fontWeight: '600' }]), card-title (e.g., ['1.125rem', { lineHeight: '1.75rem', fontWeight: '600' }]), body-lg, body-sm, label, data-value. Reference MASTER.md for exact scale values. Ensure these map to CSS variable references where applicable (e.g., var(--font-size-page-title)) for runtime theming flexibility. Export types if using TypeScript strict mode.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Apply a Tailwind class like text-page-title to a test element and verify correct font-size/line-height in browser. Run `npm run build` to confirm no Tailwind config errors.",
             "parentId": "undefined"
           },
@@ -375,7 +375,7 @@
             "description": "Add a custom spacing scale to tailwind.config.ts that maps to design token values from MASTER.md, ensuring consistent spacing across all components and pages.",
             "dependencies": [],
             "details": "In tailwind.config.ts under theme.extend.spacing, add named spacing tokens that align with MASTER.md (e.g., section-gap, card-padding, sidebar-width, header-height, etc.). Use numeric or semantic keys as appropriate. Where spacing tokens reference CSS variables (e.g., var(--spacing-section-gap)), use a CSS variable reference pattern compatible with Tailwind's JIT engine. Also extend theme.extend.borderRadius, theme.extend.boxShadow if MASTER.md defines shadow/radius tokens. Document each token with an inline comment indicating its intended use context.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Apply spacing utility classes in a test component and verify correct pixel values in DevTools. Run `npm run build` to confirm no config errors. Cross-check spacing values against MASTER.md.",
             "parentId": "undefined"
           },
@@ -385,7 +385,7 @@
             "description": "Set up the primary application font and Fira Code monospace font using next/font/google in src/app/layout.tsx, exposing them as CSS variables and a .font-data utility class.",
             "dependencies": [],
             "details": "In src/app/layout.tsx: (1) Import the primary font (e.g., Inter or the font specified in MASTER.md) from 'next/font/google' with variable: '--font-sans' and appropriate subsets/weights. (2) Import Fira_Code from 'next/font/google' with variable: '--font-mono' and subsets. (3) Apply both font variables to the <html> or <body> element via className. (4) In globals.css, define .font-data { font-family: var(--font-mono); } utility class. (5) Update tailwind.config.ts fontFamily to reference var(--font-sans) and var(--font-mono). Ensure no layout shift by using display: 'swap'.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify fonts load correctly in Network tab (no FOUT). Inspect computed font-family on body and on an element with .font-data class. Run Lighthouse performance check to confirm no font-related CLS.",
             "parentId": "undefined"
           },
@@ -395,7 +395,7 @@
             "description": "Systematically find and replace all hardcoded color values in the codebase with their corresponding CSS variable tokens, starting with high-impact targets: .nav-item-active (#0d7ff2 → hsl(var(--primary))) and .glass-sidebar (rgba() values → CSS var tokens).",
             "dependencies": [],
             "details": "Step 1: Use grep or the audit script (subtask 7) to locate all hardcoded hex, rgb(), rgba(), and hsl() values in .css, .tsx, .ts files under src/. Step 2: Replace .nav-item-active color #0d7ff2 with hsl(var(--primary)) in the relevant CSS/component file. Step 3: Replace .glass-sidebar rgba() background/border values with appropriate CSS variable tokens (e.g., var(--surface-1), var(--card-hover), var(--border)). Step 4: Replace any other high-frequency hardcoded values (e.g., bg-gray-950 in utility pages per task 44). Step 5: Verify visual consistency after each replacement. Maintain a changelog of all replacements made.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run the token audit script and confirm 0 hardcoded color violations remain. Visual regression check on nav and sidebar components. Run `npm run build` to confirm no broken references.",
             "parentId": "undefined"
           },
@@ -405,7 +405,7 @@
             "description": "Add global focus-visible ring styles to globals.css and Tailwind config to ensure all interactive elements meet WCAG AA keyboard navigation and focus indicator requirements.",
             "dependencies": [],
             "details": "In globals.css, add a global rule: *:focus-visible { outline: 2px solid hsl(var(--primary)); outline-offset: 2px; border-radius: var(--radius, 4px); } to replace browser defaults. Ensure the ring color meets 3:1 contrast ratio against all background surfaces per WCAG 2.1 SC 1.4.11. In tailwind.config.ts, add a ring-primary utility or extend ring colors to reference var(--primary). Add focus-visible variants for custom components (buttons, inputs, nav items, cards). Remove any outline: none or outline: 0 declarations that suppress focus indicators without providing alternatives. Test with keyboard-only navigation (Tab, Enter, Esc).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Keyboard navigation test: Tab through all interactive elements and verify visible focus ring on each. Run Lighthouse accessibility audit targeting 90+ score. Use browser DevTools contrast checker to verify ring color contrast ratio ≥ 3:1.",
             "parentId": "undefined"
           },
@@ -415,7 +415,7 @@
             "description": "Build a Node.js/shell script that scans the codebase for remaining hardcoded color, spacing, and typography values, reporting violations with file paths and line numbers to enforce design token adoption.",
             "dependencies": [],
             "details": "Create scripts/token-audit.ts (or .mjs) that: (1) Recursively scans src/ for .tsx, .ts, .css files. (2) Uses regex patterns to detect hardcoded hex colors (#[0-9a-fA-F]{3,8}), rgb()/rgba() calls, hsl() calls not wrapping a CSS variable, hardcoded pixel font sizes (font-size: Npx), and Tailwind color classes with hardcoded palette values (e.g., bg-gray-950, text-blue-500). (3) Outputs a formatted report: file path, line number, matched value, suggested token replacement. (4) Exits with code 1 if violations are found (for CI integration). (5) Add an npm script entry: \"token-audit\": \"tsx scripts/token-audit.ts\" in package.json. Include an allowlist for intentional exceptions.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Run `npm run token-audit` on the codebase before and after subtask 5 refactoring. Verify the script correctly identifies known hardcoded values and reports 0 violations after all replacements. Test CI exit code behavior by introducing a deliberate hardcoded value.",
             "parentId": "undefined"
           }

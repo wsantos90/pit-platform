@@ -20,8 +20,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="dark">
-      <body className={`${inter.variable} antialiased`}>
+    <html lang="pt-BR" className={`dark ${inter.variable}`}>
+      <body className="font-sans antialiased">
         {children}
         <Toaster richColors position="top-right" theme="dark" />
       </body>
