@@ -9,7 +9,7 @@
         "testStrategy": "Run `npm run build`, `npm test`, verify no console.error in browser devtools, check bundle size reduction, validate types with `tsc --noEmit`, test logger with unit test: expect(logger.error('test')).toBeCalled()",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -126,7 +126,7 @@
         "dependencies": [
           "26"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -1870,9 +1870,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-21T05:06:12.347Z",
+      "lastModified": "2026-03-21T02:36:34.3823670-03:00",
       "taskCount": 22,
-      "completedCount": 1,
+      "completedCount": 3,
       "tags": [
         "master"
       ]

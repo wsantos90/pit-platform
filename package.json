@@ -10,6 +10,7 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "typecheck": "tsc --noEmit",
     "gen:types": "supabase gen types typescript --local > src/types/database.ts",
+    "token-audit": "npx tsx scripts/token-audit.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",

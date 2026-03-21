@@ -80,10 +80,10 @@ function UserAvatar({ name }: { name: string }) {
     const initial = (name ?? '?').charAt(0).toUpperCase();
     return (
         <div className="relative shrink-0">
-            <div className="w-10 h-10 rounded-full border-2 border-primary/50 bg-primary/15 text-primary flex items-center justify-center font-bold text-sm">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-primary/30 bg-primary/15 text-sm font-bold text-primary">
                 {initial}
             </div>
-            <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-background bg-success" />
         </div>
     );
 }
@@ -272,62 +272,67 @@ export function SidebarShell() {
     const disabled = rolesLoading || !hydrated;
 
     return (
-        <aside className="glass-sidebar w-72 flex flex-col h-full shrink-0 z-50">
+        <aside className="glass-sidebar z-sidebar flex h-full w-sidebar shrink-0 flex-col">
             {/* Brand */}
             <div className="p-6 flex flex-col gap-1">
                 <div className="flex items-center gap-3">
                     <div className="rounded-lg p-1.5 bg-primary flex items-center justify-center">
-                        <MSIcon name="insights" className="text-white text-2xl" />
+                        <MSIcon name="insights" className="text-2xl text-primary-foreground" />
                     </div>
-                    <h1 className="text-2xl font-black tracking-tighter text-slate-100">P.I.T</h1>
+                    <h1 className="text-2xl font-black tracking-tight text-foreground">P.I.T</h1>
                 </div>
-                <p className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">
+                <p className="text-caption uppercase tracking-[0.2em] text-foreground-tertiary">
                     Performance · Intelligence · Tracking
                 </p>
             </div>
 
             {/* User profile card */}
-            <div className="mx-4 mb-6 p-3 rounded-xl border border-slate-700/50 bg-slate-800/40 flex items-center gap-3">
+            <div className="mx-4 mb-6 flex items-center gap-3 rounded-xl border border-border/15 bg-surface-raised/40 p-3">
                 <UserAvatar name={displayName} />
                 <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-bold text-slate-100 leading-tight truncate">
+                    <span className="truncate text-sm font-bold leading-tight text-foreground">
                         {displayName}
                     </span>
-                    <span className="text-[11px] text-slate-400 font-medium">{roleLabel}</span>
+                    <span className="text-caption font-medium text-foreground-secondary">{roleLabel}</span>
                 </div>
             </div>
 
             {/* Context switcher */}
             <div className="px-4 mb-6" ref={dropdownRef}>
-                <label className="text-[10px] uppercase font-bold text-slate-500 px-2 mb-2 block tracking-wider">
+                <label className="mb-2 block px-2 text-label font-semibold uppercase text-foreground-tertiary">
                     Contexto Atual
                 </label>
                 <div className="relative">
                     <button
                         disabled={disabled}
                         onClick={() => setContextOpen((o) => !o)}
-                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg border border-slate-700 bg-slate-800/60 transition-colors disabled:opacity-50"
+                        className="flex w-full items-center justify-between rounded-lg border border-border/15 bg-surface-raised px-3 py-2.5 transition-colors disabled:opacity-50"
                     >
                         <div className="flex items-center gap-2">
                             <MSIcon name={contextIcon} className="text-primary text-xl" />
-                            <span className="text-sm font-semibold text-slate-100">{contextLabel}</span>
+                            <span className="text-body-sm font-semibold text-foreground">{contextLabel}</span>
                         </div>
-                        <MSIcon name="unfold_more" className="text-slate-500 text-xl" />
+                        <MSIcon name="unfold_more" className="text-xl text-foreground-tertiary" />
                     </button>
 
                     {contextOpen && contextOptions.length > 1 && (
-                        <div className="absolute top-full left-0 w-full mt-1 rounded-lg border border-slate-700 bg-[hsl(210_36%_6%)] shadow-xl overflow-hidden z-10">
+                        <div className="absolute left-0 top-full z-dropdown mt-1 w-full overflow-hidden rounded-lg border border-border/15 bg-surface-overlay shadow-float">
                             {contextOptions.map((opt) => (
                                 <button
                                     key={opt.value}
                                     onClick={() => handleContextSelect(opt.value)}
-                                    className={`w-full flex items-center gap-2 px-3 py-2.5 text-sm transition-colors text-left ${
+                                    className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors ${
                                         activeContextValue === opt.value
-                                            ? 'text-primary bg-primary/15'
-                                            : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                                            ? 'bg-primary/15 text-primary'
+                                            : 'text-foreground-secondary hover:bg-surface-raised/60 hover:text-foreground'
                                     }`}
                                 >
-                                    <MSIcon name={opt.icon} className="text-lg text-slate-400" />
+                                    <MSIcon
+                                        name={opt.icon}
+                                        className={`text-lg ${
+                                            activeContextValue === opt.value ? 'text-primary' : 'text-foreground-secondary'
+                                        }`}
+                                    />
                                     {opt.label}
                                 </button>
                             ))}
@@ -340,7 +345,7 @@ export function SidebarShell() {
             <nav className="flex-1 px-2 space-y-6 overflow-y-auto custom-scrollbar">
                 {navSections.map((section) => (
                     <section key={section.label}>
-                        <h3 className="px-4 text-[10px] uppercase font-bold text-slate-500 mb-2 tracking-wider">
+                        <h3 className="mb-2 px-4 text-label font-semibold uppercase text-foreground-tertiary">
                             {section.label}
                         </h3>
                         <div className="space-y-0.5">
@@ -352,10 +357,10 @@ export function SidebarShell() {
                                     <Link
                                         key={item.href}
                                         href={item.href}
-                                        className={`flex items-center justify-between px-4 py-2.5 rounded-lg transition-all group ${
+                                        className={`group flex items-center justify-between rounded-lg px-4 py-2.5 transition-all ${
                                             isActive
                                                 ? 'nav-item-active rounded-r-lg'
-                                                : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/50'
+                                                : 'text-foreground-secondary hover:bg-surface-raised/50 hover:text-foreground'
                                         }`}
                                     >
                                         <div className="flex items-center gap-3">
@@ -368,7 +373,7 @@ export function SidebarShell() {
                                             </span>
                                         </div>
                                         {item.badge != null && item.badge > 0 && (
-                                            <span className="bg-primary text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">
+                                            <span className="rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-black text-primary-foreground">
                                                 {item.badge}
                                             </span>
                                         )}
@@ -381,10 +386,10 @@ export function SidebarShell() {
             </nav>
 
             {/* Footer */}
-            <div className="p-4 border-t border-slate-800/50 flex flex-col gap-2">
+            <div className="flex flex-col gap-2 border-t border-border/15 p-4">
                 <button
                     onClick={signOut}
-                    className="flex items-center gap-3 px-4 py-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-all"
+                    className="flex items-center gap-3 rounded-lg px-4 py-2 text-error transition-all hover:bg-error-bg hover:text-error"
                 >
                     <MSIcon name="logout" className="text-[22px]" />
                     <span className="text-sm font-bold">Sair do Sistema</span>

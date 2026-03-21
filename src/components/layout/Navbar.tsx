@@ -19,7 +19,7 @@ export function Navbar() {
     const { user, loading } = useAuth();
 
     return (
-        <nav className="h-14 border-b border-border bg-background/80 backdrop-blur-sm flex items-center justify-between px-6">
+        <nav className="flex h-navbar items-center justify-between border-b border-border/15 bg-background px-content">
             <span className="text-sm text-muted-foreground">Dashboard</span>
 
             {loading ? (

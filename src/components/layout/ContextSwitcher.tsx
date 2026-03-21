@@ -88,12 +88,12 @@ export function ContextSwitcher() {
 
     return (
         <div className="space-y-2">
-            <label htmlFor="context-switcher" className="text-xs font-medium text-gray-400">
+            <label htmlFor="context-switcher" className="text-label font-medium text-foreground-secondary">
                 Contexto
             </label>
             <select
                 id="context-switcher"
-                className="w-full rounded-md border border-gray-700 bg-gray-950 px-3 py-2 text-sm text-gray-200 outline-none transition focus:border-orange-500"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground outline-none transition focus:border-primary focus-visible:ring-1 focus-visible:ring-ring"
                 value={value}
                 onChange={(event) => {
                     const nextValue = event.target.value;
@@ -137,7 +137,7 @@ export function ContextSwitcher() {
                 ) : null}
             </select>
             {hasTeamContext && !loadingTeams && teams.length === 0 ? (
-                <a href="/team/claim" className="text-xs text-orange-400 hover:underline">
+                <a href="/team/claim" className="text-xs text-accent-brand hover:underline">
                     Reivindicar um time →
                 </a>
             ) : null}
