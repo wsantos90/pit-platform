@@ -629,7 +629,7 @@
           "29",
           "30"
         ],
-        "status": "pending",
+        "status": "review",
         "subtasks": [
           {
             "id": 1,
@@ -637,9 +637,10 @@
             "description": "Parse and implement all design tokens, layout rules, spacing, typography, and color specifications defined in design-system/pages/auth.md across all three auth pages.",
             "dependencies": [],
             "details": "Read design-system/pages/auth.md thoroughly and extract all relevant tokens (colors, spacing, border-radius, font sizes, shadows). Create a shared auth layout wrapper component (e.g., AuthLayout) that enforces the spec's page structure. Map all design tokens to Tailwind/CSS variables already defined in the design system. Document any deviations or missing tokens that need to be added. Ensure the layout wrapper is reusable across /login, /register, and /forgot-password pages.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Visual diff against design-system/pages/auth.md mockups; verify all CSS variables/tokens are correctly applied using browser DevTools; cross-check spacing and typography with the spec document.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:24:32.468Z"
           },
           {
             "id": 2,
@@ -647,9 +648,10 @@
             "description": "Create a subtle grid or texture background effect using pure CSS that is applied globally to all auth pages via the shared AuthLayout component.",
             "dependencies": [],
             "details": "Implement the background pattern using CSS (e.g., repeating-linear-gradient, SVG data URI, or CSS grid dot pattern) as specified in auth.md. Add the background styles to the AuthLayout wrapper or a dedicated CSS module/Tailwind utility class. Ensure the pattern is subtle and does not interfere with readability. The background must be responsive and render correctly on all screen sizes. Test for performance — avoid heavy image assets; prefer CSS-only or lightweight SVG solutions. Respect prefers-reduced-motion by providing a fallback plain background.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Visual inspection across breakpoints (mobile/tablet/desktop); verify pattern renders in Chrome, Firefox, and Safari; check prefers-reduced-motion fallback; Lighthouse performance check to ensure no render-blocking assets.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:24:37.059Z"
           },
           {
             "id": 3,
@@ -657,9 +659,10 @@
             "description": "Create a branded AuthCard component that includes the P.I.T logo, consistent card styling using design tokens, and serves as the container for all auth forms.",
             "dependencies": [],
             "details": "Build an AuthCard React component using shadcn Card primitives styled with the new design tokens (background, border, shadow, border-radius). Integrate the P.I.T logo at the top of the card (SVG or Next.js Image component). The card should accept a title prop, optional subtitle, and children for form content. Apply consistent padding, max-width constraints, and center alignment. Ensure the card is visually distinct from the background pattern. Add aria-labelledby for accessibility. Export from a shared components/auth/ directory for reuse across all three pages.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Render AuthCard in isolation (Storybook or test page); verify logo renders correctly at all sizes; check aria attributes with axe-core or browser accessibility inspector; test card layout on mobile (375px) and desktop (1280px).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:24:41.768Z"
           },
           {
             "id": 4,
@@ -667,9 +670,10 @@
             "description": "Implement the redesigned /login page using AuthLayout, AuthCard, shadcn Input/Label components, form validation, and all UI states (loading, error, success).",
             "dependencies": [],
             "details": "Rebuild the /login page using the AuthLayout and AuthCard components. Use shadcn Input and Label for email and password fields with react-hook-form or native validation. Implement client-side validation (required fields, email format, password min length). Connect to Supabase auth (signInWithPassword). Handle loading state with a button spinner or disabled state. Display inline error messages for validation failures and Supabase auth errors (e.g., invalid credentials). On success, redirect to the appropriate dashboard route. Add a link to /forgot-password and /register. Ensure full keyboard navigation (tab order, enter to submit). Apply WCAG AA focus ring styles.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Test with valid/invalid credentials against real Supabase; verify loading spinner appears during async call; verify error messages display for wrong password and unregistered email; test keyboard-only navigation through the form; test on mobile viewport (375px).",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:24:46.590Z"
           },
           {
             "id": 5,
@@ -677,9 +681,10 @@
             "description": "Implement the redesigned /register page using AuthLayout, AuthCard, shadcn Input/Label components, form validation, and all UI states (loading, error, success).",
             "dependencies": [],
             "details": "Rebuild the /register page using AuthLayout and AuthCard. Include fields for email, password, and confirm password (and any additional required fields per spec). Use shadcn Input/Label with react-hook-form validation: required fields, email format, password strength, password match confirmation. Connect to Supabase auth (signUp). Show loading state during submission. Display field-level and form-level error messages including Supabase errors (e.g., email already in use). On success, show a success message or redirect as per the auth flow spec. Add a link to /login. Ensure WCAG AA keyboard focus and tab order. Apply consistent styling matching /login page.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Test registration with new and existing email addresses; verify password mismatch error; verify Supabase error messages surface correctly; test keyboard navigation; test on mobile viewport; visual consistency check against /login page.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:24:51.511Z"
           },
           {
             "id": 6,
@@ -687,9 +692,10 @@
             "description": "Implement the redesigned /forgot-password page using AuthLayout, AuthCard, shadcn Input/Label, form validation, and all UI states (loading, error, success).",
             "dependencies": [],
             "details": "Rebuild the /forgot-password page using AuthLayout and AuthCard. Include a single email input field with shadcn Input/Label. Validate email format on submit. Connect to Supabase auth (resetPasswordForEmail). Show loading state during the async call. On success, display a success message (e.g., 'Check your email for a reset link') without redirecting. Display error messages for invalid email or Supabase errors. Add a back link to /login. Ensure WCAG AA keyboard focus and accessible error/success announcements via aria-live regions. Match visual style of /login and /register pages.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Test with valid and invalid email addresses; verify success message appears after Supabase call; verify error states; test aria-live region announces success/error to screen readers; keyboard navigation test; mobile viewport test; visual consistency check against other auth pages.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:24:56.316Z"
           },
           {
             "id": 7,
@@ -697,14 +703,16 @@
             "description": "Implement shared loading skeleton, error boundary, and success redirect utilities for all auth pages, finalize Supabase auth flow integration, and conduct full keyboard navigation and mobile responsiveness QA.",
             "dependencies": [],
             "details": "Create a shared LoadingSkeleton component for auth cards (pulsing placeholder matching card dimensions). Implement an ErrorBoundary wrapper for auth pages to catch unexpected runtime errors gracefully. Audit and finalize Supabase auth flow across all three pages: ensure session handling, redirect logic, and error code mapping are consistent. Conduct WCAG AA keyboard focus audit: verify visible focus rings on all interactive elements, correct tab order, and no focus traps. Test mobile responsiveness at 375px, 768px, and 1280px breakpoints. Fix any layout overflow, font scaling, or touch target issues. Run axe-core or Lighthouse accessibility audit and resolve all critical issues. Perform a final visual consistency review across all three auth pages.",
-            "status": "pending",
+            "status": "review",
             "testStrategy": "Run full Supabase auth flow (login, register, forgot-password) end-to-end in staging environment; keyboard-only navigation test on all three pages; axe-core accessibility scan with zero critical violations; Lighthouse mobile score 90+; cross-browser test (Chrome, Firefox, Safari); visual regression snapshot comparison across all three pages.",
-            "parentId": "undefined"
+            "parentId": "undefined",
+            "updatedAt": "2026-03-22T00:25:01.009Z"
           }
         ],
         "complexity": 5,
         "recommendedSubtasks": 7,
-        "expansionPrompt": "Structure auth pages redesign into subtasks: (1) Design spec application from design-system/pages/auth.md, (2) Background pattern/texture CSS implementation, (3) Auth card component with branding (P.I.T logo), (4) /login page with form validation and states, (5) /register page with form validation and states, (6) /forgot-password page with form validation and states, (7) Loading/error/success state handling and Supabase auth flow integration. Include keyboard navigation and mobile responsiveness testing."
+        "expansionPrompt": "Structure auth pages redesign into subtasks: (1) Design spec application from design-system/pages/auth.md, (2) Background pattern/texture CSS implementation, (3) Auth card component with branding (P.I.T logo), (4) /login page with form validation and states, (5) /register page with form validation and states, (6) /forgot-password page with form validation and states, (7) Loading/error/success state handling and Supabase auth flow integration. Include keyboard navigation and mobile responsiveness testing.",
+        "updatedAt": "2026-03-22T00:25:01.009Z"
       },
       {
         "id": "33",
@@ -1870,9 +1878,9 @@
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-03-21T02:36:34.3823670-03:00",
+      "lastModified": "2026-03-22T00:25:01.010Z",
       "taskCount": 22,
-      "completedCount": 3,
+      "completedCount": 4,
       "tags": [
         "master"
       ]
