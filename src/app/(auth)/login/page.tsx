@@ -1,47 +1,78 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { FormEvent, Suspense, useState } from "react";
+import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { FormEvent, Suspense, useEffect, useRef, useState } from 'react';
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { getAuthErrorMessage } from "@/lib/supabase/auth-errors";
-import { ensurePlayerProfile } from "@/lib/supabase/player-profile";
-import { isEmailValid } from "@/lib/utils";
+import { AuthCard, AuthCardSkeleton, AuthFormAlert, PasswordField } from '@/components/auth';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { createClient } from '@/lib/supabase/client';
+import { getAuthErrorMessage } from '@/lib/supabase/auth-errors';
+import { ensurePlayerProfile } from '@/lib/supabase/player-profile';
+import { cn, isEmailValid } from '@/lib/utils';
+
+type LoginFieldErrors = {
+  email?: string;
+  password?: string;
+};
+
+const AUTH_INPUT_CLASSNAME =
+  'h-11 rounded-xl border-border/20 bg-surface-raised/45 px-4 text-base shadow-none placeholder:text-foreground-tertiary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0';
+
+function getInputClassName(hasError: boolean) {
+  return cn(
+    AUTH_INPUT_CLASSNAME,
+    hasError && 'border-error/60 focus-visible:ring-error'
+  );
+}
+
+function getSafeNextPath(nextPath: string | null) {
+  if (!nextPath || !nextPath.startsWith('/') || nextPath.startsWith('//')) {
+    return '/profile';
+  }
+
+  return nextPath;
+}
 
 function LoginContent() {
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
-  const nextPath = searchParams.get("next");
+  const nextPath = searchParams.get('next');
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<LoginFieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!fieldErrors.email && !fieldErrors.password) {
+      return;
+    }
+
+    const invalidField = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    invalidField?.focus();
+  }, [fieldErrors.email, fieldErrors.password]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
+    const nextFieldErrors: LoginFieldErrors = {};
+    setFormError(null);
 
-    if (!isEmailValid(email)) {
-      setError("Informe um email válido.");
-      return;
+    if (!isEmailValid(email.trim())) {
+      nextFieldErrors.email = 'Informe um email válido.';
     }
     if (!password) {
-      setError("Informe sua senha.");
+      nextFieldErrors.password = 'Informe sua senha.';
+    }
+
+    setFieldErrors(nextFieldErrors);
+    if (Object.keys(nextFieldErrors).length > 0) {
       return;
     }
 
@@ -53,7 +84,7 @@ function LoginContent() {
     });
 
     if (signInError) {
-      setError(getAuthErrorMessage(signInError.message));
+      setFormError(getAuthErrorMessage(signInError.message));
       setIsSubmitting(false);
       return;
     }
@@ -61,125 +92,146 @@ function LoginContent() {
     try {
       const authUser = signInData.user ?? signInData.session?.user;
       const metadataGamertag = authUser?.user_metadata?.ea_gamertag;
-      if (authUser?.id && typeof metadataGamertag === "string") {
+      if (authUser?.id && typeof metadataGamertag === 'string') {
         await ensurePlayerProfile({
           supabase,
           userId: authUser.id,
           gamertag: metadataGamertag,
         });
       }
-    } catch (profileError) {
-      console.error("Falha ao garantir perfil de jogador no login:", profileError);
+    } catch {
+      // Login should still complete even if profile hydration fails.
     }
 
-    const safeNextPath = nextPath && nextPath.startsWith("/") ? nextPath : "/profile";
+    const safeNextPath = getSafeNextPath(nextPath);
     router.push(safeNextPath);
     router.refresh();
   }
 
   return (
-    <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight">
-          Bem-vindo de volta
-        </CardTitle>
-        <CardDescription>
-          Entre com suas credenciais para acessar sua conta
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              required
-            />
-          </div>
+    <AuthCard
+      description="Entre com suas credenciais para acessar seu ambiente competitivo."
+      footer={
+        <p className="text-body-sm text-foreground-secondary">
+          Não tem uma conta?{' '}
+          <Link
+            className="font-semibold text-accent-brand transition-colors hover:text-accent-brand-hover"
+            href="/register"
+          >
+            Criar conta
+          </Link>
+        </p>
+      }
+      title="Bem-vindo de volta"
+    >
+      <form
+        ref={formRef}
+        aria-busy={isSubmitting}
+        aria-label="Formulário de login"
+        className="space-y-5"
+        noValidate
+        onSubmit={handleSubmit}
+      >
+        <div className="space-y-2">
+          <Label className="text-body-sm font-semibold text-foreground" htmlFor="login-email">
+            Email
+          </Label>
+          <Input
+            aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
+            aria-invalid={Boolean(fieldErrors.email)}
+            autoComplete="email"
+            className={getInputClassName(Boolean(fieldErrors.email))}
+            disabled={isSubmitting}
+            id="login-email"
+            onChange={(event) => {
+              setEmail(event.target.value);
+              if (fieldErrors.email) {
+                setFieldErrors((current) => ({ ...current, email: undefined }));
+              }
+              if (formError) {
+                setFormError(null);
+              }
+            }}
+            placeholder="voce@exemplo.com"
+            required
+            type="email"
+            value={email}
+          />
+          {fieldErrors.email ? (
+            <p className="text-caption text-error" id="login-email-error">
+              {fieldErrors.email}
+            </p>
+          ) : null}
+        </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password">Senha</Label>
-              <Link
-                href="/forgot-password"
-                className="text-sm font-medium text-primary hover:text-primary/80 hover:underline"
-              >
-                Esqueceu sua senha?
-              </Link>
-            </div>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
-              required
-            />
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-3">
+            <Label className="text-body-sm font-semibold text-foreground" htmlFor="login-password">
+              Senha
+            </Label>
+            <Link
+              className="text-body-sm font-medium text-foreground-secondary transition-colors hover:text-accent-brand"
+              href="/forgot-password"
+            >
+              Esqueceu sua senha?
+            </Link>
           </div>
+          <PasswordField
+            aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
+            aria-invalid={Boolean(fieldErrors.password)}
+            autoComplete="current-password"
+            className={getInputClassName(Boolean(fieldErrors.password))}
+            disabled={isSubmitting}
+            id="login-password"
+            onChange={(event) => {
+              setPassword(event.target.value);
+              if (fieldErrors.password) {
+                setFieldErrors((current) => ({ ...current, password: undefined }));
+              }
+              if (formError) {
+                setFormError(null);
+              }
+            }}
+            placeholder="Digite sua senha"
+            required
+            value={password}
+          />
+          {fieldErrors.password ? (
+            <p className="text-caption text-error" id="login-password-error">
+              {fieldErrors.password}
+            </p>
+          ) : null}
+        </div>
 
-          <div className="flex items-center space-x-2">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
             <Checkbox
-              id="remember"
               checked={rememberMe}
-              onCheckedChange={(checked) => setRememberMe(Boolean(checked))}
+              className="size-4 rounded-[5px] border-border/30 data-[state=checked]:border-primary data-[state=checked]:bg-primary"
+              disabled={isSubmitting}
+              id="remember-me"
+              onCheckedChange={(checked) => setRememberMe(checked === true)}
             />
-            <Label htmlFor="remember" className="text-sm font-medium leading-none">
+            <Label
+              className="cursor-pointer text-body-sm font-medium text-foreground-secondary"
+              htmlFor="remember-me"
+            >
               Lembrar de mim
             </Label>
           </div>
+        </div>
 
-          {error ? (
-            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
+        <AuthFormAlert message={formError} type="error" />
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
-          >
-            {isSubmitting ? "Entrando..." : "Entrar"}
-          </Button>
-
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou continue com
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button type="button" variant="outline" className="w-full" disabled>
-              Google
-            </Button>
-            <Button type="button" variant="outline" className="w-full" disabled>
-              Discord
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-center border-t border-border/50 pt-6">
-        <p className="text-sm text-muted-foreground">
-          Não tem uma conta?{" "}
-          <Link
-            href="/register"
-            className="font-medium text-primary hover:text-primary/80 hover:underline"
-          >
-            Cadastre-se
-          </Link>
-        </p>
-      </CardFooter>
-    </Card>
+        <Button
+          className="h-11 w-full rounded-xl font-semibold shadow-[0_18px_30px_hsl(var(--primary)/0.28)]"
+          disabled={isSubmitting}
+          type="submit"
+        >
+          {isSubmitting ? 'Entrando...' : 'Entrar'}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }
 
@@ -187,19 +239,10 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold tracking-tight">
-              Bem-vindo de volta
-            </CardTitle>
-            <CardDescription>Carregando formulário...</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="h-9 w-full rounded-md border border-border bg-background" />
-            <div className="h-9 w-full rounded-md border border-border bg-background" />
-            <div className="h-9 w-full rounded-md bg-primary/30" />
-          </CardContent>
-        </Card>
+        <AuthCardSkeleton
+          description="Preparando a validação das suas credenciais..."
+          title="Carregando login"
+        />
       }
     >
       <LoginContent />

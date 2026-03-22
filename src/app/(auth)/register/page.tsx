@@ -1,64 +1,96 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { MailCheck } from 'lucide-react';
 
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { createClient } from "@/lib/supabase/client";
-import { getAuthErrorMessage } from "@/lib/supabase/auth-errors";
-import { ensurePlayerProfile } from "@/lib/supabase/player-profile";
-import { isEmailValid } from "@/lib/utils";
+import { AuthCard, AuthFormAlert, PasswordField } from '@/components/auth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { createClient } from '@/lib/supabase/client';
+import { getAuthErrorMessage } from '@/lib/supabase/auth-errors';
+import { ensurePlayerProfile } from '@/lib/supabase/player-profile';
+import { cn, isEmailValid } from '@/lib/utils';
+
+type RegisterFieldErrors = {
+  email?: string;
+  gamertag?: string;
+  password?: string;
+  confirmPassword?: string;
+};
+
+const AUTH_INPUT_CLASSNAME =
+  'h-11 rounded-xl border-border/20 bg-surface-raised/45 px-4 text-base shadow-none placeholder:text-foreground-tertiary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-0';
+
+function getInputClassName(hasError: boolean) {
+  return cn(
+    AUTH_INPUT_CLASSNAME,
+    hasError && 'border-error/60 focus-visible:ring-error'
+  );
+}
 
 export default function RegisterPage() {
+  const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
-  const [gamertag, setGamertag] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const [email, setEmail] = useState('');
+  const [gamertag, setGamertag] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<RegisterFieldErrors>({});
+  const [formError, setFormError] = useState<string | null>(null);
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (
+      !fieldErrors.email &&
+      !fieldErrors.gamertag &&
+      !fieldErrors.password &&
+      !fieldErrors.confirmPassword
+    ) {
+      return;
+    }
+
+    const invalidField = formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]');
+    invalidField?.focus();
+  }, [
+    fieldErrors.confirmPassword,
+    fieldErrors.email,
+    fieldErrors.gamertag,
+    fieldErrors.password,
+  ]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(null);
-    setSuccess(null);
-
+    const nextFieldErrors: RegisterFieldErrors = {};
     const cleanEmail = email.trim();
     const cleanGamertag = gamertag.trim();
 
+    setFormError(null);
+
     if (!isEmailValid(cleanEmail)) {
-      setError("Informe um email válido.");
-      return;
+      nextFieldErrors.email = 'Informe um email válido.';
     }
     if (cleanGamertag.length < 3) {
-      setError("O EA Gamertag deve ter ao menos 3 caracteres.");
-      return;
+      nextFieldErrors.gamertag = 'Seu EA Gamertag precisa ter pelo menos 3 caracteres.';
     }
     if (password.length < 6) {
-      setError("A senha deve ter pelo menos 6 caracteres.");
-      return;
+      nextFieldErrors.password = 'A senha deve ter pelo menos 6 caracteres.';
     }
     if (password !== confirmPassword) {
-      setError("A confirmação de senha não confere.");
+      nextFieldErrors.confirmPassword = 'A confirmação precisa ser igual à senha.';
+    }
+
+    setFieldErrors(nextFieldErrors);
+    if (Object.keys(nextFieldErrors).length > 0) {
       return;
     }
 
     setIsSubmitting(true);
     const supabase = createClient();
-
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
       email: cleanEmail,
       password,
@@ -71,20 +103,20 @@ export default function RegisterPage() {
     });
 
     if (signUpError) {
-      setError(getAuthErrorMessage(signUpError.message));
+      setFormError(getAuthErrorMessage(signUpError.message));
       setIsSubmitting(false);
       return;
     }
 
     const userId = signUpData.user?.id;
     if (!userId) {
-      setError("Não foi possível criar o usuário.");
+      setFormError('Não foi possível criar o seu acesso agora. Tente novamente.');
       setIsSubmitting(false);
       return;
     }
 
     if (!signUpData.session) {
-      setSuccess("Conta criada com sucesso. Verifique seu email para confirmar o cadastro.");
+      setConfirmationEmail(cleanEmail);
       setIsSubmitting(false);
       return;
     }
@@ -95,130 +127,227 @@ export default function RegisterPage() {
         userId,
         gamertag: cleanGamertag,
       });
-    } catch (profileError) {
-      console.error("Falha ao garantir perfil de jogador no cadastro:", profileError);
+    } catch {
+      // Registration should still complete even if profile hydration fails.
     }
 
-    router.push("/profile");
+    router.push('/profile');
     router.refresh();
   }
 
-  return (
-    <Card className="w-full border-border/50 bg-card/50 backdrop-blur-sm">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold tracking-tight">
-          Criar conta
-        </CardTitle>
-        <CardDescription>
-          Preencha os dados abaixo para criar sua conta
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-4" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="name@example.com"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              required
-            />
+  if (confirmationEmail) {
+    return (
+      <AuthCard
+        description="Enviamos um link de confirmação para ativar seu acesso ao ambiente P.I.T."
+        footer={
+          <p className="text-body-sm text-foreground-secondary">
+            Já confirmou o email?{' '}
+            <Link
+              className="font-semibold text-accent-brand transition-colors hover:text-accent-brand-hover"
+              href="/login"
+            >
+              Entrar
+            </Link>
+          </p>
+        }
+        title="Confirme seu cadastro"
+      >
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex size-14 items-center justify-center rounded-2xl border border-primary/15 bg-primary/10 text-primary">
+            <MailCheck aria-hidden="true" className="size-7" />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="gamertag">EA Gamertag (ID)</Label>
-            <Input
-              id="gamertag"
-              type="text"
-              placeholder="Seu EA ID"
-              value={gamertag}
-              onChange={(event) => setGamertag(event.target.value)}
-              autoComplete="nickname"
-              required
-            />
-            <p className="text-[0.8rem] text-muted-foreground">
-              Este será seu identificador público na plataforma.
+          <div className="space-y-3">
+            <p className="text-body-sm leading-6 text-foreground-secondary">
+              Enviamos a confirmação para{' '}
+              <span className="font-semibold text-foreground">{confirmationEmail}</span>. Abra o
+              email, valide o link e volte para entrar.
+            </p>
+            <p className="text-body-sm leading-6 text-foreground-secondary">
+              Se não encontrar a mensagem, confira também a caixa de spam ou promoções.
             </p>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Senha</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete="new-password"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirm-password">Confirmar Senha</Label>
-            <Input
-              id="confirm-password"
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              autoComplete="new-password"
-              required
-            />
-          </div>
-
-          {error ? (
-            <p className="rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive">
-              {error}
-            </p>
-          ) : null}
-          {success ? (
-            <p className="rounded-md border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-500">
-              {success}
-            </p>
-          ) : null}
-
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="mt-2 w-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 hover:bg-primary/90"
-          >
-            {isSubmitting ? "Criando conta..." : "Criar Conta"}
+          <Button asChild className="h-11 w-full rounded-xl font-semibold" variant="outline">
+            <Link href="/login">Ir para o login</Link>
           </Button>
+        </div>
+      </AuthCard>
+    );
+  }
 
-          <div className="relative my-4">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou continue com
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Button type="button" variant="outline" className="w-full" disabled>
-              Google
-            </Button>
-            <Button type="button" variant="outline" className="w-full" disabled>
-              Discord
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-      <CardFooter className="flex justify-center border-t border-border/50 pt-6">
-        <p className="text-sm text-muted-foreground">
-          Já tem uma conta?{" "}
+  return (
+    <AuthCard
+      description="Crie seu acesso com email, EA Gamertag e uma senha segura."
+      footer={
+        <p className="text-body-sm text-foreground-secondary">
+          Já tem uma conta?{' '}
           <Link
+            className="font-semibold text-accent-brand transition-colors hover:text-accent-brand-hover"
             href="/login"
-            className="font-medium text-primary hover:text-primary/80 hover:underline"
           >
             Entrar
           </Link>
         </p>
-      </CardFooter>
-    </Card>
+      }
+      title="Criar conta"
+    >
+      <form
+        ref={formRef}
+        aria-busy={isSubmitting}
+        aria-label="Formulário de cadastro"
+        className="space-y-5"
+        noValidate
+        onSubmit={handleSubmit}
+      >
+        <div className="space-y-2">
+          <Label className="text-body-sm font-semibold text-foreground" htmlFor="register-gamertag">
+            EA Gamertag
+          </Label>
+          <Input
+            aria-describedby={
+              fieldErrors.gamertag
+                ? 'register-gamertag-help register-gamertag-error'
+                : 'register-gamertag-help'
+            }
+            aria-invalid={Boolean(fieldErrors.gamertag)}
+            autoComplete="nickname"
+            className={getInputClassName(Boolean(fieldErrors.gamertag))}
+            disabled={isSubmitting}
+            id="register-gamertag"
+            onChange={(event) => {
+              setGamertag(event.target.value);
+              if (fieldErrors.gamertag) {
+                setFieldErrors((current) => ({ ...current, gamertag: undefined }));
+              }
+              if (formError) {
+                setFormError(null);
+              }
+            }}
+            placeholder="Seu EA ID público"
+            required
+            type="text"
+            value={gamertag}
+          />
+          <p className="text-body-sm leading-6 text-foreground-secondary" id="register-gamertag-help">
+            Esse nome será usado para identificar seu perfil competitivo na plataforma.
+          </p>
+          {fieldErrors.gamertag ? (
+            <p className="text-caption text-error" id="register-gamertag-error">
+              {fieldErrors.gamertag}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-body-sm font-semibold text-foreground" htmlFor="register-email">
+            Email
+          </Label>
+          <Input
+            aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
+            aria-invalid={Boolean(fieldErrors.email)}
+            autoComplete="email"
+            className={getInputClassName(Boolean(fieldErrors.email))}
+            disabled={isSubmitting}
+            id="register-email"
+            onChange={(event) => {
+              setEmail(event.target.value);
+              if (fieldErrors.email) {
+                setFieldErrors((current) => ({ ...current, email: undefined }));
+              }
+              if (formError) {
+                setFormError(null);
+              }
+            }}
+            placeholder="voce@exemplo.com"
+            required
+            type="email"
+            value={email}
+          />
+          {fieldErrors.email ? (
+            <p className="text-caption text-error" id="register-email-error">
+              {fieldErrors.email}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label className="text-body-sm font-semibold text-foreground" htmlFor="register-password">
+            Senha
+          </Label>
+          <PasswordField
+            aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
+            aria-invalid={Boolean(fieldErrors.password)}
+            autoComplete="new-password"
+            className={getInputClassName(Boolean(fieldErrors.password))}
+            disabled={isSubmitting}
+            id="register-password"
+            onChange={(event) => {
+              setPassword(event.target.value);
+              if (fieldErrors.password) {
+                setFieldErrors((current) => ({ ...current, password: undefined }));
+              }
+              if (formError) {
+                setFormError(null);
+              }
+            }}
+            placeholder="Crie uma senha forte"
+            required
+            value={password}
+          />
+          {fieldErrors.password ? (
+            <p className="text-caption text-error" id="register-password-error">
+              {fieldErrors.password}
+            </p>
+          ) : null}
+        </div>
+
+        <div className="space-y-2">
+          <Label
+            className="text-body-sm font-semibold text-foreground"
+            htmlFor="register-confirm-password"
+          >
+            Confirmar senha
+          </Label>
+          <PasswordField
+            aria-describedby={
+              fieldErrors.confirmPassword ? 'register-confirm-password-error' : undefined
+            }
+            aria-invalid={Boolean(fieldErrors.confirmPassword)}
+            autoComplete="new-password"
+            className={getInputClassName(Boolean(fieldErrors.confirmPassword))}
+            disabled={isSubmitting}
+            id="register-confirm-password"
+            onChange={(event) => {
+              setConfirmPassword(event.target.value);
+              if (fieldErrors.confirmPassword) {
+                setFieldErrors((current) => ({ ...current, confirmPassword: undefined }));
+              }
+              if (formError) {
+                setFormError(null);
+              }
+            }}
+            placeholder="Repita a senha"
+            required
+            value={confirmPassword}
+          />
+          {fieldErrors.confirmPassword ? (
+            <p className="text-caption text-error" id="register-confirm-password-error">
+              {fieldErrors.confirmPassword}
+            </p>
+          ) : null}
+        </div>
+
+        <AuthFormAlert message={formError} type="error" />
+
+        <Button
+          className="h-11 w-full rounded-xl font-semibold shadow-[0_18px_30px_hsl(var(--primary)/0.28)]"
+          disabled={isSubmitting}
+          type="submit"
+        >
+          {isSubmitting ? 'Criando conta...' : 'Criar conta'}
+        </Button>
+      </form>
+    </AuthCard>
   );
 }
