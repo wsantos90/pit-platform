@@ -1,0 +1,695 @@
+# P.I.T Platform — Phase 3 Frontend Redesign PRD
+# Version: 3.0 | Date: 2026-03-26 | Author: Claude (Anthropic)
+# Status: Ready for TaskMaster parsing
+
+## OVERVIEW
+
+P.I.T (Performance · Intelligence · Tracking) is a competitive SaaS platform for FIFA Pro Clubs 11v11
+management in Brazil. The backend is solid (54+ REST endpoints, 25+ Supabase tables, 5+ views, RLS,
+MercadoPago PIX payments). The Phase 3 goal is a complete frontend redesign that makes the platform
+feel alive, data-rich, and professional — like a real football analytics tool.
+
+### Visual Identity (mandatory — do not deviate)
+- Style: Dark Mode OLED + Data-Dense Dashboard + Minimalism
+- Primary palette: OLED black (#0A0A0F base) + Orange/Amber (#F97316 primary)
+- Design System MASTER.md: pit-platform/design-system/p.i.t/MASTER.md (source of truth for all visual specs)
+- Typography: Russo One (display/headings), Inter (body), JetBrains Mono (data/numbers)
+- No hardcoded colors — all via CSS custom properties
+- No emojis as icons — use Lucide React exclusively
+- All implementations must be dark-first, data-dense, esports-editorial tone
+
+### Tech Stack
+- Next.js 16 (App Router) + TypeScript 5 + Tailwind CSS 3 + shadcn/ui
+- Supabase (PostgreSQL 15+, Auth, RLS, Realtime, Storage)
+- MercadoPago (PIX payments, already integrated)
+- Recharts (charts — radar, line, area, bar)
+- @tanstack/react-table (data tables)
+- Context switching: profile / team_id / moderation / admin (useContext hook)
+- RBAC: player → manager → moderator → admin (cumulative roles)
+
+### Definition of Done (per task)
+1. Follows user story mapped to the task
+2. Uses ONLY tokens from design-system/p.i.t/MASTER.md (no hardcoded colors)
+3. All states covered: loading (skeleton), empty, error, success, no-permission
+4. Dark OLED theme default — no light backgrounds
+5. Responsive: mobile (375px), tablet (768px), desktop (1024px), wide (1440px)
+6. `npm run build` passes with no TypeScript errors
+7. `npm test` passes (if tests exist for the component)
+8. Skills invoked: /frontend-design for implementation, /ui-ux-pro-max for review
+
+---
+
+## PERSONAS
+
+The platform serves 5 distinct personas. Each persona has specific screens and data needs.
+All implementations must start from the persona's perspective, not just "what data exists."
+
+---
+
+## FEATURE GROUP 1: DESIGN SYSTEM FOUNDATION
+
+### Task: Update CSS Variables to P.I.T Dark OLED Theme
+**Priority: CRITICAL — All other tasks depend on this**
+
+The current globals.css has wrong defaults (light background, blue primary). Update to:
+- Default (`:root`) = dark OLED values from MASTER.md
+- Primary = #F97316 (orange), not #2563EB (blue)
+- Background base = #0A0A0F (240 33% 4%)
+- Background raised (card) = #141420 (240 25% 10%)
+- Background overlay (surface-raised) = #1C1C2E (240 24% 14%)
+- Foreground = #F8F9FC (225 60% 98%)
+- Foreground-secondary = #94A3B8 (215 20% 65%)
+- Border = rgba(255,255,255,0.08)
+- All 7 position colors: GK=amber, ZAG=blue, VOL=green, MC=emerald, AE=orange, AD=orange-light, ATA=red
+- Result colors: Win=green, Draw=slate, Loss=red
+- Chart colors: chart-1=orange, chart-2=blue, chart-3=green, chart-4=amber, chart-5=purple
+
+Also update tailwind.config.ts to add missing position tokens: pos-gk, pos-zag, pos-vol, pos-mc, pos-ae, pos-ad, pos-ata.
+Add font families: font-heading (Russo One), font-data (JetBrains Mono).
+Add css-var-based colors matching MASTER.md.
+
+Files to modify:
+- src/app/globals.css (CSS vars, dark as default)
+- tailwind.config.ts (add position tokens, font families, remove old position tokens)
+- src/app/layout.tsx (add Russo One + JetBrains Mono font loading via next/font/google)
+
+Acceptance: Design-system page shows OLED black background, orange buttons, correct position badge colors.
+
+### Task: Shared Components Library — Core P.I.T Components
+**Priority: HIGH — Dependencies: CSS variables task**
+
+Create or update the following shared components at src/components/shared/:
+
+1. **PlayerCard** — FIFA-style card (160×220px)
+   - Props: playerName, position, rating, goals, assists, matches, avatarUrl, clubName, tier
+   - Design: dark card with position-colored top stripe, rating as large number (Russo One), stats grid
+   - Variants: full (160×220), compact (used in lists), skeleton version
+   - Position badge: colored dot + text using --pos-* tokens
+
+2. **FormStrip** — W/D/L result sequence
+   - Props: results (array of 'W'|'D'|'L', max 10), size (sm|md|lg)
+   - Design: colored dots/pills — green=W, slate=D, red=L
+   - Each pill shows letter, tooltip shows date + score on hover
+
+3. **TournamentCard** — Tournament listing card
+   - Props: tournament (id, name, type, status, startDate, entryFee, maxTeams, currentTeams, bannerUrl)
+   - Design: banner image header (aspect-ratio 16:9), status badge, entry fee, spots remaining
+   - Status variants: open (green), in_progress (amber), finished (slate)
+   - Action: "Inscrever" button (only for managers)
+
+4. **TrophyCard** — Hall of fame trophy display
+   - Props: tournament (name, type, date, tier), clubName, clubLogo, mvpPlayer
+   - Design: gold/amber accented card, tier badge, champion club, date
+
+5. **RadarChart** — Player attribute radar
+   - Props: data (array of {attribute, value, maxValue}), compareData? (optional second player)
+   - Implementation: Recharts RadarChart, 5-8 axes, 30% fill opacity
+   - Colors: chart-1 (current player), chart-2 (comparison), chart-avg for benchmark
+
+6. **PositionBadge** — Colored position chip
+   - Props: position ('GK'|'ZAG'|'VOL'|'MC'|'AE'|'AD'|'ATA'), size (sm|md)
+   - Uses --pos-* tokens
+
+7. **RatingBadge** — Numerical rating with color tier
+   - Props: rating (number), size (sm|md|lg)
+   - Color scale: 90+ (gold), 80-89 (green), 70-79 (blue), 60-69 (slate), <60 (muted)
+
+8. **MatchResultRow** — Single match row for lists
+   - Props: match (date, homeTeam, homeScore, awayTeam, awayScore, type, playerRating?)
+   - Design: score centered, result color indicator, match type badge, player rating if available
+
+9. **KPICard** — Key metric card (replaces StatCard for dashboard use)
+   - Props: title, value, subtitle, trend (direction, percentage), icon, accentColor
+   - Design: compact, data-dense, sparkline optional
+
+10. **PageHeader** — Keep existing, ensure dark theme compatibility
+
+All components must export from src/components/shared/index.ts.
+Write Storybook-like examples in the design-system page.
+
+### Task: Update Design System Showcase Page (/design-system)
+**Priority: MEDIUM — Dependencies: CSS variables task, Shared components task**
+
+Update src/app/(public)/design-system/DesignSystemShowcase.tsx to:
+- Reflect correct P.I.T dark colors (update COLOR_SECTIONS data)
+- Add all 7 position colors section
+- Add Buttons section (all variants: primary, secondary, ghost, destructive, outline, sizes)
+- Add new shared components section: PlayerCard, FormStrip, TournamentCard, TrophyCard, RadarChart, PositionBadge, RatingBadge
+- Add Typography section showing Russo One for headings
+- Add Loading states section
+- Remove deprecated light-mode color references
+
+---
+
+## FEATURE GROUP 2: PLAYER PERSONA SCREENS
+
+### Task: Player Profile Dashboard (/profile)
+**User Story (US-1.1):** As a player, I want to see my key stats, recent form, and upcoming matches when I enter my dashboard.
+
+**Screen: /profile (main dashboard)**
+Components needed:
+- Player Card hero section: large PlayerCard (full variant) with avatar, gamertag, position, tier, club badge
+- Hero Stats row: 4 KPICards — Partidas, Gols, Assistências, Rating Médio
+- FormStrip component: últimos 5/10 resultados (W/D/L)
+- Upcoming matches widget: próxima partida agendada (matchmaking queue)
+- Pending invitations: card list of pending club invitations
+- Recent activity: últimos 5 events (gol marcado, MVP, convite, nova partida)
+
+Data sources:
+- v_player_stats view (stats aggregated)
+- match_players table (recent matches)
+- matchmaking_queue (upcoming)
+- notifications table (activity feed)
+- club_invitations (pending invites)
+
+Loading states: PlayerCard skeleton, KPI skeletons (4x), FormStrip skeleton
+Empty states: "Você ainda não tem partidas registradas" with call-to-action
+Backend gaps: streak calculation (do client-side from match_players), activity feed (aggregate from notifications)
+
+Files to create/update:
+- src/app/(dashboard)/profile/page.tsx
+- src/components/features/player/ProfileHero.tsx
+- src/components/features/player/ActivityFeed.tsx
+- src/components/features/player/UpcomingMatch.tsx
+
+### Task: Player Stats Page (/profile/stats)
+**User Story (US-1.2):** As a player, I want to see my radar chart by position, compare with other players, and track my evolution over time.
+
+**Screen: /profile/stats (NEW route)**
+Components needed:
+- RadarChart component: attributes by main position (Pace, Shooting, Passing, Dribbling, Defending, Physical)
+- Player comparison: dropdown to select opponent player, side-by-side RadarChart
+- Stats by position table: filter by position played (ZAG, VOL, MC, etc.)
+- Personal records: best rating, most goals in a match, longest streak
+- Rating evolution line chart: Recharts LineChart with weekly data points
+
+Data sources:
+- v_player_stats_by_position
+- match_players (for evolution chart — group by week)
+- GET /api/player/[id]/stats (existing)
+
+Files to create:
+- src/app/(dashboard)/profile/stats/page.tsx
+- src/components/features/player/StatsRadarSection.tsx
+- src/components/features/player/PlayerComparison.tsx
+- src/components/features/player/RatingEvolutionChart.tsx
+
+### Task: Player Match History (/profile/matches)
+**User Story (US-1.3):** As a player, I want to browse my match history with filters and see my individual performance in each game.
+
+**Screen: /profile/matches**
+Components needed:
+- Filter bar: type (championship/friendly_pit/friendly_external), result (W/D/L), period (week/month/all)
+- MatchResultRow list: paginated, 20 per page
+- Match detail expandable: click to expand — all players with their stats, timeline events if available
+- Performance badges inline: MVP, hat-trick, clean sheet badges
+
+Data sources:
+- GET /api/player/matches (filtered by player, with pagination)
+- match_players table joined with matches
+
+Files to create/update:
+- src/app/(dashboard)/profile/matches/page.tsx
+- src/components/features/player/MatchHistoryList.tsx
+- src/components/features/player/MatchDetailExpanded.tsx
+
+### Task: Player Public Profile (/players/[id])
+**User Story (US-1.4):** As a visitor, I want to see a player's public profile with their stats and achievements.
+
+**Screen: /players/[id] (existing but needs redesign)**
+Components needed:
+- PlayerCard large (public variant) — stats summary, club link, tier
+- Career stats table: seasons, goals, assists, matches, rating avg
+- Trophy showcase: tournament wins, individual awards
+- "Convidar para time" button (only visible for logged-in managers)
+
+Data sources:
+- GET /api/player/[id] (existing)
+- GET /api/player/[id]/stats
+- v_player_stats view
+
+Files to update:
+- src/app/(public)/players/[id]/page.tsx
+
+### Task: Player Settings (/profile/settings)
+**User Story (US-1.5):** As a player, I want to configure my identity, notifications, and account in a clear, organized settings page.
+
+**Screen: /profile/settings**
+Tab sections:
+1. Identidade: gamertag EA, posições (primária/secundária), bio, avatar upload (Supabase Storage)
+2. Status: free agent toggle, availability
+3. Notificações: toggle per notification type (in-app)
+4. Conta: email (display only), password change, danger zone (delete account)
+
+Avatar upload: integrate Supabase Storage bucket "player-avatars"
+File type: JPEG/PNG/WebP, max 2MB, crop to square before upload
+
+Files to update:
+- src/app/(dashboard)/profile/settings/page.tsx (rewrite with tabs)
+
+---
+
+## FEATURE GROUP 3: MANAGER PERSONA SCREENS
+
+### Task: Team Dashboard (/team)
+**User Story (US-2.1):** As a manager, I want to see my club's key metrics, current form, and quick actions when I enter the team section.
+
+**Screen: /team (main club dashboard)**
+Components needed:
+- Club header: logo (with upload), name, subscription badge (plan tier), player count
+- KPI row: 4 KPICards — Jogadores Ativos, Rating Médio Elenco, Taxa de Vitória, Gols/Jogo
+- Form strip: últimos 10 jogos do time (W/D/L)
+- Best player widget: quem está em melhor fase (rating médio últimas 5 partidas)
+- Upcoming fixtures: próximo matchmaking/torneio
+- Alerts panel: jogadores inativos há 7+ dias, pagamentos pendentes, convites não respondidos
+- Quick Actions bar: Agendar matchmaking, Inscrever em torneio, Convidar jogador
+
+Data sources:
+- GET /api/team (existing) — club info
+- GET /api/team/matches (results for form strip)
+- v_club_stats view
+- club_players joined with players
+- matchmaking_queue
+
+Files to update:
+- src/app/(dashboard)/team/page.tsx
+- src/components/features/team/ClubHeader.tsx
+- src/components/features/team/TeamAlertsPanel.tsx
+
+### Task: Roster Management (/team/roster)
+**User Story (US-2.2):** As a manager, I want to see my full roster with stats, manage positions, and track player availability.
+
+**Screen: /team/roster**
+Components needed:
+- Position coverage grid: visual 11v11 formation showing which positions have players and which are empty
+- Roster DataTable: player name, position badge, rating, goals, assists, last match date, status
+- Filters: by position, by status (active/inactive)
+- Pending invitations section: who was invited and status
+- Row actions: promote to captain, remove from team, view profile
+
+Files to update:
+- src/app/(dashboard)/team/roster/page.tsx
+
+### Task: Lineup Editor (/team/lineup)
+**User Story (US-2.3):** As a manager, I want to build and save formations with drag-and-drop player placement.
+
+**Screen: /team/lineup**
+Components needed:
+- Football pitch visual: 11 position slots in proper formation layout (4-3-3, 4-4-2, 3-5-2)
+- Drag and drop: react-dnd or @dnd-kit for player → position assignment
+- Multiple lineups: saved lineup selector (main, reserve, attacking, defensive)
+- Player bench panel: unassigned players shown on side
+- Lineup comparison: toggle between lineups showing avg rating diff
+
+Files to update:
+- src/app/(dashboard)/team/lineup/page.tsx
+
+### Task: Team Match History (/team/matches)
+**User Story (US-2.4):** As a manager, I want to see my club's complete match history with opponent analysis.
+
+**Screen: /team/matches**
+Components needed:
+- Match list: chronological with score, opponent club link, type badge, date
+- Filters: type, result, opponent search
+- Head-to-head modal: click opponent to see full H2H record (wins/draws/losses, recent matches)
+- Season stats summary: team aggregates (goals scored/conceded, clean sheets)
+
+Files to update:
+- src/app/(dashboard)/team/matches/page.tsx
+
+### Task: Matchmaking Interface (/matchmaking)
+**User Story (US-2.5):** As a manager, I want to schedule matches and communicate with opponents.
+
+**Screen: /matchmaking**
+Components needed:
+- Availability calendar: week view showing available time slots
+- Queue status card: current matchmaking status (waiting, found, confirmed) with timer
+- Confrontation chat: message thread per matchmaking entry
+- Matchmaking history: past scheduled matches
+
+Files to update:
+- src/app/(dashboard)/matchmaking/page.tsx
+
+---
+
+## FEATURE GROUP 4: TOURNAMENT & COMPETITION SCREENS
+
+### Task: Tournament Listing (/tournaments)
+**User Story (US-3.1):** As a competitor, I want to browse tournaments with rich visual cards showing all relevant information.
+
+**Screen: /tournaments**
+Components needed:
+- Tournament grid: 3 columns desktop, 2 tablet, 1 mobile
+- TournamentCard component for each tournament
+- Filter bar: type (corujao/league), status (open/in_progress/finished), entry fee range
+- Featured tournament banner: largest tournament at top in hero format
+- Empty state: "Nenhum torneio disponível no momento"
+
+Data sources:
+- GET /api/tournaments (existing, public route)
+
+Files to update:
+- src/app/(public)/tournaments/page.tsx
+
+### Task: Tournament Detail Page (/tournaments/[id])
+**User Story (US-3.2):** As a competitor, I want to see full tournament details, enrolled teams, bracket, and individual stats.
+
+**Screen: /tournaments/[id] (NEW full page)**
+Sections:
+1. Tournament header: banner image, name, format, dates, entry fee, prize info
+2. Info cards: vagas (X/Y), type, rules summary, organizer
+3. Enrolled teams grid: club logos + names
+4. Bracket/standings: elimination bracket or group stage table
+5. Top scorers leaderboard: goals within this tournament
+6. Registration button (for managers, if open)
+
+Data sources:
+- GET /api/tournament/[id] (existing)
+- GET /api/tournament/[id]/matches
+- GET /api/tournament/[id]/hall-of-fame (trophy data if finished)
+
+Files to create:
+- src/app/(public)/tournaments/[id]/page.tsx (full server component)
+- src/components/features/tournaments/TournamentBracket.tsx
+- src/components/features/tournaments/TournamentScorers.tsx
+
+### Task: Hall of Fame (/hall-of-fame)
+**User Story (US-3.3):** As a competitor, I want to see all past champions, individual awards, and the history of competitions.
+
+**Screen: /hall-of-fame**
+Components needed:
+- Trophy grid: filterable by year, type (corujão/league), tier
+- TrophyCard component for each champion
+- Individual awards section: MVP, top scorer, best GK, best ZAG per tournament
+- Timeline view: chronological list of all champions
+- Search: by team name, player, tournament name
+
+Data sources:
+- GET /api/tournaments?status=finished
+- GET /api/tournament/[id]/hall-of-fame (per tournament)
+
+Files to update:
+- src/app/(public)/hall-of-fame/page.tsx (major rewrite)
+
+### Task: Rankings Page (/rankings)
+**User Story (US-3.4):** As a competitor, I want to see player and team rankings across different categories and time periods.
+
+**Screen: /rankings**
+Tab structure:
+1. Jogadores: ranking by rating avg, goals, assists, MVPs
+2. Times: ranking by wins, win rate, goals scored
+3. Por Posição: best GK, best ZAG, etc. with position filter
+
+Components needed:
+- Ranked DataTable with position number, player/club info, stats, trend arrow
+- Period filter: week / month / season / all-time
+- Position filter (for Por Posição tab)
+- Top 3 podium display at top of each tab
+
+Data sources:
+- v_player_stats view (aggregate for rankings)
+- v_club_stats view
+- GET /api/rankings endpoint (NEW — needs to be created)
+
+Note: The /api/rankings endpoint doesn't exist yet. Task must include:
+- Server component that fetches from v_player_stats/v_club_stats via Supabase
+- Create GET /api/rankings route with query params: type (player|club|position), period, position, limit
+
+Files to create/update:
+- src/app/(public)/rankings/page.tsx (full redesign)
+- src/app/api/rankings/route.ts (new endpoint)
+
+---
+
+## FEATURE GROUP 5: PRICING & SUBSCRIPTIONS
+
+### Task: Pricing Page (/pricing)
+**User Story:** As a club manager, I want to understand the subscription tiers and subscribe/upgrade my club.
+
+**Screen: /pricing (NEW)**
+Components needed:
+- Tier comparison table: Free, Pro, Ultra
+  - Free: 11 players, 1 tournament/month, basic stats
+  - Pro: 20 players, unlimited tournaments, full analytics
+  - Ultra: unlimited players, priority support, custom branding
+- Current plan badge for logged-in users
+- PIX payment button for each paid tier (MercadoPago integration — already exists)
+- FAQ section: common questions about billing
+
+Files to create:
+- src/app/(public)/pricing/page.tsx
+
+---
+
+## FEATURE GROUP 6: IMAGE UPLOAD INFRASTRUCTURE
+
+### Task: Image Upload System (Supabase Storage)
+**Priority: HIGH — Required by Player Settings, Team Dashboard, Tournament Detail**
+
+Create a unified image upload utility and integrate with Supabase Storage.
+
+Storage buckets needed (create via Supabase dashboard or migration):
+- player-avatars: player profile pictures
+- club-logos: club logo uploads
+- tournament-banners: tournament banner images
+
+Upload utility at src/lib/upload/uploadImage.ts:
+- Function: uploadImage(file: File, bucket: string, path: string): Promise<string | null>
+- Uses Supabase Storage client
+- Returns public URL on success
+- Validates: max 2MB, allowed types (JPEG/PNG/WebP/AVIF)
+
+Image upload UI component: src/components/shared/ImageUpload.tsx
+- Props: bucket, path, currentUrl, onUpload, aspectRatio (square|banner|logo)
+- Shows current image preview
+- Drag and drop + click to upload
+- Shows upload progress
+- Error handling for size/type validation
+
+Use in:
+- Profile settings (avatar)
+- Team settings (club logo)
+- Tournament creation (banner)
+
+---
+
+## FEATURE GROUP 7: MODERATION PANEL
+
+### Task: Moderation Dashboard (/moderation)
+**User Story (US-4.1 to US-4.5):** As a moderator, I need efficient tools to manage claims, disputes, tournaments, and users.
+
+**Screen: /moderation (requires moderator role)**
+Tab structure:
+1. Dashboard: KPI cards (claims pendentes, disputas abertas, torneios ativos, usuários suspensos)
+2. Claims: queue of pending club ownership claims
+3. Disputes: open disputes with severity and resolution tools
+4. Tornneios: active tournament management (confirm, generate bracket, advance rounds)
+5. Usuários: user search with moderation actions
+
+Dashboard tab components:
+- 4 KPI cards with counts and trends
+- Priority queue: items needing urgent attention
+- Recent actions feed: last 10 moderation actions
+
+Claims tab components:
+- Card grid with proof image, club name, requester, date
+- Approve / Reject with mandatory reason input
+- History tab: processed claims
+
+Disputes tab components:
+- Severity filter (low/medium/high/critical)
+- Dispute card: teams, tournament, description, evidence
+- Resolution form: WO/dismissed/upheld with notes
+
+Tournaments tab:
+- Active tournament list with management actions
+- Generate bracket button (for confirmed tournaments)
+- Advance round button (per tournament)
+
+Users tab:
+- Search input
+- User profile card: roles, status, clubs
+- Actions: suspend, ban, change role
+
+Data sources: All existing moderation endpoints (/api/moderation/*)
+
+Files to update:
+- src/app/(dashboard)/moderation/page.tsx
+- All moderation sub-pages
+
+---
+
+## FEATURE GROUP 8: ADMIN PANEL
+
+### Task: Admin Panel (/admin)
+**User Story (US-5.1 to US-5.5):** As admin, I need complete platform visibility: metrics, data collection, financial, and settings.
+
+**Screen: /admin (requires admin role)**
+Tab structure:
+1. Dashboard: macro metrics + system health
+2. Coleta: EA API collection pipeline status
+3. Discovery: discovered clubs pipeline
+4. Financeiro: revenue metrics + delinquents
+5. Configurações: platform settings
+
+Dashboard tab:
+- Metric cards: total clubs, players, matches collected, revenue total
+- Recharts LineChart: user growth over time, daily matches collected
+- System health: collection service status, last run, cookie validity
+- Alert panel: failed collections, expiring cookies, overdue payments
+
+Coleta tab:
+- Cookie service status (online/offline)
+- Last sync timestamp
+- Recent runs table: status, clubs processed, new matches
+- Manual trigger button
+
+Discovery tab:
+- Discovered clubs with status (unclaimed/pending/active)
+- Manual scan trigger
+- Add club ID manually form
+
+Financeiro tab:
+- Revenue summary: total, by type (tournament/subscription)
+- Delinquents table: clubs with overdue payments, days overdue
+- Recharts AreaChart: monthly revenue timeline
+
+Configurações tab:
+- Maintenance mode toggle
+- Registration open/closed toggle
+- Subscription plan prices editor
+
+Data sources: All existing admin endpoints (/api/admin/*)
+
+Files to update:
+- src/app/(dashboard)/admin/page.tsx
+- Admin tab components
+
+---
+
+## FEATURE GROUP 9: AUTH & UTILITY PAGES
+
+### Task: Auth Pages Redesign (/login, /register, /forgot-password)
+Complete visual overhaul to match P.I.T dark OLED theme.
+
+- Login: full-screen dark split layout (left: form, right: platform showcase with stats)
+- Register: same split, multi-field form with validation
+- Forgot password: centered card, clean dark form
+
+Files to update:
+- src/app/(auth)/login/page.tsx
+- src/app/(auth)/register/page.tsx
+- src/app/(auth)/forgot-password/page.tsx
+
+### Task: Public Landing Page (/)
+As a visitor, I want to understand the platform value, see active tournaments, and sign up.
+
+Sections:
+1. Hero: headline + P.I.T visual (match stats preview), CTAs
+2. Live tournaments: grid of open tournaments from API
+3. Top rankings: snapshot of top 3 players and clubs
+4. Features: 3 value props (track stats, compete, manage club)
+5. Pricing preview: 3 tiers with CTA to /pricing
+6. Footer: links + social
+
+Files to update:
+- src/app/(public)/page.tsx (landing)
+
+### Task: Utility Pages (404, error, loading, unauthorized)
+Update all utility pages to dark OLED theme with P.I.T branding.
+
+Files:
+- src/app/not-found.tsx
+- src/app/error.tsx
+- src/app/loading.tsx
+- src/app/unauthorized/page.tsx
+
+---
+
+## BACKEND GAPS — NEW ENDPOINTS NEEDED
+
+The following endpoints do not exist and must be created alongside the frontend tasks that depend on them:
+
+1. GET /api/rankings?type=player|club|position&period=week|month|season&limit=50
+   - Server reads v_player_stats or v_club_stats with ORDER BY and LIMIT
+   - No auth required (public)
+
+2. GET /api/player/[id]/form?last=10
+   - Returns last N match results for a player as W/D/L array
+   - Used by FormStrip component
+
+3. GET /api/club/[id]/form?last=10
+   - Returns last N match results for a club as W/D/L array
+
+4. GET /api/player/[id]/records
+   - Returns personal bests: best rating, most goals in one match, longest win streak
+
+5. GET /api/club/[id]/head-to-head/[otherId]
+   - Returns H2H record between two clubs (wins/draws/losses + last 5 matches)
+
+6. POST /api/upload/image
+   - Validates and uploads to Supabase Storage
+   - Body: FormData with file + bucket + path
+   - Returns: { url: string }
+
+Each endpoint must:
+- Use createServerClient from @supabase/ssr
+- Include proper error handling (400, 401, 404, 500)
+- Return typed response bodies matching TypeScript interfaces in src/types/
+
+---
+
+## IMPLEMENTATION ORDER
+
+Tasks should be implemented in this order (dependencies first):
+
+BLOCK A (Foundation — must be done first):
+1. Update CSS variables (globals.css + tailwind.config.ts) — CRITICAL blocker
+2. Shared Components Library (PlayerCard, FormStrip, TournamentCard, TrophyCard, RadarChart, etc.)
+3. Design System Showcase page update
+
+BLOCK B (Player persona):
+4. Player Profile Dashboard (/profile)
+5. Player Stats Page (/profile/stats)
+6. Player Match History (/profile/matches)
+7. Player Public Profile (/players/[id])
+8. Player Settings (/profile/settings) + Image Upload System
+
+BLOCK C (Manager persona):
+9. Team Dashboard (/team)
+10. Roster Management (/team/roster)
+11. Lineup Editor (/team/lineup)
+12. Team Match History (/team/matches)
+13. Matchmaking Interface (/matchmaking)
+
+BLOCK D (Competition):
+14. Tournament Listing (/tournaments)
+15. Tournament Detail (/tournaments/[id]) + backend endpoint
+16. Hall of Fame (/hall-of-fame)
+17. Rankings (/rankings) + /api/rankings endpoint
+
+BLOCK E (Monetization):
+18. Pricing Page (/pricing)
+
+BLOCK F (Staff):
+19. Moderation Panel (/moderation) + all tabs
+20. Admin Panel (/admin) + all tabs
+
+BLOCK G (Public & Auth):
+21. Public Landing Page (/)
+22. Auth Pages (login, register, forgot-password)
+23. Utility Pages (404, error, loading, unauthorized)
+
+---
+
+## CONSTRAINTS
+
+- NEVER use light backgrounds — all surfaces must be from --background, --card, --surface-raised tokens
+- NEVER use inline styles with color values — always Tailwind classes with tokens
+- NEVER use Material Symbols — use Lucide React icons only
+- NEVER add new npm packages without justification in the task context
+- NEVER bypass RLS — always use createServerClient (server.ts) for server-side reads
+- NEVER expose admin supabase client to client components
+- ALWAYS handle loading state with skeleton components (never spinners for >300ms waits)
+- ALWAYS handle empty state with EmptyState component (never blank space)
+- ALWAYS handle error state with ErrorState component + retry action

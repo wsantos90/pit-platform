@@ -2,7 +2,611 @@
   "master": {
     "tasks": [
       {
-        "id": "26",
+        "id": 48,
+        "title": "Atualizar Variáveis CSS para Tema Dark OLED P.I.T",
+        "description": "Atualizar globals.css com as variáveis CSS do tema dark OLED conforme MASTER.md, incluindo cores primárias, backgrounds, posições e cores de gráficos.",
+        "details": "Modificar src/app/globals.css:\n- Definir :root com valores dark OLED como padrão (não light)\n- --background: 240 33% 4% (#0A0A0F)\n- --background-card: 240 25% 10% (#141420)\n- --surface-raised: 240 24% 14% (#1C1C2E)\n- --primary: #F97316 (orange)\n- --foreground: 225 60% 98% (#F8F9FC)\n- --foreground-secondary: 215 20% 65% (#94A3B8)\n- --border: rgba(255,255,255,0.08)\n- Cores de posição: --pos-gk (amber), --pos-zag (blue), --pos-vol (green), --pos-mc (emerald), --pos-ae (orange), --pos-ad (orange-light), --pos-ata (red)\n- Cores de resultado: --result-win (green), --result-draw (slate), --result-loss (red)\n- Cores de gráfico: --chart-1 (orange), --chart-2 (blue), --chart-3 (green), --chart-4 (amber), --chart-5 (purple)\n\nModificar tailwind.config.ts:\n- Adicionar tokens de posição: pos-gk, pos-zag, pos-vol, pos-mc, pos-ae, pos-ad, pos-ata\n- Adicionar font families: font-heading (Russo One), font-data (JetBrains Mono)\n- Remover tokens de posição antigos\n- Mapear todas as cores para css variables\n\nModificar src/app/layout.tsx:\n- Importar Russo One e JetBrains Mono via next/font/google\n- Aplicar classes de fonte ao body",
+        "testStrategy": "Verificar que a página design-system exibe fundo OLED black (#0A0A0F), botões laranja (#F97316), badges de posição com cores corretas. Executar npm run build sem erros TypeScript. Inspecionar elementos no DevTools para confirmar que não há cores hardcoded.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 49,
+        "title": "Criar Componente PlayerCard",
+        "description": "Implementar componente PlayerCard estilo FIFA com variantes full (160×220px), compact e skeleton.",
+        "details": "Criar src/components/shared/PlayerCard.tsx:\n\ninterface PlayerCardProps {\n  playerName: string;\n  position: 'GK' | 'ZAG' | 'VOL' | 'MC' | 'AE' | 'AD' | 'ATA';\n  rating: number;\n  goals: number;\n  assists: number;\n  matches: number;\n  avatarUrl?: string;\n  clubName?: string;\n  tier?: 'free' | 'pro' | 'ultra';\n  variant?: 'full' | 'compact';\n  isLoading?: boolean;\n}\n\nDesign:\n- Card dark com stripe colorida no topo usando --pos-* tokens\n- Rating como número grande (Russo One, font-heading)\n- Grid de stats (gols, assists, partidas)\n- Avatar circular com fallback\n- Badge de posição colorido\n- Variante compact para uso em listas (menor, horizontal)\n- Skeleton version com animate-pulse\n\nUsar Tailwind classes com tokens do tema:\n- bg-card, border-border\n- text-foreground, text-foreground-secondary\n- Nunca cores hardcoded",
+        "testStrategy": "Renderizar PlayerCard com diferentes props na página design-system. Verificar variantes full/compact/skeleton. Testar todas as 7 posições para cores corretas. Verificar responsividade em 375px, 768px, 1024px.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 50,
+        "title": "Criar Componente FormStrip",
+        "description": "Implementar componente FormStrip para exibir sequência de resultados W/D/L com pills coloridas.",
+        "details": "Criar src/components/shared/FormStrip.tsx:\n\ninterface FormStripProps {\n  results: Array<'W' | 'D' | 'L'>;\n  size?: 'sm' | 'md' | 'lg';\n  maxResults?: number; // default 10\n}\n\nDesign:\n- Pills/dots coloridos: W=--result-win (green), D=--result-draw (slate), L=--result-loss (red)\n- Cada pill mostra letra (V/E/D em português)\n- Tooltip no hover com data e placar (se disponível)\n- Tamanhos: sm (16px), md (24px), lg (32px)\n- Flex row com gap-1\n- Skeleton version com pills cinza animados\n\nImplementação:\n```tsx\nconst resultColors = {\n  W: 'bg-result-win text-white',\n  D: 'bg-result-draw text-white', \n  L: 'bg-result-loss text-white'\n};\nconst resultLabels = { W: 'V', D: 'E', L: 'D' };\n```",
+        "testStrategy": "Testar com arrays de diferentes tamanhos (1, 5, 10 resultados). Verificar cores corretas para cada tipo de resultado. Testar tooltip hover. Verificar tamanhos sm/md/lg.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 51,
+        "title": "Criar Componente TournamentCard",
+        "description": "Implementar card de torneio com banner, status badge, vagas e botão de inscrição.",
+        "details": "Criar src/components/shared/TournamentCard.tsx:\n\ninterface TournamentCardProps {\n  tournament: {\n    id: string;\n    name: string;\n    type: 'corujao' | 'league';\n    status: 'open' | 'in_progress' | 'finished';\n    startDate: string;\n    entryFee: number;\n    maxTeams: number;\n    currentTeams: number;\n    bannerUrl?: string;\n  };\n  onRegister?: () => void;\n  canRegister?: boolean;\n}\n\nDesign:\n- Banner image header (aspect-ratio 16:9) com fallback gradient\n- Status badge: open (green), in_progress (amber), finished (slate)\n- Entry fee em destaque\n- Barra de progresso de vagas (currentTeams/maxTeams)\n- Botão 'Inscrever' (apenas se canRegister=true e status=open)\n- Card bg-card com hover effect\n- Skeleton version",
+        "testStrategy": "Renderizar cards com diferentes status e verificar badges. Testar com/sem banner image. Verificar botão de inscrição aparece apenas quando permitido. Testar responsividade.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 52,
+        "title": "Criar Componente TrophyCard",
+        "description": "Implementar card de troféu para Hall of Fame com destaque gold/amber.",
+        "details": "Criar src/components/shared/TrophyCard.tsx:\n\ninterface TrophyCardProps {\n  tournament: {\n    name: string;\n    type: 'corujao' | 'league';\n    date: string;\n    tier: 'gold' | 'silver' | 'bronze';\n  };\n  clubName: string;\n  clubLogo?: string;\n  mvpPlayer?: string;\n}\n\nDesign:\n- Card com borda/accent gold/amber para tier gold\n- Ícone de troféu (Lucide: Trophy)\n- Nome do torneio em Russo One\n- Logo do clube campeão\n- Badge de tier (gold/silver/bronze)\n- Data formatada\n- MVP player se disponível\n- Efeito shimmer sutil no gold tier",
+        "testStrategy": "Renderizar TrophyCards com diferentes tiers e verificar estilos. Testar com/sem logo e MVP. Verificar formatação de data.",
+        "priority": "medium",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 53,
+        "title": "Criar Componente RadarChart",
+        "description": "Implementar gráfico radar para atributos de jogador usando Recharts.",
+        "details": "Criar src/components/shared/RadarChart.tsx:\n\ninterface RadarChartProps {\n  data: Array<{\n    attribute: string;\n    value: number;\n    maxValue: number;\n  }>;\n  compareData?: Array<{\n    attribute: string;\n    value: number;\n    maxValue: number;\n  }>;\n  showBenchmark?: boolean;\n}\n\nImplementação com Recharts:\n```tsx\nimport { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend, ResponsiveContainer } from 'recharts';\n\n// Cores usando CSS variables\nconst COLORS = {\n  primary: 'hsl(var(--chart-1))', // orange\n  compare: 'hsl(var(--chart-2))', // blue\n  benchmark: 'hsl(var(--chart-avg))'\n};\n```\n\n- 5-8 eixos (Pace, Shooting, Passing, Dribbling, Defending, Physical)\n- Fill opacity 30%\n- Grid lines sutis\n- Labels em foreground-secondary\n- Suporte a comparação lado a lado\n- ResponsiveContainer para responsividade",
+        "testStrategy": "Renderizar com dados de exemplo (6 atributos). Testar modo comparação com dois jogadores. Verificar cores do tema. Testar responsividade do container.",
+        "priority": "medium",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 54,
+        "title": "Criar Componentes PositionBadge, RatingBadge, MatchResultRow e KPICard",
+        "description": "Implementar componentes auxiliares: badges de posição/rating, linha de resultado e card de KPI.",
+        "details": "Criar em src/components/shared/:\n\n1. PositionBadge.tsx:\n- Props: position, size ('sm'|'md')\n- Chip colorido usando --pos-* tokens\n- Dot colorido + texto da posição\n\n2. RatingBadge.tsx:\n- Props: rating (number), size ('sm'|'md'|'lg')\n- Escala de cor: 90+ (gold), 80-89 (green), 70-79 (blue), 60-69 (slate), <60 (muted)\n- Número em font-data (JetBrains Mono)\n\n3. MatchResultRow.tsx:\n- Props: match { date, homeTeam, homeScore, awayTeam, awayScore, type, playerRating? }\n- Score centralizado, indicador de resultado colorido\n- Badge de tipo de partida\n- Rating do jogador se disponível\n\n4. KPICard.tsx:\n- Props: title, value, subtitle?, trend? { direction: 'up'|'down', percentage }, icon?, accentColor?\n- Design compacto, data-dense\n- Ícone Lucide opcional\n- Trend arrow com cor (green up, red down)\n- Sparkline opcional (mini gráfico)\n\nExportar todos de src/components/shared/index.ts",
+        "testStrategy": "Testar cada componente com variações de props. Verificar cores de posição (7 posições). Verificar escala de cores do rating. Testar KPICard com/sem trend e sparkline.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 55,
+        "title": "Atualizar Página Design System Showcase",
+        "description": "Atualizar /design-system para refletir tema P.I.T dark OLED e exibir todos os novos componentes.",
+        "details": "Atualizar src/app/(public)/design-system/DesignSystemShowcase.tsx:\n\nSeções a incluir:\n1. Cores P.I.T:\n   - Background colors (base, card, surface-raised)\n   - Primary/secondary colors\n   - Foreground colors\n   - Border color\n\n2. Cores de Posição (7 posições):\n   - Grid com todas as posições e suas cores\n   - PositionBadge para cada uma\n\n3. Cores de Resultado:\n   - Win/Draw/Loss com FormStrip exemplo\n\n4. Cores de Gráfico:\n   - chart-1 a chart-5\n\n5. Tipografia:\n   - Russo One para headings (h1-h6)\n   - Inter para body\n   - JetBrains Mono para dados/números\n\n6. Botões:\n   - Todas variantes: primary, secondary, ghost, destructive, outline\n   - Todos tamanhos: sm, default, lg\n\n7. Componentes Compartilhados:\n   - PlayerCard (full e compact)\n   - FormStrip\n   - TournamentCard\n   - TrophyCard\n   - RadarChart\n   - PositionBadge\n   - RatingBadge\n   - KPICard\n\n8. Estados de Loading:\n   - Skeletons de cada componente\n\nRemover referências a cores light-mode.",
+        "testStrategy": "Navegar para /design-system e verificar que todas as seções renderizam corretamente. Verificar que não há backgrounds claros. Testar interatividade dos componentes.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 56,
+        "title": "Criar Sistema de Upload de Imagens",
+        "description": "Implementar utilitário de upload e componente de UI para Supabase Storage.",
+        "details": "1. Criar src/lib/upload/uploadImage.ts:\n```typescript\nimport { createClient } from '@/lib/supabase/client';\n\nconst ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/avif'];\nconst MAX_SIZE = 2 * 1024 * 1024; // 2MB\n\nexport async function uploadImage(\n  file: File,\n  bucket: 'player-avatars' | 'club-logos' | 'tournament-banners',\n  path: string\n): Promise<string | null> {\n  // Validar tipo e tamanho\n  if (!ALLOWED_TYPES.includes(file.type)) throw new Error('Tipo de arquivo não permitido');\n  if (file.size > MAX_SIZE) throw new Error('Arquivo muito grande (máx 2MB)');\n  \n  const supabase = createClient();\n  const { data, error } = await supabase.storage\n    .from(bucket)\n    .upload(path, file, { upsert: true });\n  \n  if (error) throw error;\n  \n  const { data: { publicUrl } } = supabase.storage\n    .from(bucket)\n    .getPublicUrl(data.path);\n  \n  return publicUrl;\n}\n```\n\n2. Criar src/components/shared/ImageUpload.tsx:\n- Props: bucket, path, currentUrl, onUpload, aspectRatio ('square'|'banner'|'logo')\n- Preview da imagem atual\n- Drag and drop + click to upload\n- Progress bar durante upload\n- Validação de erro inline\n- Estados: idle, uploading, success, error\n\n3. Criar POST /api/upload/image route:\n- Recebe FormData com file, bucket, path\n- Valida e faz upload\n- Retorna { url: string }",
+        "testStrategy": "Testar upload de imagens válidas (JPEG, PNG, WebP). Testar rejeição de arquivos inválidos (>2MB, tipos não permitidos). Verificar que URL pública é retornada. Testar drag and drop e click.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 57,
+        "title": "Criar Endpoint GET /api/player/[id]/form",
+        "description": "Implementar endpoint para retornar últimos N resultados de um jogador como array W/D/L.",
+        "details": "Criar src/app/api/player/[id]/form/route.ts:\n\n```typescript\nimport { createServerClient } from '@/lib/supabase/server';\nimport { NextRequest, NextResponse } from 'next/server';\n\nexport async function GET(\n  request: NextRequest,\n  { params }: { params: { id: string } }\n) {\n  const searchParams = request.nextUrl.searchParams;\n  const last = parseInt(searchParams.get('last') || '10');\n  \n  const supabase = await createServerClient();\n  \n  // Buscar últimas partidas do jogador\n  const { data: matches, error } = await supabase\n    .from('match_players')\n    .select(`\n      match_id,\n      matches!inner (\n        id,\n        home_score,\n        away_score,\n        home_club_id,\n        away_club_id,\n        played_at\n      )\n    `)\n    .eq('player_id', params.id)\n    .order('matches(played_at)', { ascending: false })\n    .limit(last);\n  \n  if (error) return NextResponse.json({ error: error.message }, { status: 500 });\n  \n  // Determinar W/D/L baseado no clube do jogador\n  const results = matches.map(mp => {\n    const match = mp.matches;\n    const playerClubId = /* determinar clube do jogador na partida */;\n    const isHome = match.home_club_id === playerClubId;\n    const playerScore = isHome ? match.home_score : match.away_score;\n    const opponentScore = isHome ? match.away_score : match.home_score;\n    \n    if (playerScore > opponentScore) return 'W';\n    if (playerScore < opponentScore) return 'L';\n    return 'D';\n  });\n  \n  return NextResponse.json({ results });\n}\n```",
+        "testStrategy": "Testar endpoint com diferentes valores de 'last' (5, 10, 20). Verificar que retorna array correto de W/D/L. Testar com jogador sem partidas (array vazio). Testar com ID inválido (404).",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 58,
+        "title": "Criar Endpoint GET /api/club/[id]/form",
+        "description": "Implementar endpoint para retornar últimos N resultados de um clube como array W/D/L.",
+        "details": "Criar src/app/api/club/[id]/form/route.ts:\n\n```typescript\nimport { createServerClient } from '@/lib/supabase/server';\nimport { NextRequest, NextResponse } from 'next/server';\n\nexport async function GET(\n  request: NextRequest,\n  { params }: { params: { id: string } }\n) {\n  const searchParams = request.nextUrl.searchParams;\n  const last = parseInt(searchParams.get('last') || '10');\n  \n  const supabase = await createServerClient();\n  \n  const { data: matches, error } = await supabase\n    .from('matches')\n    .select('id, home_score, away_score, home_club_id, away_club_id, played_at')\n    .or(`home_club_id.eq.${params.id},away_club_id.eq.${params.id}`)\n    .order('played_at', { ascending: false })\n    .limit(last);\n  \n  if (error) return NextResponse.json({ error: error.message }, { status: 500 });\n  \n  const results = matches.map(match => {\n    const isHome = match.home_club_id === params.id;\n    const clubScore = isHome ? match.home_score : match.away_score;\n    const opponentScore = isHome ? match.away_score : match.home_score;\n    \n    if (clubScore > opponentScore) return 'W';\n    if (clubScore < opponentScore) return 'L';\n    return 'D';\n  });\n  \n  return NextResponse.json({ results });\n}\n```",
+        "testStrategy": "Testar com clube existente e verificar resultados. Testar parâmetro 'last'. Verificar ordenação (mais recente primeiro). Testar clube sem partidas.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 59,
+        "title": "Criar Endpoint GET /api/rankings",
+        "description": "Implementar endpoint de rankings para jogadores, clubes e por posição.",
+        "details": "Criar src/app/api/rankings/route.ts:\n\n```typescript\nimport { createServerClient } from '@/lib/supabase/server';\nimport { NextRequest, NextResponse } from 'next/server';\n\nexport async function GET(request: NextRequest) {\n  const searchParams = request.nextUrl.searchParams;\n  const type = searchParams.get('type') || 'player'; // player | club | position\n  const period = searchParams.get('period') || 'all'; // week | month | season | all\n  const position = searchParams.get('position'); // GK, ZAG, etc.\n  const limit = parseInt(searchParams.get('limit') || '50');\n  \n  const supabase = await createServerClient();\n  \n  if (type === 'player') {\n    // Buscar de v_player_stats\n    let query = supabase\n      .from('v_player_stats')\n      .select('*')\n      .order('rating_avg', { ascending: false })\n      .limit(limit);\n    \n    if (position) {\n      query = query.eq('main_position', position);\n    }\n    \n    // Filtro de período (se implementado na view)\n    \n    const { data, error } = await query;\n    if (error) return NextResponse.json({ error: error.message }, { status: 500 });\n    return NextResponse.json({ rankings: data, type, period });\n  }\n  \n  if (type === 'club') {\n    const { data, error } = await supabase\n      .from('v_club_stats')\n      .select('*')\n      .order('win_rate', { ascending: false })\n      .limit(limit);\n    \n    if (error) return NextResponse.json({ error: error.message }, { status: 500 });\n    return NextResponse.json({ rankings: data, type, period });\n  }\n  \n  // type === 'position'\n  // Retornar top jogadores por posição específica\n}\n```",
+        "testStrategy": "Testar cada tipo de ranking (player, club, position). Verificar filtros de período e posição. Testar limite de resultados. Verificar ordenação correta.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 60,
+        "title": "Implementar Player Profile Dashboard (/profile)",
+        "description": "Criar dashboard principal do jogador com stats, forma recente e próximas partidas.",
+        "details": "Atualizar src/app/(dashboard)/profile/page.tsx:\n\nComponentes a criar/usar:\n1. ProfileHero.tsx:\n   - PlayerCard large com avatar, gamertag, posição, tier, badge do clube\n   - Buscar dados de GET /api/player/me ou contexto\n\n2. Hero Stats Row:\n   - 4 KPICards: Partidas, Gols, Assistências, Rating Médio\n   - Dados de v_player_stats\n\n3. FormStrip:\n   - Últimos 5/10 resultados\n   - Usar GET /api/player/[id]/form\n\n4. UpcomingMatch.tsx:\n   - Próxima partida agendada (matchmaking_queue)\n   - Card com data, horário, adversário\n\n5. PendingInvitations:\n   - Lista de convites pendentes de clubes\n   - Ações: aceitar/recusar\n\n6. ActivityFeed.tsx:\n   - Últimos 5 eventos (gol, MVP, convite, partida)\n   - Timeline vertical\n\nEstados:\n- Loading: skeletons para cada seção\n- Empty: 'Você ainda não tem partidas registradas' com CTA\n- Error: ErrorState com retry\n\nLayout responsivo: grid 12 colunas, reorganiza em mobile.",
+        "testStrategy": "Verificar renderização com dados reais. Testar estados loading/empty/error. Verificar responsividade em todos breakpoints. Testar interações (aceitar convite, etc).",
+        "priority": "high",
+        "dependencies": [
+          48,
+          49,
+          50,
+          54,
+          57
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 61,
+        "title": "Implementar Player Stats Page (/profile/stats)",
+        "description": "Criar página de estatísticas detalhadas do jogador com radar chart e evolução.",
+        "details": "Criar src/app/(dashboard)/profile/stats/page.tsx:\n\nSeções:\n1. StatsRadarSection.tsx:\n   - RadarChart com atributos por posição principal\n   - Atributos: Pace, Shooting, Passing, Dribbling, Defending, Physical\n   - Dados calculados de match_players\n\n2. PlayerComparison.tsx:\n   - Dropdown para selecionar outro jogador\n   - RadarChart lado a lado\n   - Buscar jogadores do mesmo clube ou liga\n\n3. Stats by Position Table:\n   - @tanstack/react-table\n   - Filtro por posição jogada\n   - Colunas: Posição, Partidas, Gols, Assists, Rating Médio\n   - Dados de v_player_stats_by_position\n\n4. Personal Records:\n   - Cards com recordes pessoais\n   - Melhor rating, mais gols em uma partida, maior sequência\n   - Criar GET /api/player/[id]/records se necessário\n\n5. RatingEvolutionChart.tsx:\n   - Recharts LineChart\n   - Pontos de dados semanais\n   - Tooltip com detalhes\n\nLayout: 2 colunas desktop, stack mobile.",
+        "testStrategy": "Verificar RadarChart renderiza com dados corretos. Testar comparação entre jogadores. Verificar tabela com filtros. Testar gráfico de evolução com diferentes períodos.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          53,
+          54,
+          60
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 62,
+        "title": "Implementar Player Match History (/profile/matches)",
+        "description": "Criar página de histórico de partidas do jogador com filtros e detalhes expandíveis.",
+        "details": "Criar/atualizar src/app/(dashboard)/profile/matches/page.tsx:\n\nComponentes:\n1. Filter Bar:\n   - Tipo: championship, friendly_pit, friendly_external (Select)\n   - Resultado: W, D, L (ToggleGroup)\n   - Período: week, month, all (Select)\n   - Aplicar filtros via query params\n\n2. MatchHistoryList.tsx:\n   - Lista de MatchResultRow\n   - Paginação: 20 por página\n   - Infinite scroll ou pagination buttons\n   - Dados de GET /api/player/matches\n\n3. MatchDetailExpanded.tsx:\n   - Expandir ao clicar na row\n   - Mostrar todos jogadores com stats\n   - Timeline de eventos se disponível\n   - Performance badges: MVP, hat-trick, clean sheet\n\nEstados:\n- Loading: skeleton rows\n- Empty: 'Nenhuma partida encontrada com esses filtros'\n- Error: retry button\n\nImplementar client-side filtering ou server-side via API.",
+        "testStrategy": "Testar filtros individualmente e combinados. Verificar paginação funciona. Testar expansão de detalhes. Verificar badges aparecem corretamente.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          54,
+          60
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 63,
+        "title": "Implementar Player Public Profile (/players/[id])",
+        "description": "Redesenhar página pública de perfil de jogador com stats e troféus.",
+        "details": "Atualizar src/app/(public)/players/[id]/page.tsx:\n\nServer Component com fetch de dados:\n```typescript\nexport default async function PlayerPublicProfile({ params }: { params: { id: string } }) {\n  const supabase = await createServerClient();\n  \n  const { data: player } = await supabase\n    .from('players')\n    .select('*, clubs(*)')\n    .eq('id', params.id)\n    .single();\n  \n  const { data: stats } = await supabase\n    .from('v_player_stats')\n    .select('*')\n    .eq('player_id', params.id)\n    .single();\n  // ...\n}\n```\n\nSeções:\n1. PlayerCard large (public variant)\n   - Stats summary, link para clube, tier\n\n2. Career Stats Table:\n   - Temporadas, gols, assists, partidas, rating médio\n   - @tanstack/react-table\n\n3. Trophy Showcase:\n   - Grid de TrophyCards\n   - Títulos de torneios, prêmios individuais\n\n4. 'Convidar para time' Button:\n   - Visível apenas para managers logados\n   - Abre modal de convite\n\nMetadata para SEO:\n```typescript\nexport async function generateMetadata({ params }) {\n  // Gerar title e description dinâmicos\n}\n```",
+        "testStrategy": "Verificar página renderiza com dados do jogador. Testar botão de convite aparece apenas para managers. Verificar SEO metadata. Testar com jogador inexistente (404).",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          52,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 64,
+        "title": "Implementar Player Settings (/profile/settings)",
+        "description": "Criar página de configurações do jogador com tabs para identidade, status, notificações e conta.",
+        "details": "Reescrever src/app/(dashboard)/profile/settings/page.tsx:\n\nUsar shadcn/ui Tabs:\n\n1. Tab Identidade:\n   - Gamertag EA (input)\n   - Posição primária (select)\n   - Posição secundária (select)\n   - Bio (textarea, max 200 chars)\n   - Avatar upload (ImageUpload component)\n   - Salvar via PATCH /api/player/me\n\n2. Tab Status:\n   - Free agent toggle (Switch)\n   - Disponibilidade (select: disponível, ocupado, inativo)\n\n3. Tab Notificações:\n   - Toggle por tipo de notificação\n   - Convites de clube, resultados de partida, torneios\n   - Salvar preferências\n\n4. Tab Conta:\n   - Email (display only, disabled input)\n   - Alterar senha (form com validação)\n   - Danger Zone: botão deletar conta com confirmação\n\nValidação com react-hook-form + zod.\nToast de sucesso/erro após salvar.",
+        "testStrategy": "Testar cada tab individualmente. Verificar upload de avatar funciona. Testar validação de formulários. Verificar alteração de senha. Testar confirmação de delete.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          56,
+          60
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 65,
+        "title": "Implementar Team Dashboard (/team)",
+        "description": "Criar dashboard principal do time com métricas, forma e alertas.",
+        "details": "Atualizar src/app/(dashboard)/team/page.tsx:\n\nComponentes:\n1. ClubHeader.tsx:\n   - Logo (com upload via ImageUpload)\n   - Nome do clube\n   - Badge de subscription (Free/Pro/Ultra)\n   - Contagem de jogadores\n\n2. KPI Row:\n   - 4 KPICards: Jogadores Ativos, Rating Médio Elenco, Taxa de Vitória, Gols/Jogo\n   - Dados de v_club_stats\n\n3. FormStrip:\n   - Últimos 10 jogos do time\n   - Usar GET /api/club/[id]/form\n\n4. Best Player Widget:\n   - Jogador em melhor fase (rating médio últimas 5)\n   - PlayerCard compact\n\n5. Upcoming Fixtures:\n   - Próximo matchmaking/torneio\n   - Card com data e adversário\n\n6. TeamAlertsPanel.tsx:\n   - Jogadores inativos há 7+ dias\n   - Pagamentos pendentes\n   - Convites não respondidos\n   - Ícones de alerta (Lucide: AlertTriangle)\n\n7. Quick Actions Bar:\n   - Botões: Agendar matchmaking, Inscrever em torneio, Convidar jogador\n\nAcesso: apenas managers do clube.",
+        "testStrategy": "Verificar acesso restrito a managers. Testar upload de logo. Verificar KPIs calculados corretamente. Testar alertas aparecem quando há dados.",
+        "priority": "high",
+        "dependencies": [
+          48,
+          49,
+          50,
+          54,
+          56,
+          58
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 66,
+        "title": "Implementar Roster Management (/team/roster)",
+        "description": "Criar página de gerenciamento de elenco com grid de posições e tabela de jogadores.",
+        "details": "Atualizar src/app/(dashboard)/team/roster/page.tsx:\n\nComponentes:\n1. Position Coverage Grid:\n   - Visual 11v11 mostrando formação\n   - Slots de posição com jogador ou vazio\n   - Cores por posição (--pos-* tokens)\n   - Indicador de cobertura (verde=ok, amarelo=1, vermelho=0)\n\n2. Roster DataTable:\n   - @tanstack/react-table\n   - Colunas: Nome, Posição (PositionBadge), Rating (RatingBadge), Gols, Assists, Última Partida, Status\n   - Sorting por qualquer coluna\n   - Filtros: por posição, por status (ativo/inativo)\n\n3. Pending Invitations Section:\n   - Lista de convites enviados\n   - Status: pendente, aceito, recusado\n   - Ação: cancelar convite\n\n4. Row Actions (dropdown):\n   - Ver perfil\n   - Promover a capitão\n   - Remover do time (com confirmação)\n\nDados de club_players joined com players.",
+        "testStrategy": "Verificar grid de posições mostra cobertura correta. Testar filtros e sorting da tabela. Testar ações de row (promover, remover). Verificar convites pendentes.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          54,
+          65
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 67,
+        "title": "Implementar Lineup Editor (/team/lineup)",
+        "description": "Criar editor de escalação com drag-and-drop e múltiplas formações.",
+        "details": "Atualizar src/app/(dashboard)/team/lineup/page.tsx:\n\nDependências: @dnd-kit/core, @dnd-kit/sortable\n\nComponentes:\n1. Football Pitch Visual:\n   - SVG ou div-based campo de futebol\n   - 11 slots de posição em layout de formação\n   - Formações: 4-3-3, 4-4-2, 3-5-2, 4-2-3-1\n   - Selector de formação\n\n2. Drag and Drop:\n   - DndContext do @dnd-kit\n   - Draggable player cards\n   - Droppable position slots\n   - Visual feedback durante drag\n\n3. Lineup Selector:\n   - Múltiplas escalações salvas (principal, reserva, ofensiva, defensiva)\n   - Criar nova, renomear, deletar\n   - Salvar via API\n\n4. Player Bench Panel:\n   - Lista de jogadores não escalados\n   - Filtro por posição\n   - Drag from bench to pitch\n\n5. Lineup Comparison:\n   - Toggle para comparar escalações\n   - Mostrar diff de rating médio\n\nPersistência: salvar em tabela lineups ou club_lineups.",
+        "testStrategy": "Testar drag and drop funciona em desktop e mobile. Verificar troca de formações. Testar salvar/carregar escalações. Verificar comparação entre escalações.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          65
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 68,
+        "title": "Implementar Team Match History (/team/matches)",
+        "description": "Criar página de histórico de partidas do time com análise de adversários.",
+        "details": "Atualizar src/app/(dashboard)/team/matches/page.tsx:\n\nComponentes:\n1. Match List:\n   - Lista cronológica de partidas\n   - MatchResultRow para cada partida\n   - Score, adversário (link), tipo, data\n   - Paginação\n\n2. Filter Bar:\n   - Tipo de partida\n   - Resultado (W/D/L)\n   - Busca por adversário\n   - Período\n\n3. Head-to-Head Modal:\n   - Clicar no adversário abre modal\n   - Histórico completo H2H\n   - Wins/Draws/Losses\n   - Últimas 5 partidas\n   - Criar GET /api/club/[id]/head-to-head/[otherId]\n\n4. Season Stats Summary:\n   - Cards com agregados do time\n   - Gols marcados/sofridos\n   - Clean sheets\n   - Maior vitória/derrota\n\nDados de matches table filtrado por club_id.",
+        "testStrategy": "Testar filtros funcionam corretamente. Verificar modal H2H abre e mostra dados. Testar paginação. Verificar stats summary calculados.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          54,
+          65
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 69,
+        "title": "Criar Endpoint GET /api/club/[id]/head-to-head/[otherId]",
+        "description": "Implementar endpoint para retornar histórico de confrontos entre dois clubes.",
+        "details": "Criar src/app/api/club/[id]/head-to-head/[otherId]/route.ts:\n\n```typescript\nimport { createServerClient } from '@/lib/supabase/server';\nimport { NextRequest, NextResponse } from 'next/server';\n\nexport async function GET(\n  request: NextRequest,\n  { params }: { params: { id: string; otherId: string } }\n) {\n  const supabase = await createServerClient();\n  \n  // Buscar todas partidas entre os dois clubes\n  const { data: matches, error } = await supabase\n    .from('matches')\n    .select('*')\n    .or(`and(home_club_id.eq.${params.id},away_club_id.eq.${params.otherId}),and(home_club_id.eq.${params.otherId},away_club_id.eq.${params.id})`)\n    .order('played_at', { ascending: false });\n  \n  if (error) return NextResponse.json({ error: error.message }, { status: 500 });\n  \n  // Calcular W/D/L do ponto de vista do clube params.id\n  let wins = 0, draws = 0, losses = 0;\n  \n  matches.forEach(match => {\n    const isHome = match.home_club_id === params.id;\n    const clubScore = isHome ? match.home_score : match.away_score;\n    const opponentScore = isHome ? match.away_score : match.home_score;\n    \n    if (clubScore > opponentScore) wins++;\n    else if (clubScore < opponentScore) losses++;\n    else draws++;\n  });\n  \n  return NextResponse.json({\n    clubId: params.id,\n    opponentId: params.otherId,\n    totalMatches: matches.length,\n    wins,\n    draws,\n    losses,\n    recentMatches: matches.slice(0, 5)\n  });\n}\n```",
+        "testStrategy": "Testar com dois clubes que já se enfrentaram. Verificar contagem W/D/L correta. Testar com clubes que nunca se enfrentaram (zeros). Verificar últimas 5 partidas retornadas.",
+        "priority": "medium",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 70,
+        "title": "Implementar Matchmaking Interface (/matchmaking)",
+        "description": "Criar interface de matchmaking com calendário, status e chat.",
+        "details": "Atualizar src/app/(dashboard)/matchmaking/page.tsx:\n\nComponentes:\n1. Availability Calendar:\n   - Visualização semanal\n   - Slots de horário clicáveis\n   - Marcar disponibilidade do time\n   - Usar date-fns para manipulação de datas\n\n2. Queue Status Card:\n   - Status atual: waiting, found, confirmed\n   - Timer mostrando tempo na fila\n   - Adversário encontrado (se found/confirmed)\n   - Botões: confirmar, cancelar\n\n3. Confrontation Chat:\n   - Thread de mensagens por matchmaking entry\n   - Supabase Realtime para updates\n   - Input de mensagem\n   - Histórico de mensagens\n\n4. Matchmaking History:\n   - Lista de matchmakings passados\n   - Status, adversário, data, resultado\n\nIntegração com matchmaking_queue table.\nRealtime subscription para updates de status.",
+        "testStrategy": "Testar seleção de disponibilidade no calendário. Verificar status atualiza em tempo real. Testar chat funciona. Verificar histórico carrega corretamente.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          54,
+          65
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 71,
+        "title": "Implementar Tournament Listing (/tournaments)",
+        "description": "Criar página de listagem de torneios com grid de cards e filtros.",
+        "details": "Atualizar src/app/(public)/tournaments/page.tsx:\n\nServer Component:\n```typescript\nexport default async function TournamentsPage({ searchParams }) {\n  const supabase = await createServerClient();\n  \n  let query = supabase\n    .from('tournaments')\n    .select('*')\n    .order('start_date', { ascending: true });\n  \n  // Aplicar filtros de searchParams\n  if (searchParams.status) {\n    query = query.eq('status', searchParams.status);\n  }\n  // ...\n  \n  const { data: tournaments } = await query;\n}\n```\n\nComponentes:\n1. Featured Tournament Banner:\n   - Maior torneio em destaque no topo\n   - Hero format com banner grande\n\n2. Filter Bar:\n   - Tipo: corujao, league\n   - Status: open, in_progress, finished\n   - Entry fee range (slider)\n\n3. Tournament Grid:\n   - 3 colunas desktop, 2 tablet, 1 mobile\n   - TournamentCard para cada torneio\n   - Responsive grid com gap\n\n4. Empty State:\n   - 'Nenhum torneio disponível no momento'\n   - Ilustração ou ícone\n\nDados de GET /api/tournaments (público).",
+        "testStrategy": "Verificar grid renderiza corretamente. Testar filtros atualizam lista. Verificar responsividade do grid. Testar empty state quando não há torneios.",
+        "priority": "high",
+        "dependencies": [
+          48,
+          51
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 72,
+        "title": "Implementar Tournament Detail Page (/tournaments/[id])",
+        "description": "Criar página completa de detalhes do torneio com bracket, times e artilheiros.",
+        "details": "Criar src/app/(public)/tournaments/[id]/page.tsx:\n\nServer Component com dados:\n```typescript\nexport default async function TournamentDetailPage({ params }) {\n  const supabase = await createServerClient();\n  \n  const { data: tournament } = await supabase\n    .from('tournaments')\n    .select('*')\n    .eq('id', params.id)\n    .single();\n  \n  const { data: enrolledTeams } = await supabase\n    .from('tournament_teams')\n    .select('*, clubs(*)')\n    .eq('tournament_id', params.id);\n  // ...\n}\n```\n\nSeções:\n1. Tournament Header:\n   - Banner image (aspect-ratio 21:9)\n   - Nome, formato, datas\n   - Entry fee, prêmio\n\n2. Info Cards:\n   - Vagas (X/Y com progress bar)\n   - Tipo (badge)\n   - Regras resumidas\n   - Organizador\n\n3. Enrolled Teams Grid:\n   - Logos e nomes dos clubes\n   - Link para perfil do clube\n\n4. TournamentBracket.tsx:\n   - Bracket de eliminação ou tabela de grupos\n   - Visualização interativa\n   - Resultados das partidas\n\n5. TournamentScorers.tsx:\n   - Leaderboard de artilheiros\n   - Gols dentro do torneio\n\n6. Registration Button:\n   - Visível para managers se status=open\n   - Abre modal de confirmação",
+        "testStrategy": "Verificar página renderiza com dados do torneio. Testar bracket/tabela de grupos. Verificar botão de inscrição aparece corretamente. Testar com torneio inexistente (404).",
+        "priority": "high",
+        "dependencies": [
+          48,
+          51,
+          54,
+          71
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 73,
+        "title": "Implementar Hall of Fame (/hall-of-fame)",
+        "description": "Criar página de Hall da Fama com troféus, prêmios individuais e timeline.",
+        "details": "Reescrever src/app/(public)/hall-of-fame/page.tsx:\n\nComponentes:\n1. Trophy Grid:\n   - Filtros: ano, tipo (corujão/league), tier\n   - Grid de TrophyCards\n   - Responsive: 3 cols desktop, 2 tablet, 1 mobile\n\n2. Individual Awards Section:\n   - MVP, artilheiro, melhor GK, melhor ZAG por torneio\n   - Cards com foto do jogador e stats\n\n3. Timeline View:\n   - Lista cronológica de todos os campeões\n   - Vertical timeline com anos\n   - Expandir para ver detalhes\n\n4. Search:\n   - Busca por nome do time, jogador, torneio\n   - Filtro em tempo real\n\nDados:\n- GET /api/tournaments?status=finished\n- GET /api/tournament/[id]/hall-of-fame para cada torneio\n\nOu criar view agregada no Supabase.",
+        "testStrategy": "Verificar filtros funcionam. Testar busca retorna resultados corretos. Verificar timeline renderiza cronologicamente. Testar com muitos dados (performance).",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          52,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 74,
+        "title": "Implementar Rankings Page (/rankings)",
+        "description": "Criar página de rankings com tabs para jogadores, times e por posição.",
+        "details": "Redesenhar src/app/(public)/rankings/page.tsx:\n\nUsar shadcn/ui Tabs:\n\n1. Tab Jogadores:\n   - Ranking por rating médio, gols, assists, MVPs\n   - Selector de métrica\n   - Top 3 podium display no topo\n   - DataTable com posição, jogador, stats, trend\n\n2. Tab Times:\n   - Ranking por vitórias, win rate, gols marcados\n   - Top 3 podium\n   - DataTable com posição, clube, stats\n\n3. Tab Por Posição:\n   - Filtro de posição (GK, ZAG, VOL, MC, AE, AD, ATA)\n   - Melhores jogadores da posição selecionada\n   - PositionBadge no header\n\nComponentes compartilhados:\n- RankedDataTable: número de posição, info, stats, trend arrow\n- PodiumDisplay: top 3 com destaque visual\n- PeriodFilter: week, month, season, all-time\n\nDados de GET /api/rankings com query params.",
+        "testStrategy": "Testar cada tab renderiza corretamente. Verificar filtros de período e posição. Testar ordenação da tabela. Verificar podium mostra top 3.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          54,
+          59
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 75,
+        "title": "Implementar Pricing Page (/pricing)",
+        "description": "Criar página de preços com comparação de planos e integração PIX.",
+        "details": "Criar src/app/(public)/pricing/page.tsx:\n\nComponentes:\n1. Tier Comparison Table:\n   - 3 colunas: Free, Pro, Ultra\n   - Free: 11 jogadores, 1 torneio/mês, stats básicas\n   - Pro: 20 jogadores, torneios ilimitados, analytics completo\n   - Ultra: jogadores ilimitados, suporte prioritário, branding custom\n   - Checkmarks para features incluídas\n   - Preços destacados\n\n2. Current Plan Badge:\n   - Para usuários logados\n   - Mostrar plano atual do clube\n   - 'Seu plano atual' badge\n\n3. PIX Payment Buttons:\n   - Integração MercadoPago existente\n   - Botão 'Assinar' para cada plano pago\n   - Redirect para checkout\n\n4. FAQ Section:\n   - Accordion com perguntas comuns\n   - Como funciona o pagamento?\n   - Posso cancelar?\n   - Como fazer upgrade?\n\nDesign: cards side-by-side, destaque no plano Pro (recomendado).",
+        "testStrategy": "Verificar tabela de comparação renderiza corretamente. Testar botões de pagamento redirecionam. Verificar badge de plano atual para usuários logados. Testar FAQ accordion.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 76,
+        "title": "Implementar Moderation Dashboard (/moderation)",
+        "description": "Criar painel de moderação com tabs para claims, disputas, torneios e usuários.",
+        "details": "Atualizar src/app/(dashboard)/moderation/page.tsx:\n\nAcesso: requer role moderator ou admin.\n\nTabs:\n1. Dashboard Tab:\n   - 4 KPICards: claims pendentes, disputas abertas, torneios ativos, usuários suspensos\n   - Priority queue: itens urgentes\n   - Recent actions feed: últimas 10 ações de moderação\n\n2. Claims Tab:\n   - Grid de cards com proof image, clube, solicitante, data\n   - Botões Aprovar/Rejeitar\n   - Input obrigatório de motivo\n   - Tab de histórico: claims processados\n\n3. Disputes Tab:\n   - Filtro de severidade (low/medium/high/critical)\n   - Dispute card: times, torneio, descrição, evidência\n   - Resolution form: WO/dismissed/upheld com notas\n\n4. Tournaments Tab:\n   - Lista de torneios ativos\n   - Ações: confirmar, gerar bracket, avançar rodada\n   - Status badges\n\n5. Users Tab:\n   - Search input\n   - User profile card: roles, status, clubes\n   - Ações: suspender, banir, alterar role\n\nDados de /api/moderation/* endpoints.",
+        "testStrategy": "Verificar acesso restrito a moderators. Testar cada tab funciona. Verificar ações de moderação (aprovar claim, resolver disputa). Testar busca de usuários.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 77,
+        "title": "Implementar Admin Panel (/admin)",
+        "description": "Criar painel administrativo com métricas, coleta, financeiro e configurações.",
+        "details": "Atualizar src/app/(dashboard)/admin/page.tsx:\n\nAcesso: requer role admin.\n\nTabs:\n1. Dashboard Tab:\n   - Metric cards: total clubes, jogadores, partidas coletadas, receita total\n   - Recharts LineChart: crescimento de usuários, partidas diárias\n   - System health: status do serviço de coleta, última execução, validade do cookie\n   - Alert panel: coletas falhadas, cookies expirando, pagamentos atrasados\n\n2. Coleta Tab:\n   - Status do cookie service (online/offline)\n   - Timestamp da última sync\n   - Tabela de execuções recentes: status, clubes processados, novas partidas\n   - Botão de trigger manual\n\n3. Discovery Tab:\n   - Clubes descobertos com status (unclaimed/pending/active)\n   - Trigger de scan manual\n   - Form para adicionar club ID manualmente\n\n4. Financeiro Tab:\n   - Revenue summary: total, por tipo (torneio/subscription)\n   - Delinquents table: clubes com pagamentos atrasados, dias de atraso\n   - Recharts AreaChart: timeline de receita mensal\n\n5. Configurações Tab:\n   - Maintenance mode toggle\n   - Registration open/closed toggle\n   - Editor de preços de planos\n\nDados de /api/admin/* endpoints.",
+        "testStrategy": "Verificar acesso restrito a admins. Testar gráficos renderizam com dados. Verificar toggles de configuração funcionam. Testar trigger manual de coleta.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 78,
+        "title": "Redesenhar Auth Pages (login, register, forgot-password)",
+        "description": "Atualizar páginas de autenticação para tema dark OLED P.I.T.",
+        "details": "Atualizar páginas em src/app/(auth)/:\n\n1. login/page.tsx:\n   - Layout split full-screen dark\n   - Esquerda: form de login (email, senha, remember me, forgot password link)\n   - Direita: showcase da plataforma com stats preview\n   - Background: --background (OLED black)\n   - Botão primary orange\n   - Link para register\n\n2. register/page.tsx:\n   - Mesmo layout split\n   - Form multi-field: nome, email, senha, confirmar senha, gamertag\n   - Validação com react-hook-form + zod\n   - Terms checkbox\n   - Link para login\n\n3. forgot-password/page.tsx:\n   - Card centralizado\n   - Form simples: email\n   - Mensagem de sucesso após envio\n   - Link para voltar ao login\n\nTodos:\n- Usar tokens de cor do tema\n- Loading states nos botões\n- Error messages inline\n- Integração com Supabase Auth",
+        "testStrategy": "Testar fluxo completo de login. Testar registro com validação. Testar forgot password envia email. Verificar tema dark em todas as páginas.",
+        "priority": "medium",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 79,
+        "title": "Implementar Public Landing Page (/)",
+        "description": "Criar landing page pública com hero, torneios, rankings e features.",
+        "details": "Atualizar src/app/(public)/page.tsx:\n\nSeções:\n1. Hero Section:\n   - Headline impactante sobre P.I.T\n   - Visual de stats/dashboard preview\n   - CTAs: 'Começar Agora' (register), 'Saiba Mais'\n   - Background gradient sutil\n\n2. Live Tournaments:\n   - Grid de torneios abertos (3 cards)\n   - Dados de GET /api/tournaments?status=open&limit=3\n   - Link 'Ver todos' para /tournaments\n\n3. Top Rankings:\n   - Snapshot top 3 jogadores e clubes\n   - Mini podium display\n   - Link para /rankings\n\n4. Features Section:\n   - 3 value props com ícones Lucide\n   - Track stats, Compete, Manage club\n   - Cards com descrição\n\n5. Pricing Preview:\n   - 3 tiers resumidos\n   - CTA para /pricing\n\n6. Footer:\n   - Links de navegação\n   - Social links\n   - Copyright\n\nAnimações sutis com CSS transitions.\nResponsivo para todos breakpoints.",
+        "testStrategy": "Verificar todas as seções renderizam. Testar links funcionam. Verificar dados de torneios e rankings carregam. Testar responsividade completa.",
+        "priority": "high",
+        "dependencies": [
+          48,
+          51,
+          54,
+          59,
+          71
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 80,
+        "title": "Atualizar Utility Pages (404, error, loading, unauthorized)",
+        "description": "Atualizar páginas utilitárias para tema dark OLED com branding P.I.T.",
+        "details": "Atualizar páginas:\n\n1. src/app/not-found.tsx:\n   - Background OLED black\n   - Ilustração ou ícone grande (Lucide: FileQuestion)\n   - Texto '404 - Página não encontrada'\n   - Botão 'Voltar ao início'\n   - Branding P.I.T sutil\n\n2. src/app/error.tsx:\n   - 'use client' (Error Boundary)\n   - Background OLED\n   - Ícone de erro (Lucide: AlertCircle)\n   - Mensagem de erro genérica\n   - Botão 'Tentar novamente' (reset)\n   - Botão 'Voltar ao início'\n\n3. src/app/loading.tsx:\n   - Background OLED\n   - Skeleton ou spinner P.I.T branded\n   - Animação sutil\n\n4. src/app/unauthorized/page.tsx:\n   - Background OLED\n   - Ícone (Lucide: ShieldX)\n   - Texto 'Acesso não autorizado'\n   - Explicação breve\n   - Botão 'Fazer login' ou 'Voltar'\n\nTodos usando tokens de cor do tema.",
+        "testStrategy": "Navegar para rota inexistente e verificar 404. Simular erro e verificar error page. Verificar loading aparece durante navegação. Testar unauthorized com usuário sem permissão.",
+        "priority": "low",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 81,
+        "title": "Criar Endpoint GET /api/player/[id]/records",
+        "description": "Implementar endpoint para retornar recordes pessoais do jogador.",
+        "details": "Criar src/app/api/player/[id]/records/route.ts:\n\n```typescript\nimport { createServerClient } from '@/lib/supabase/server';\nimport { NextRequest, NextResponse } from 'next/server';\n\nexport async function GET(\n  request: NextRequest,\n  { params }: { params: { id: string } }\n) {\n  const supabase = await createServerClient();\n  \n  // Buscar todas partidas do jogador\n  const { data: matches, error } = await supabase\n    .from('match_players')\n    .select(`\n      rating,\n      goals,\n      assists,\n      matches!inner (\n        id,\n        home_score,\n        away_score,\n        home_club_id,\n        away_club_id,\n        played_at\n      )\n    `)\n    .eq('player_id', params.id)\n    .order('matches(played_at)', { ascending: false });\n  \n  if (error) return NextResponse.json({ error: error.message }, { status: 500 });\n  \n  // Calcular recordes\n  const bestRating = Math.max(...matches.map(m => m.rating || 0));\n  const mostGoalsInMatch = Math.max(...matches.map(m => m.goals || 0));\n  \n  // Calcular maior sequência de vitórias\n  let currentStreak = 0;\n  let longestWinStreak = 0;\n  // ... lógica de streak\n  \n  return NextResponse.json({\n    bestRating,\n    mostGoalsInMatch,\n    longestWinStreak,\n    totalMatches: matches.length\n  });\n}\n```",
+        "testStrategy": "Testar com jogador que tem partidas. Verificar cálculos de recordes estão corretos. Testar com jogador sem partidas. Testar com ID inválido.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 82,
+        "title": "Implementar Componente EmptyState e ErrorState",
+        "description": "Criar componentes reutilizáveis para estados vazios e de erro.",
+        "details": "Criar em src/components/shared/:\n\n1. EmptyState.tsx:\n```typescript\ninterface EmptyStateProps {\n  icon?: LucideIcon;\n  title: string;\n  description?: string;\n  action?: {\n    label: string;\n    onClick: () => void;\n  };\n}\n```\n- Ícone centralizado (default: Inbox)\n- Título em foreground\n- Descrição em foreground-secondary\n- Botão de ação opcional\n- Padding generoso, centralizado\n\n2. ErrorState.tsx:\n```typescript\ninterface ErrorStateProps {\n  title?: string;\n  description?: string;\n  onRetry?: () => void;\n}\n```\n- Ícone AlertCircle em destructive\n- Título de erro\n- Descrição do problema\n- Botão 'Tentar novamente' se onRetry fornecido\n\nExportar de src/components/shared/index.ts.\n\nUsar em todas as páginas que precisam de estados empty/error.",
+        "testStrategy": "Renderizar EmptyState com diferentes props. Testar ação onClick funciona. Renderizar ErrorState e testar retry. Verificar estilos do tema.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 83,
+        "title": "Implementar Skeletons para Todos os Componentes",
+        "description": "Criar versões skeleton de todos os componentes principais para loading states.",
+        "details": "Criar skeletons em src/components/shared/skeletons/:\n\n1. PlayerCardSkeleton.tsx:\n   - Mesmo tamanho do PlayerCard\n   - Blocos animados com animate-pulse\n   - Avatar circular, linhas de texto\n\n2. KPICardSkeleton.tsx:\n   - Bloco de título, bloco de valor grande\n\n3. FormStripSkeleton.tsx:\n   - Pills cinza animados\n\n4. TournamentCardSkeleton.tsx:\n   - Banner placeholder, linhas de texto\n\n5. MatchResultRowSkeleton.tsx:\n   - Linha com blocos para times e score\n\n6. DataTableSkeleton.tsx:\n   - Props: rows (number), columns (number)\n   - Grid de células skeleton\n\n7. RadarChartSkeleton.tsx:\n   - Círculo com linhas placeholder\n\nTodos usando:\n- bg-muted com animate-pulse\n- Rounded corners consistentes\n- Tamanhos matching componentes reais\n\nExportar de src/components/shared/skeletons/index.ts.",
+        "testStrategy": "Verificar cada skeleton tem tamanho correto. Testar animação pulse funciona. Usar em páginas e verificar transição smooth para dados reais.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          50,
+          51,
+          54
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 84,
+        "title": "Configurar Context de Perfil/Time/Moderação/Admin",
+        "description": "Implementar context switching para diferentes modos de visualização.",
+        "details": "Criar src/contexts/AppContext.tsx:\n\n```typescript\ninterface AppContextType {\n  // Perfil atual\n  currentProfile: Player | null;\n  \n  // Time selecionado (para managers com múltiplos times)\n  currentTeamId: string | null;\n  setCurrentTeamId: (id: string) => void;\n  \n  // Modo de visualização\n  viewMode: 'player' | 'manager' | 'moderator' | 'admin';\n  setViewMode: (mode: ViewMode) => void;\n  \n  // Roles do usuário\n  roles: Role[];\n  hasRole: (role: Role) => boolean;\n}\n\nexport const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {\n  // Buscar perfil e roles do Supabase Auth\n  // Persistir team_id selecionado em localStorage\n  // Determinar viewMode baseado em roles e rota atual\n};\n```\n\nUsar em:\n- Layout principal para determinar sidebar items\n- Páginas para verificar permissões\n- Componentes para mostrar/esconder ações\n\nRBAC: player → manager → moderator → admin (cumulativo).",
+        "testStrategy": "Testar context fornece dados corretos. Verificar hasRole funciona para roles cumulativos. Testar troca de team_id persiste. Verificar viewMode muda com rota.",
+        "priority": "high",
+        "dependencies": [
+          48
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 85,
+        "title": "Atualizar Sidebar/Navigation para Tema P.I.T",
+        "description": "Redesenhar sidebar e navegação com tema dark OLED e ícones Lucide.",
+        "details": "Atualizar src/components/layout/Sidebar.tsx (ou equivalente):\n\n1. Design:\n   - Background: --background ou --card\n   - Border direita sutil: --border\n   - Logo P.I.T no topo\n   - Ícones Lucide para cada item\n   - Hover state com --primary/10\n   - Active state com --primary e borda esquerda\n\n2. Seções baseadas em role:\n   - Player: Profile, Stats, Matches, Settings\n   - Manager: + Team, Roster, Lineup, Matchmaking\n   - Moderator: + Moderation\n   - Admin: + Admin\n\n3. Team Switcher:\n   - Para managers com múltiplos times\n   - Dropdown com logos dos times\n   - Usa setCurrentTeamId do context\n\n4. User Menu:\n   - Avatar do usuário\n   - Dropdown: Profile, Settings, Logout\n\n5. Mobile:\n   - Hamburger menu\n   - Drawer overlay\n   - Mesmos items\n\nÍcones Lucide sugeridos:\n- User, BarChart3, History, Settings\n- Users, ClipboardList, Layout, Swords\n- Shield, ShieldCheck",
+        "testStrategy": "Verificar sidebar renderiza corretamente para cada role. Testar team switcher funciona. Verificar mobile drawer abre/fecha. Testar navegação funciona.",
+        "priority": "high",
+        "dependencies": [
+          48,
+          84
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 86,
+        "title": "Implementar Testes de Integração para Componentes Críticos",
+        "description": "Criar testes para componentes e fluxos principais usando Vitest/Jest.",
+        "details": "Configurar testes em src/__tests__/ ou junto aos componentes:\n\n1. Configuração:\n   - Vitest ou Jest com React Testing Library\n   - Setup file com providers mockados\n   - Mock do Supabase client\n\n2. Testes de Componentes:\n```typescript\n// PlayerCard.test.tsx\ndescribe('PlayerCard', () => {\n  it('renders player info correctly', () => {\n    render(<PlayerCard playerName=\"Test\" position=\"MC\" rating={85} ... />);\n    expect(screen.getByText('Test')).toBeInTheDocument();\n    expect(screen.getByText('85')).toBeInTheDocument();\n  });\n  \n  it('shows skeleton when loading', () => {\n    render(<PlayerCard isLoading />);\n    expect(screen.getByTestId('player-card-skeleton')).toBeInTheDocument();\n  });\n});\n```\n\n3. Testes de Páginas:\n   - Profile dashboard carrega dados\n   - Team dashboard mostra KPIs\n   - Rankings filtra corretamente\n\n4. Testes de API Routes:\n   - /api/rankings retorna dados corretos\n   - /api/player/[id]/form retorna array W/D/L\n\nMínimo 80% coverage em componentes shared.",
+        "testStrategy": "Executar npm test e verificar todos passam. Verificar coverage report. Testar em CI pipeline.",
+        "priority": "medium",
+        "dependencies": [
+          48,
+          49,
+          50,
+          51,
+          54,
+          59
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 87,
+        "title": "Otimização de Performance e Build Final",
+        "description": "Otimizar bundle size, lazy loading e verificar build sem erros.",
+        "details": "Otimizações:\n\n1. Code Splitting:\n   - Lazy load páginas pesadas (admin, moderation)\n   - Dynamic import para Recharts\n   ```typescript\n   const RadarChart = dynamic(() => import('@/components/shared/RadarChart'), {\n     loading: () => <RadarChartSkeleton />\n   });\n   ```\n\n2. Image Optimization:\n   - Usar next/image para todas imagens\n   - Configurar domains no next.config.js\n   - Placeholder blur para avatars/banners\n\n3. Font Optimization:\n   - Preload Russo One e JetBrains Mono\n   - Font display swap\n\n4. Bundle Analysis:\n   - npm run build\n   - Analisar bundle com @next/bundle-analyzer\n   - Identificar e remover dependências não usadas\n\n5. Verificações Finais:\n   - npm run build passa sem erros TypeScript\n   - npm run lint passa\n   - Lighthouse score > 90 em performance\n   - Verificar todas páginas em produção mode\n\n6. Checklist de Acessibilidade:\n   - Contraste de cores (WCAG AA)\n   - Labels em inputs\n   - Alt text em imagens\n   - Keyboard navigation",
+        "testStrategy": "Executar npm run build e verificar zero erros. Rodar Lighthouse em páginas principais. Verificar bundle size é razoável. Testar em dispositivos reais.",
+        "priority": "high",
+        "dependencies": [
+          48,
+          49,
+          50,
+          51,
+          52,
+          53,
+          54,
+          55,
+          60,
+          61,
+          62,
+          63,
+          64,
+          65,
+          66,
+          67,
+          68,
+          70,
+          71,
+          72,
+          73,
+          74,
+          75,
+          76,
+          77,
+          78,
+          79,
+          80
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2026-03-26T03:32:17.209Z",
+      "updated": "2026-03-26T04:50:10.037Z",
+      "description": "Tasks for master context"
+    }
+  },
+  "phase2-legacy": {
+    "tasks": [
+      {
+        "id": 26,
         "title": "Codebase Refactoring and Cleanup",
         "description": "Resolve merge conflicts, remove dead code/stubs, implement centralized logging, run depcheck, clean directories, and organize AI configs",
         "details": "1. Resolve merge conflicts in profile/page.tsx, StatsOverview.tsx, EvolutionChart.tsx, PositionStats.tsx using git mergetool. 2. Remove 501 stub routes (tournament/create, discovery/insert-manual) or implement minimally. 3. Create src/lib/logger.ts with Winston: `npm i winston`, implement logger.error/replace console.error. 4. Run `npx depcheck --ignores='@types/*,eslint*'`, remove unused deps. 5. Remove material-symbols from package.json. 6. Add ./~/, coverage/, dist/ to .gitignore. 7. Consolidate AI configs to docs/ai-tools/, keep CLAUDE.md as SSOT. 8. Extract stateful logic from 7 admin tab panels to custom hooks (useState/useEffect). 9. Add npm script 'gen:types': 'supabase gen types typescript --local > src/types/database.ts'. 10. Run naming audit with ESLint naming rules.",
@@ -117,7 +721,7 @@
         "expansionPrompt": "Break down this refactoring task into discrete, testable subtasks: (1) Merge conflict resolution per file, (2) Stub route removal/implementation strategy, (3) Winston logger setup and integration, (4) Dependency audit and removal, (5) .gitignore updates, (6) AI config consolidation, (7) Admin hook extraction per panel, (8) Type generation script setup, (9) ESLint naming audit, (10) Build and test validation. For each, define success criteria and testing approach."
       },
       {
-        "id": "27",
+        "id": 27,
         "title": "Project Documentation Setup",
         "description": "Create CONTRIBUTING.md, DEVELOPMENT.md, ARCHITECTURE.md, API.md, DATABASE.md, GitHub templates, labels, milestone, and update README.md",
         "details": "1. Create docs/ folder structure. 2. docs/CONTRIBUTING.md: Git workflow (branch-per-task, PR checklist), dev setup, testing reqs. 3. docs/DEVELOPMENT.md: Supabase local start, env vars, migrations, seed. 4. docs/ARCHITECTURE.md: Mermaid diagram of app flow, Supabase schema. 5. docs/API.md: Table of 40+ routes (method/path/params/response). 6. docs/DATABASE.md: Schema doc, ERD Mermaid, views list. 7. .github/ISSUE_TEMPLATE/bug_report.md + feature_request.md. 8. .github/PULL_REQUEST_TEMPLATE.md with Phase 2 checklist. 9. GitHub labels: bug,feature,refactor,docs,redesign,phase-2. 10. Milestone 'Phase 2: Redesign'. 11. Update README.md with badges, quickstart, deploy links.",
@@ -244,7 +848,7 @@
         "expansionPrompt": "Decompose documentation creation into focused subtasks: (1) docs/ folder structure setup, (2) CONTRIBUTING.md with Git workflow, (3) DEVELOPMENT.md with local setup, (4) ARCHITECTURE.md with Mermaid diagrams, (5) API.md route documentation, (6) DATABASE.md schema documentation, (7) Bug report template, (8) Feature request template, (9) PR template with checklist, (10) GitHub labels and milestone creation, (11) README.md updates with badges and links. Assign ownership and validation criteria for each."
       },
       {
-        "id": "28",
+        "id": 28,
         "title": "Visual Brainstorming and Design System Generation",
         "description": "Install UI/UX Pro Max skill, create design-refs/, generate MASTER.md with complete design system specs and page specs",
         "details": "1. `npx skills add https://github.com/nextlevelbuilder/ui-ux-pro-max-skill --skill ui-ux-pro-max`. 2. Create design-refs/ with screenshots: VirtualNexusArena.com, 21st.dev, Dribbble esports dashboards. 3. Run UI/UX Pro Max skill targeting design-system/MASTER.md output. 4. MASTER.md sections: color palette (primary/secondary/accent/semantic), typography scale (fonts/weights/sizes), spacing scale (4px grid), component specs (button/card/modal/table/sidebar/navbar), anti-patterns. 5. Create design-system/pages/ with specs for profile.md, team.md, auth.md, etc. 6. Manual validation/adjustments. 7. Finalize primary color decision (blue/orange).",
@@ -338,7 +942,7 @@
         "updatedAt": "2026-03-21T05:06:12.346Z"
       },
       {
-        "id": "29",
+        "id": 29,
         "title": "Implement Design Tokens in CSS/Tailwind Config",
         "description": "Apply MASTER.md tokens to globals.css, tailwind.config.ts, layout.tsx, convert hardcoded styles to CSS variables",
         "details": "1. Update src/app/globals.css: add --card-hover, --surface-1/2, --position-gk/def/mid/fwd/atk tokens from MASTER.md. 2. tailwind.config.ts: extend theme with typography scale (page-title, section-title, etc.), spacing scale. 3. src/app/layout.tsx: next/font/google for main font + Fira Code (.font-data utility). 4. Replace .nav-item-active #0d7ff2 → hsl(var(--primary)). 5. Replace .glass-sidebar rgba() → CSS var tokens. 6. Add focus-visible ring styles for WCAG. 7. Create tokens audit script to find remaining hardcoded values.",
@@ -425,7 +1029,7 @@
         "expansionPrompt": "Break token implementation into systematic subtasks: (1) CSS variable definition in globals.css (semantic tokens), (2) Tailwind config theme extension (typography scale), (3) Tailwind config spacing scale, (4) Font setup via next/font/google, (5) Hardcoded color replacement audit and refactoring, (6) Focus-visible and accessibility ring styles, (7) Token audit script creation and validation. Prioritize by page/component impact."
       },
       {
-        "id": "30",
+        "id": 30,
         "title": "Shared Components Library Expansion",
         "description": "Add shadcn/ui components, create PageHeader, StatCard v2, EmptyState, ErrorState, LoadingSkeleton, StatusBadge, etc. with WCAG AA",
         "details": "1. `npx shadcn@latest add dialog dropdown-menu avatar tooltip sheet breadcrumb skeleton scroll-area progress`. 2. src/components/shared/: PageHeader (title/subtitle/actions), StatCard v2 (icon/label/value/sparkline), EmptyState, ErrorState, NoPermissionState, LoadingSkeleton variants, StatusBadge (approved/pending/rejected), ScoreDisplay, PlayerAvatar, DataTable (table+sort/filter/pagination). 3. All components: WCAG AA contrast, keyboard nav (Tab/Enter/Esc), aria-labels on icons, focus-visible ring. 4. Use Fira Code for numeric data via .font-data.",
@@ -532,7 +1136,7 @@
         "expansionPrompt": "Organize component library expansion into phases: (1) shadcn/ui component installation and setup, (2) PageHeader component with title/subtitle/actions, (3) StatCard v2 with icon/label/value/sparkline, (4) EmptyState, ErrorState, NoPermissionState variants, (5) LoadingSkeleton with multiple variants, (6) StatusBadge with state variants, (7) ScoreDisplay and PlayerAvatar components, (8) DataTable with sorting/filtering/pagination, (9) WCAG AA validation and keyboard navigation testing across all components. Include Storybook setup."
       },
       {
-        "id": "31",
+        "id": 31,
         "title": "Layout Shell Redesign - Sidebar + Navbar",
         "description": "Redesign SidebarShell: migrate to Lucide icons, CSS tokens, collapsible sidebar, mobile drawer, breadcrumb, user dropdown",
         "details": "1. src/components/layout/SidebarShell.tsx: replace Material Symbols → Lucide React (remove material-symbols pkg). 2. Replace slate-* hardcoded → CSS tokens. 3. Add collapsible state (localStorage sync). 4. Mobile drawer via shadcn Sheet. 5. Navbar: add Breadcrumb, user avatar DropdownMenu. 6. Prepare landing layout variant (no sidebar). 7. Responsive: 1440p/1080p/1366px breakpoints.",
@@ -619,7 +1223,7 @@
         "expansionPrompt": "Decompose layout redesign into focused subtasks: (1) Material Symbols to Lucide React icon migration, (2) Hardcoded color replacement with CSS tokens, (3) Collapsible sidebar state management and localStorage persistence, (4) Mobile drawer implementation via shadcn Sheet, (5) Navbar with Breadcrumb and user DropdownMenu, (6) Landing layout variant (no sidebar), (7) Responsive design testing (1440p/1080p/1366px breakpoints). Include visual regression testing."
       },
       {
-        "id": "32",
+        "id": 32,
         "title": "Auth Pages Redesign",
         "description": "Redesign /login, /register, /forgot-password with background pattern, branded cards, consistent states (loading/error/success)",
         "details": "1. Apply design-system/pages/auth.md spec. 2. Add subtle grid/texture background via CSS. 3. Auth cards use new tokens + branding (P.I.T logo). 4. Consistent layout across 3 pages. 5. States: loading skeleton, error boundary, success redirect. 6. Form validation with shadcn Input/Label. 7. WCAG AA keyboard focus.",
@@ -715,7 +1319,7 @@
         "updatedAt": "2026-03-22T00:25:01.009Z"
       },
       {
-        "id": "33",
+        "id": 33,
         "title": "Profile Page Redesign",
         "description": "Redesign /profile using page spec: PlayerHeader, StatsOverview (StatCard v2), EvolutionChart, MatchHistory (DataTable), all states",
         "details": "1. Follow design-system/pages/profile.md. 2. PlayerHeader: larger PlayerAvatar + PositionBadge. 3. StatsOverview: StatCard v2 grid + trends. 4. EvolutionChart: branded colors + tooltip. 5. MatchHistory: DataTable sorting. 6. PositionStats: visual map/spider chart. 7. PendingInvitesCard/QuickClubRefreshCard with StatusBadge. 8. Suspense + LoadingSkeleton per section.",
@@ -813,7 +1417,7 @@
         "expansionPrompt": "Break profile page redesign into component-focused subtasks: (1) PlayerHeader with larger avatar and position badge, (2) StatsOverview with StatCard v2 grid and trend indicators, (3) EvolutionChart with branded colors and tooltip, (4) MatchHistory DataTable with sorting, (5) PositionStats visual map/spider chart, (6) PendingInvitesCard and QuickClubRefreshCard with StatusBadge, (7) Suspense boundaries and LoadingSkeleton per section, (8) Testing with real/empty data and all loading/error states. Validate Lighthouse 90+ performance."
       },
       {
-        "id": "34",
+        "id": 34,
         "title": "Profile Sub-Pages Redesign",
         "description": "Redesign /profile/matches (DataTable filters) and /profile/settings (forms layout)",
         "details": "1. /profile/matches: DataTable with filters (match type/result/date). 2. /profile/settings: PlayerIdentityForm + PositionSettingsForm in clean layout. 3. Use shared components + states. 4. Breadcrumb navigation. 5. Form validation + loading states.",
@@ -880,7 +1484,7 @@
         "expansionPrompt": "Organize profile sub-pages redesign into subtasks: (1) /profile/matches DataTable with filters (match type/result/date), (2) /profile/settings form layout with PlayerIdentityForm and PositionSettingsForm, (3) Shared component integration (breadcrumb, form validation), (4) Loading and empty states, (5) Keyboard navigation and consistency testing with main profile page."
       },
       {
-        "id": "35",
+        "id": 35,
         "title": "Team Page Redesign",
         "description": "Redesign /team with 4 tabs: Roster (DataTable), History (DataTable), Matchmaking (EmptyState), Lineup (visual field)",
         "details": "1. Tabs: underline style (not pill). 2. Roster tab: TeamDashboard (StatCard grid), RosterTable (DataTable + PlayerAvatar). 3. History: MatchHistoryTable + ScoreDisplay. 4. Matchmaking: EmptyState → /matchmaking. 5. Lineup: LineupVisual polished field. 6. Invite Dialog (shadcn). 7. All states implemented.",
@@ -978,7 +1582,7 @@
         "expansionPrompt": "Structure team page redesign into tab-focused subtasks: (1) Tab navigation setup (underline style), (2) Roster tab with TeamDashboard StatCard grid and RosterTable DataTable, (3) History tab with MatchHistoryTable and ScoreDisplay, (4) Matchmaking tab with EmptyState and navigation, (5) Lineup tab with LineupVisual field, (6) Invite Dialog implementation via shadcn, (7) State management for all tabs and data loading, (8) Testing tab switching, DataTable functionality, and visual consistency."
       },
       {
-        "id": "36",
+        "id": 36,
         "title": "Team Sub-Pages Redesign",
         "description": "Redesign /team/claim wizard (3-step progress indicator), /team/lineup drag-drop field, and other team sub-pages. Apply design tokens and shared components.",
         "details": "",
@@ -1045,7 +1649,7 @@
         "expansionPrompt": "Decompose team sub-pages into focused subtasks: (1) /team/claim wizard with 3-step progress indicator and form validation, (2) /team/lineup with drag-drop field implementation, (3) Other team sub-pages identification and specification, (4) Design token and shared component application, (5) Testing wizard flow, drag-drop interactions, and form validation."
       },
       {
-        "id": "37",
+        "id": 37,
         "title": "Matchmaking Page Redesign",
         "description": "Redesign /matchmaking with animated QueuePanel, styled ConfrontationChat with message bubbles, visual countdown, and status indicators (searching, matched, confirmed, expired).",
         "details": "",
@@ -1123,7 +1727,7 @@
         "expansionPrompt": "Structure matchmaking page redesign into subtasks: (1) QueuePanel with animated state transitions, (2) ConfrontationChat with message bubbles and styling, (3) Visual countdown timer implementation, (4) Status indicators (searching, matched, confirmed, expired) with visual feedback, (5) Real-time state management and WebSocket integration, (6) Testing animations, state transitions, and user interactions."
       },
       {
-        "id": "38",
+        "id": 38,
         "title": "Tournament Pages Redesign",
         "description": "Redesign /tournaments list with banner-style TournamentCard (VirtualNexusArena inspiration), and /tournaments/[id] detail page migrating inline styles to Tailwind tokens. Refine BracketView, HallOfFameCard, EnrollButton.",
         "details": "",
@@ -1201,7 +1805,7 @@
         "expansionPrompt": "Break tournament pages redesign into subtasks: (1) /tournaments list page with banner-style TournamentCard (VirtualNexusArena inspiration), (2) TournamentCard component with image, title, status, and CTA, (3) /tournaments/[id] detail page with inline style migration to Tailwind tokens, (4) BracketView refinement and interaction, (5) HallOfFameCard and EnrollButton components, (6) Testing card rendering, bracket interactions, and responsive design."
       },
       {
-        "id": "39",
+        "id": 39,
         "title": "Detail Pages Redesign - Players and Matches",
         "description": "Redesign /players/[id] with player profile card, StatCard v2 grid, DataTable history. Redesign /matches/[id] with ScoreDisplay, home/away DataTables. Add Breadcrumb navigation to both.",
         "details": "",
@@ -1278,7 +1882,7 @@
         "expansionPrompt": "Organize detail pages redesign into subtasks: (1) /players/[id] player profile card layout, (2) /players/[id] StatCard v2 grid for player statistics, (3) /players/[id] DataTable for match history, (4) /matches/[id] ScoreDisplay component, (5) /matches/[id] home/away DataTables, (6) Breadcrumb navigation and consistency testing across both pages."
       },
       {
-        "id": "40",
+        "id": 40,
         "title": "Public Pages - Rankings and Hall of Fame",
         "description": "Build /rankings from scratch: filterable leaderboard (players by Pit Rating, clubs by wins) with DataTable. Build /hall-of-fame from scratch: award categories, champions per season. Currently stubs.",
         "details": "",
@@ -1355,7 +1959,7 @@
         "expansionPrompt": "Structure public pages creation into subtasks: (1) /rankings page layout and design, (2) Filterable leaderboard DataTable for players (Pit Rating), (3) Filterable leaderboard DataTable for clubs (wins), (4) /hall-of-fame page layout and design, (5) Award categories and champions per season display, (6) Testing filters, data loading, and responsive design."
       },
       {
-        "id": "41",
+        "id": 41,
         "title": "Public Landing Page",
         "description": "New pre-login public page: hero/CTA, open tournaments (reuse TournamentCard), top rankings, latest results, position highlights. Own layout without sidebar. SEO with Open Graph dynamic meta tags and JSON-LD for tournaments. Inspiration: VirtualNexusArena homepage.",
         "details": "",
@@ -1444,7 +2048,7 @@
         "expansionPrompt": "Decompose landing page creation into subtasks: (1) Landing layout without sidebar, (2) Hero section with CTA, (3) Open tournaments section with TournamentCard reuse, (4) Top rankings section, (5) Latest results section, (6) Position highlights section, (7) SEO implementation (Open Graph meta tags, JSON-LD for tournaments, robots.txt). Validate with VirtualNexusArena inspiration."
       },
       {
-        "id": "42",
+        "id": 42,
         "title": "Admin Panel Redesign",
         "description": "Redesign /admin 7 tabs: DashboardMetrics with StatCard v2, CollectControl/DiscoveryControl with StatusBadge, FinancialDashboard with charts/DataTable, GlobalSettings/SubscriptionManager/ManualClubId with updated form tokens.",
         "details": "",
@@ -1531,7 +2135,7 @@
         "expansionPrompt": "Structure admin panel redesign into tab-focused subtasks: (1) DashboardMetrics tab with StatCard v2 grid, (2) CollectControl tab with StatusBadge, (3) DiscoveryControl tab with StatusBadge, (4) FinancialDashboard tab with charts and DataTable, (5) GlobalSettings tab with form tokens, (6) SubscriptionManager tab with form tokens, (7) ManualClubId tab with form tokens. Include state management and testing."
       },
       {
-        "id": "43",
+        "id": 43,
         "title": "Moderation Panel Redesign",
         "description": "Redesign /moderation 4 tabs: ClaimQueue with card-based review, DisputeViewer with evidence display, TournamentManager forms, UserManagement table with role badges and StatusBadge.",
         "details": "",
@@ -1598,7 +2202,7 @@
         "expansionPrompt": "Organize moderation panel redesign into tab-focused subtasks: (1) ClaimQueue tab with card-based review layout, (2) DisputeViewer tab with evidence display, (3) TournamentManager tab with forms, (4) UserManagement tab with role badges and StatusBadge, (5) Testing review workflows, form submission, and data display."
       },
       {
-        "id": "44",
+        "id": 44,
         "title": "Utility Pages Redesign",
         "description": "Apply design system to payment pages (remove bg-gray-950 hardcoded), /settings/notifications with toggle components, /unauthorized error page with P.I.T branding, 404/500 pages.",
         "details": "",
@@ -1665,7 +2269,7 @@
         "expansionPrompt": "Break utility pages redesign into subtasks: (1) Payment pages hardcoded color removal and token application, (2) /settings/notifications with toggle components, (3) /unauthorized error page with P.I.T branding, (4) 404 error page with branding, (5) 500 error page with branding and support info."
       },
       {
-        "id": "45",
+        "id": 45,
         "title": "SEO, OG Images and Social Engine",
         "description": "Dynamic Open Graph for player profiles, tournaments, teams. Sitemap XML for public pages. JSON-LD for tournaments with dates. Dynamic meta tags via Next.js metadata API. robots.txt configuration.",
         "details": "",
@@ -1732,7 +2336,7 @@
         "expansionPrompt": "Structure SEO implementation into subtasks: (1) Dynamic Open Graph meta tags for player profiles, (2) Dynamic Open Graph meta tags for tournaments, (3) Dynamic Open Graph meta tags for teams, (4) Sitemap XML generation for public pages, (5) JSON-LD structured data for tournaments with dates, robots.txt configuration. Use Next.js metadata API."
       },
       {
-        "id": "46",
+        "id": 46,
         "title": "Performance Budget and Optimization",
         "description": "Define JS budget per critical page. Validate lazy-load in admin/moderation. Optimize Recharts and large tables with virtualization. Lighthouse audit for landing and profile (target: 90+ performance, 90+ accessibility). Remove heavy dependencies. Analyze bundle with next/bundle-analyzer.",
         "details": "",
@@ -1809,7 +2413,7 @@
         "expansionPrompt": "Decompose performance optimization into subtasks: (1) Define JS budget per critical page (landing, profile, team), (2) Lazy-load validation in admin/moderation pages, (3) Recharts optimization for large datasets, (4) Large table virtualization implementation, (5) Lighthouse audit for landing and profile (target 90+ performance/accessibility), (6) Bundle analysis with next/bundle-analyzer and heavy dependency removal."
       },
       {
-        "id": "47",
+        "id": 47,
         "title": "Visual Regression Tests and Component Gallery",
         "description": "Create /dev/components route (dev only) to visualize all shared components with states (default, loading, disabled, hover, error, empty). Screenshot tests for critical pages (profile, team, tournaments, landing). Before/after comparison to protect design system.",
         "details": "",
@@ -1877,13 +2481,13 @@
       }
     ],
     "metadata": {
-      "version": "1.0.0",
-      "lastModified": "2026-03-22T00:25:01.010Z",
-      "taskCount": 22,
-      "completedCount": 4,
-      "tags": [
-        "master"
-      ]
+      "created": "2026-03-26T03:34:55.169Z",
+      "updated": "2026-03-26T03:34:55.169Z",
+      "description": "Tasks originais da Phase 2 (antes do redesign Phase 3)",
+      "copiedFrom": {
+        "tag": "master",
+        "date": "2026-03-26T03:34:55.169Z"
+      }
     }
   }
 }

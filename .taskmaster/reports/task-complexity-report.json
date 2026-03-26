@@ -1,189 +1,333 @@
 {
 	"meta": {
-		"generatedAt": "2026-03-20T00:38:57.929Z",
-		"tasksAnalyzed": 22,
-		"totalTasks": 22,
-		"analysisCount": 22,
+		"generatedAt": "2026-03-26T04:33:55.097Z",
+		"tasksAnalyzed": 40,
+		"totalTasks": 40,
+		"analysisCount": 40,
 		"thresholdScore": 5,
-		"projectName": "Task Master",
-		"usedResearch": false
+		"projectName": "P.I.T Platform",
+		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 26,
-			"taskTitle": "Codebase Refactoring and Cleanup",
-			"complexityScore": 7,
-			"recommendedSubtasks": 10,
-			"expansionPrompt": "Break down this refactoring task into discrete, testable subtasks: (1) Merge conflict resolution per file, (2) Stub route removal/implementation strategy, (3) Winston logger setup and integration, (4) Dependency audit and removal, (5) .gitignore updates, (6) AI config consolidation, (7) Admin hook extraction per panel, (8) Type generation script setup, (9) ESLint naming audit, (10) Build and test validation. For each, define success criteria and testing approach.",
-			"reasoning": "This task involves multiple independent but interconnected refactoring activities across different systems (git, logging, dependencies, configuration, code organization). The complexity stems from: (1) Merge conflict resolution requiring manual intervention and domain knowledge, (2) Deciding whether to remove or implement 501 stub routes (high-impact decision), (3) Integrating a new logging library across the codebase, (4) Dependency management with potential ripple effects, (5) Multiple file system and configuration changes. The test strategy is comprehensive but requires validation across build, runtime, and browser environments. Cyclomatic complexity is moderate per subtask, but the coordination overhead and number of distinct concerns elevates overall complexity[1][2]."
+			"taskId": 48,
+			"taskTitle": "Atualizar Variáveis CSS para Tema Dark OLED P.I.T",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - tarefa pontual de configuração CSS/Tailwind",
+			"reasoning": "Tarefa mecânica de atualização de variáveis CSS e Tailwind config. Baixo risco, detalhes específicos fornecidos, testes visuais simples. Dependência zero."
 		},
 		{
-			"taskId": 27,
-			"taskTitle": "Project Documentation Setup",
+			"taskId": 49,
+			"taskTitle": "Carregar Fontes Russo One, Inter e JetBrains Mono",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - implementação direta via next/font",
+			"reasoning": "Configuração padrão Next.js fonts. Dependente apenas da task 48. Testes visuais no DevTools. Muito baixa complexidade."
+		},
+		{
+			"taskId": 50,
+			"taskTitle": "Criar Componente PlayerCard",
+			"complexityScore": 6,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) Estrutura base e variantes; 2) Avatar com fallback e stats grid",
+			"reasoning": "Componente complexo com múltiplas variantes (full/compact/skeleton), lógica de cores por posição, avatar fallback, stats grid. Dependências críticas (48,49). Alto risco visual."
+		},
+		{
+			"taskId": 51,
+			"taskTitle": "Criar Componente FormStrip",
 			"complexityScore": 5,
-			"recommendedSubtasks": 11,
-			"expansionPrompt": "Decompose documentation creation into focused subtasks: (1) docs/ folder structure setup, (2) CONTRIBUTING.md with Git workflow, (3) DEVELOPMENT.md with local setup, (4) ARCHITECTURE.md with Mermaid diagrams, (5) API.md route documentation, (6) DATABASE.md schema documentation, (7) Bug report template, (8) Feature request template, (9) PR template with checklist, (10) GitHub labels and milestone creation, (11) README.md updates with badges and links. Assign ownership and validation criteria for each.",
-			"reasoning": "Documentation tasks are primarily linear and low-technical-complexity, but involve high volume and attention to detail. Complexity factors: (1) Multiple document types with different structures and audiences, (2) Mermaid diagram creation requires architectural understanding, (3) GitHub template integration requires platform-specific knowledge, (4) Validation across multiple rendering contexts (GitHub, Markdown preview). However, each subtask is largely independent and can be parallelized. The dependency on Task 26 is soft (refactoring should be complete for accurate documentation, but documentation can begin in parallel)[2]."
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Dividir em: 1) Lógica de mapeamento results-to-pills; 2) Tooltip integration",
+			"reasoning": "Componente com tooltip shadcn, múltiplos tamanhos, skeleton. Lógica de cores por resultado. Dependência 48."
 		},
 		{
-			"taskId": 28,
-			"taskTitle": "Visual Brainstorming and Design System Generation",
-			"complexityScore": 6,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Structure design system generation into phases: (1) UI/UX Pro Max skill installation and configuration, (2) Design reference collection (screenshots from VirtualNexusArena, 21st.dev, Dribbble), (3) MASTER.md generation with color palette section, (4) Typography and spacing scale definition, (5) Component specification (button, card, modal, table, sidebar, navbar), (6) Page-specific design specs (profile.md, team.md, auth.md, etc.), (7) Manual validation, color decision finalization, and anti-pattern documentation. Include design review checkpoints.",
-			"reasoning": "Design system generation combines automated tooling with subjective creative decisions. Complexity sources: (1) Skill installation and configuration may have undocumented requirements, (2) Reference collection requires design judgment and curation, (3) AI-generated MASTER.md likely requires significant manual refinement, (4) Color palette and typography decisions are subjective and may require iteration, (5) Component specs must balance comprehensiveness with usability, (6) WCAG AA contrast validation adds technical rigor. The task is moderately complex due to the blend of automation and human judgment[1][3]."
-		},
-		{
-			"taskId": 29,
-			"taskTitle": "Implement Design Tokens in CSS/Tailwind Config",
-			"complexityScore": 6,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Break token implementation into systematic subtasks: (1) CSS variable definition in globals.css (semantic tokens), (2) Tailwind config theme extension (typography scale), (3) Tailwind config spacing scale, (4) Font setup via next/font/google, (5) Hardcoded color replacement audit and refactoring, (6) Focus-visible and accessibility ring styles, (7) Token audit script creation and validation. Prioritize by page/component impact.",
-			"reasoning": "Token implementation requires careful coordination between CSS, Tailwind configuration, and component usage. Complexity factors: (1) CSS variable naming and organization must be consistent and maintainable, (2) Tailwind config extension requires understanding of Tailwind's theme structure, (3) Replacing hardcoded values across the codebase is error-prone and requires systematic auditing, (4) Accessibility requirements (focus-visible rings) add validation overhead, (5) Token audit script must be comprehensive to catch all violations. The task is moderately complex due to the need for systematic refactoring and validation[1][2]."
-		},
-		{
-			"taskId": 30,
-			"taskTitle": "Shared Components Library Expansion",
-			"complexityScore": 7,
-			"recommendedSubtasks": 9,
-			"expansionPrompt": "Organize component library expansion into phases: (1) shadcn/ui component installation and setup, (2) PageHeader component with title/subtitle/actions, (3) StatCard v2 with icon/label/value/sparkline, (4) EmptyState, ErrorState, NoPermissionState variants, (5) LoadingSkeleton with multiple variants, (6) StatusBadge with state variants, (7) ScoreDisplay and PlayerAvatar components, (8) DataTable with sorting/filtering/pagination, (9) WCAG AA validation and keyboard navigation testing across all components. Include Storybook setup.",
-			"reasoning": "Component library expansion is complex due to: (1) Multiple new components with distinct responsibilities, (2) Each component requires multiple state variants (default, loading, disabled, hover, error), (3) WCAG AA compliance requires accessibility knowledge and testing, (4) Keyboard navigation testing (Tab/Enter/Esc) must be validated per component, (5) Integration with shadcn/ui requires understanding of their component patterns, (6) DataTable with sorting/filtering/pagination is inherently complex, (7) Storybook setup and documentation adds overhead. This is a foundational task that many subsequent tasks depend on[1][3][7]."
-		},
-		{
-			"taskId": 31,
-			"taskTitle": "Layout Shell Redesign - Sidebar + Navbar",
-			"complexityScore": 6,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Decompose layout redesign into focused subtasks: (1) Material Symbols to Lucide React icon migration, (2) Hardcoded color replacement with CSS tokens, (3) Collapsible sidebar state management and localStorage persistence, (4) Mobile drawer implementation via shadcn Sheet, (5) Navbar with Breadcrumb and user DropdownMenu, (6) Landing layout variant (no sidebar), (7) Responsive design testing (1440p/1080p/1366px breakpoints). Include visual regression testing.",
-			"reasoning": "Layout shell redesign is moderately complex due to: (1) Icon library migration affects multiple components and requires bundle size validation, (2) State management for collapsible sidebar requires localStorage sync and cross-tab consistency, (3) Mobile drawer implementation requires responsive design knowledge, (4) Breadcrumb and dropdown menu integration requires careful UX consideration, (5) Multiple responsive breakpoints require testing across devices, (6) Visual regression testing is critical to prevent layout regressions. The task is foundational for all page redesigns[1][2]."
-		},
-		{
-			"taskId": 32,
-			"taskTitle": "Auth Pages Redesign",
+			"taskId": 52,
+			"taskTitle": "Criar Componente TournamentCard",
 			"complexityScore": 5,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Structure auth pages redesign into subtasks: (1) Design spec application from design-system/pages/auth.md, (2) Background pattern/texture CSS implementation, (3) Auth card component with branding (P.I.T logo), (4) /login page with form validation and states, (5) /register page with form validation and states, (6) /forgot-password page with form validation and states, (7) Loading/error/success state handling and Supabase auth flow integration. Include keyboard navigation and mobile responsiveness testing.",
-			"reasoning": "Auth pages redesign is moderately complex due to: (1) Three distinct pages with similar structure but different forms, (2) Form validation and error handling require careful UX, (3) Supabase auth flow integration requires understanding of async operations and error states, (4) Loading skeleton and success redirect states add complexity, (5) WCAG AA keyboard focus requirements must be validated, (6) Mobile responsiveness is critical for auth flows. However, the task is relatively straightforward compared to data-heavy pages due to limited interactivity[1][3]."
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Dividir em: 1) Banner com fallback; 2) Progress bar e conditional button",
+			"reasoning": "Banner com fallback, progress bar vagas, botão condicional por role/status. Múltiplos estados. Dependência 48."
 		},
 		{
-			"taskId": 33,
-			"taskTitle": "Profile Page Redesign",
-			"complexityScore": 7,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Break profile page redesign into component-focused subtasks: (1) PlayerHeader with larger avatar and position badge, (2) StatsOverview with StatCard v2 grid and trend indicators, (3) EvolutionChart with branded colors and tooltip, (4) MatchHistory DataTable with sorting, (5) PositionStats visual map/spider chart, (6) PendingInvitesCard and QuickClubRefreshCard with StatusBadge, (7) Suspense boundaries and LoadingSkeleton per section, (8) Testing with real/empty data and all loading/error states. Validate Lighthouse 90+ performance.",
-			"reasoning": "Profile page redesign is complex due to: (1) Multiple distinct components with different data requirements, (2) EvolutionChart and PositionStats require data visualization expertise, (3) DataTable with sorting requires state management, (4) Suspense boundaries and LoadingSkeleton require understanding of React 18 patterns, (5) Testing with real and empty data requires comprehensive test data setup, (6) Lighthouse 90+ performance target requires optimization and bundle analysis, (7) The page is user-facing and critical to the application. This is a high-impact task that sets the pattern for other page redesigns[1][2][3]."
-		},
-		{
-			"taskId": 34,
-			"taskTitle": "Profile Sub-Pages Redesign",
+			"taskId": 53,
+			"taskTitle": "Criar Componente TrophyCard",
 			"complexityScore": 4,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Organize profile sub-pages redesign into subtasks: (1) /profile/matches DataTable with filters (match type/result/date), (2) /profile/settings form layout with PlayerIdentityForm and PositionSettingsForm, (3) Shared component integration (breadcrumb, form validation), (4) Loading and empty states, (5) Keyboard navigation and consistency testing with main profile page.",
-			"reasoning": "Profile sub-pages redesign is moderately simple due to: (1) Limited number of pages (2), (2) Reuse of shared components (DataTable, forms, breadcrumb), (3) Filters and form validation are standard patterns, (4) Dependency on Task 33 means core components are already designed. The main complexity is ensuring consistency with the main profile page and proper filter/form state management[1][2]."
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - componente simples com glow effect",
+			"reasoning": "Card com efeitos visuais (glow amber), fallbacks, múltiplos tiers. Sem lógica complexa. Dependência 48."
 		},
 		{
-			"taskId": 35,
-			"taskTitle": "Team Page Redesign",
-			"complexityScore": 7,
-			"recommendedSubtasks": 8,
-			"expansionPrompt": "Structure team page redesign into tab-focused subtasks: (1) Tab navigation setup (underline style), (2) Roster tab with TeamDashboard StatCard grid and RosterTable DataTable, (3) History tab with MatchHistoryTable and ScoreDisplay, (4) Matchmaking tab with EmptyState and navigation, (5) Lineup tab with LineupVisual field, (6) Invite Dialog implementation via shadcn, (7) State management for all tabs and data loading, (8) Testing tab switching, DataTable functionality, and visual consistency.",
-			"reasoning": "Team page redesign is complex due to: (1) Four distinct tabs with different data requirements and components, (2) Roster and History tabs require DataTable with player avatars and complex data, (3) LineupVisual requires custom visualization and interaction, (4) Invite Dialog requires modal state management, (5) Tab switching must maintain state and handle loading, (6) Multiple data sources (roster, history, matchmaking, lineup) require careful data fetching strategy. This is a high-impact page with significant interactivity[1][2][3]."
+			"taskId": 54,
+			"taskTitle": "Criar Componente RadarChart",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Setup Recharts base; 2) Custom tooltip; 3) Modo comparação dual radar",
+			"reasoning": "Integração Recharts complexa (PolarGrid, multiple Radar layers), CSS vars, modo comparação, responsivo, custom tooltip. Alto risco de bugs de renderização."
 		},
 		{
-			"taskId": 36,
-			"taskTitle": "Team Sub-Pages Redesign",
-			"complexityScore": 6,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Decompose team sub-pages into focused subtasks: (1) /team/claim wizard with 3-step progress indicator and form validation, (2) /team/lineup with drag-drop field implementation, (3) Other team sub-pages identification and specification, (4) Design token and shared component application, (5) Testing wizard flow, drag-drop interactions, and form validation.",
-			"reasoning": "Team sub-pages redesign is moderately complex due to: (1) Claim wizard requires multi-step form handling and progress tracking, (2) Drag-drop field implementation requires careful UX and accessibility, (3) Multiple sub-pages with varying complexity, (4) Dependency on Task 35 means core team components are available. The main complexity is the wizard and drag-drop interactions, which require specialized patterns[1][2]."
-		},
-		{
-			"taskId": 37,
-			"taskTitle": "Matchmaking Page Redesign",
-			"complexityScore": 7,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Structure matchmaking page redesign into subtasks: (1) QueuePanel with animated state transitions, (2) ConfrontationChat with message bubbles and styling, (3) Visual countdown timer implementation, (4) Status indicators (searching, matched, confirmed, expired) with visual feedback, (5) Real-time state management and WebSocket integration, (6) Testing animations, state transitions, and user interactions.",
-			"reasoning": "Matchmaking page redesign is complex due to: (1) Animated QueuePanel requires animation expertise and performance optimization, (2) Real-time chat requires WebSocket or similar real-time technology, (3) Countdown timer requires precise timing and visual feedback, (4) Multiple status states require careful state machine design, (5) Animations and real-time updates can impact performance, (6) User experience is critical for this interactive feature. The task requires both frontend and potentially backend coordination[1][2][3]."
-		},
-		{
-			"taskId": 38,
-			"taskTitle": "Tournament Pages Redesign",
-			"complexityScore": 7,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Break tournament pages redesign into subtasks: (1) /tournaments list page with banner-style TournamentCard (VirtualNexusArena inspiration), (2) TournamentCard component with image, title, status, and CTA, (3) /tournaments/[id] detail page with inline style migration to Tailwind tokens, (4) BracketView refinement and interaction, (5) HallOfFameCard and EnrollButton components, (6) Testing card rendering, bracket interactions, and responsive design.",
-			"reasoning": "Tournament pages redesign is complex due to: (1) TournamentCard requires visual design and responsive layout, (2) BracketView is inherently complex with many nodes and interactions, (3) Inline style migration requires systematic refactoring, (4) Multiple components with distinct responsibilities, (5) Tournament data structure may be complex, (6) Responsive design is critical for tournament browsing. The task requires both design and technical expertise[1][2][3]."
-		},
-		{
-			"taskId": 39,
-			"taskTitle": "Detail Pages Redesign - Players and Matches",
-			"complexityScore": 5,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Organize detail pages redesign into subtasks: (1) /players/[id] player profile card layout, (2) /players/[id] StatCard v2 grid for player statistics, (3) /players/[id] DataTable for match history, (4) /matches/[id] ScoreDisplay component, (5) /matches/[id] home/away DataTables, (6) Breadcrumb navigation and consistency testing across both pages.",
-			"reasoning": "Detail pages redesign is moderately complex due to: (1) Two distinct detail pages with similar structure, (2) Reuse of shared components (StatCard, DataTable, ScoreDisplay), (3) Dynamic routing requires proper data fetching and error handling, (4) Breadcrumb navigation adds consistency, (5) Limited custom interactivity compared to other pages. The task is straightforward due to component reuse and dependency on Task 30[1][2]."
-		},
-		{
-			"taskId": 40,
-			"taskTitle": "Public Pages - Rankings and Hall of Fame",
-			"complexityScore": 5,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Structure public pages creation into subtasks: (1) /rankings page layout and design, (2) Filterable leaderboard DataTable for players (Pit Rating), (3) Filterable leaderboard DataTable for clubs (wins), (4) /hall-of-fame page layout and design, (5) Award categories and champions per season display, (6) Testing filters, data loading, and responsive design.",
-			"reasoning": "Public pages creation is moderately complex due to: (1) Building from scratch requires design decisions, (2) Filterable DataTable requires state management and data fetching, (3) Two distinct pages with different data structures, (4) Public pages may have SEO requirements, (5) Limited custom interactivity. The task is straightforward due to DataTable reuse and clear requirements[1][2]."
-		},
-		{
-			"taskId": 41,
-			"taskTitle": "Public Landing Page",
-			"complexityScore": 6,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Decompose landing page creation into subtasks: (1) Landing layout without sidebar, (2) Hero section with CTA, (3) Open tournaments section with TournamentCard reuse, (4) Top rankings section, (5) Latest results section, (6) Position highlights section, (7) SEO implementation (Open Graph meta tags, JSON-LD for tournaments, robots.txt). Validate with VirtualNexusArena inspiration.",
-			"reasoning": "Landing page creation is moderately complex due to: (1) Building from scratch requires design and layout decisions, (2) Multiple sections with different content types, (3) TournamentCard reuse requires responsive design, (4) SEO implementation requires Next.js metadata API knowledge, (5) Open Graph and JSON-LD require structured data expertise, (6) Landing page is critical for user acquisition and first impressions. Dependencies on Tasks 31, 38, and 40 provide necessary components[1][2][3]."
-		},
-		{
-			"taskId": 42,
-			"taskTitle": "Admin Panel Redesign",
-			"complexityScore": 6,
-			"recommendedSubtasks": 7,
-			"expansionPrompt": "Structure admin panel redesign into tab-focused subtasks: (1) DashboardMetrics tab with StatCard v2 grid, (2) CollectControl tab with StatusBadge, (3) DiscoveryControl tab with StatusBadge, (4) FinancialDashboard tab with charts and DataTable, (5) GlobalSettings tab with form tokens, (6) SubscriptionManager tab with form tokens, (7) ManualClubId tab with form tokens. Include state management and testing.",
-			"reasoning": "Admin panel redesign is moderately complex due to: (1) Seven distinct tabs with different data and components, (2) Mix of dashboards (charts, StatCards) and forms, (3) StatusBadge and DataTable reuse, (4) Financial dashboard may require chart expertise, (5) Form tokens require careful styling, (6) Admin functionality is less critical than user-facing pages. The task is manageable due to component reuse and lower priority[1][2]."
-		},
-		{
-			"taskId": 43,
-			"taskTitle": "Moderation Panel Redesign",
-			"complexityScore": 6,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Organize moderation panel redesign into tab-focused subtasks: (1) ClaimQueue tab with card-based review layout, (2) DisputeViewer tab with evidence display, (3) TournamentManager tab with forms, (4) UserManagement tab with role badges and StatusBadge, (5) Testing review workflows, form submission, and data display.",
-			"reasoning": "Moderation panel redesign is moderately complex due to: (1) Four distinct tabs with different workflows, (2) ClaimQueue requires card-based layout and review workflow, (3) DisputeViewer requires evidence display and organization, (4) UserManagement requires role-based styling, (5) Forms and data tables require careful state management. The task is manageable due to component reuse and lower priority[1][2]."
-		},
-		{
-			"taskId": 44,
-			"taskTitle": "Utility Pages Redesign",
+			"taskId": 55,
+			"taskTitle": "Criar Componentes PositionBadge e RatingBadge",
 			"complexityScore": 4,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Break utility pages redesign into subtasks: (1) Payment pages hardcoded color removal and token application, (2) /settings/notifications with toggle components, (3) /unauthorized error page with P.I.T branding, (4) 404 error page with branding, (5) 500 error page with branding and support info.",
-			"reasoning": "Utility pages redesign is relatively simple due to: (1) Small number of pages with limited functionality, (2) Mostly static content with minimal interactivity, (3) Reuse of design tokens and branding, (4) Error pages are straightforward, (5) Toggle components are simple. The task is low-complexity and can be completed quickly[1][2]."
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - dois badges simples com lógica de cores",
+			"reasoning": "Dois componentes pequenos com mapeamento de cores por posição/tier. Lógica condicional simples. Dependência 48."
 		},
 		{
-			"taskId": 45,
-			"taskTitle": "SEO, OG Images and Social Engine",
-			"complexityScore": 5,
-			"recommendedSubtasks": 5,
-			"expansionPrompt": "Structure SEO implementation into subtasks: (1) Dynamic Open Graph meta tags for player profiles, (2) Dynamic Open Graph meta tags for tournaments, (3) Dynamic Open Graph meta tags for teams, (4) Sitemap XML generation for public pages, (5) JSON-LD structured data for tournaments with dates, robots.txt configuration. Use Next.js metadata API.",
-			"reasoning": "SEO implementation is moderately complex due to: (1) Dynamic meta tags require Next.js metadata API knowledge, (2) Open Graph images may require dynamic generation, (3) JSON-LD requires structured data expertise, (4) Sitemap generation requires understanding of public page structure, (5) robots.txt requires SEO knowledge. However, the task is straightforward once patterns are established[1][2][3]."
-		},
-		{
-			"taskId": 46,
-			"taskTitle": "Performance Budget and Optimization",
+			"taskId": 56,
+			"taskTitle": "Criar Componentes MatchResultRow e KPICard",
 			"complexityScore": 6,
-			"recommendedSubtasks": 6,
-			"expansionPrompt": "Decompose performance optimization into subtasks: (1) Define JS budget per critical page (landing, profile, team), (2) Lazy-load validation in admin/moderation pages, (3) Recharts optimization for large datasets, (4) Large table virtualization implementation, (5) Lighthouse audit for landing and profile (target 90+ performance/accessibility), (6) Bundle analysis with next/bundle-analyzer and heavy dependency removal.",
-			"reasoning": "Performance optimization is moderately complex due to: (1) Requires understanding of performance metrics and budgets, (2) Lazy-loading requires code splitting knowledge, (3) Recharts and table virtualization require specialized optimization techniques, (4) Lighthouse audits require iterative optimization, (5) Bundle analysis requires dependency management expertise, (6) Performance work is ongoing and requires monitoring. The task is critical for user experience[1][2][3][7]."
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Dividir em: 1) MatchResultRow com lógica de resultado; 2) KPICard com trend indicator",
+			"reasoning": "Dois componentes com lógica condicional (cores por resultado, trend direction). Logos, múltiplos estados. Dependência 48."
 		},
 		{
-			"taskId": 47,
-			"taskTitle": "Visual Regression Tests and Component Gallery",
+			"taskId": 57,
+			"taskTitle": "Criar Barrel Export e Atualizar Index de Componentes Compartilhados",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - tarefa de organização de exports",
+			"reasoning": "Barrel exports e verificação de padrões. Muitas dependências mas execução mecânica. Baixo risco."
+		},
+		{
+			"taskId": 58,
+			"taskTitle": "Atualizar Página Design System Showcase",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Seções de cores/tokens; 2) Showcase componentes; 3) Estados loading/error",
+			"reasoning": "Página complexa com 9 seções, múltiplos componentes, testes extensivos de visual/regressão. Showcase interativo. Dependências críticas."
+		},
+		{
+			"taskId": 59,
+			"taskTitle": "Criar Sistema de Upload de Imagens",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) Utilitário Supabase upload; 2) UI drag-drop; 3) Validações; 4) Progress bar",
+			"reasoning": "Integração Supabase Storage, drag-drop, validações cliente/servidor, progress, crop opcional. Alto risco de bugs de storage/security."
+		},
+		{
+			"taskId": 60,
+			"taskTitle": "Criar Endpoint GET /api/player/[id]/form",
+			"complexityScore": 6,
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Dividir em: 1) Query complexa JOIN; 2) Lógica de cálculo W/D/L",
+			"reasoning": "Query Supabase complexa com JOINs, lógica de resultado por team_side. Performance crítica. Sem dependências."
+		},
+		{
+			"taskId": 61,
+			"taskTitle": "Criar Endpoint GET /api/club/[id]/form",
 			"complexityScore": 5,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - similar ao player/form mas mais simples",
+			"reasoning": "Query matches com OR condition, lógica W/D/L por home/away. Menos complexa que player/form."
+		},
+		{
+			"taskId": 62,
+			"taskTitle": "Criar Endpoint GET /api/rankings",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) Player rankings; 2) Club rankings; 3) Position rankings; 4) Date filters",
+			"reasoning": "Endpoint complexo com 3 tipos de ranking, múltiplos filtros período/posição, queries agregadas pesadas. Performance crítica."
+		},
+		{
+			"taskId": 63,
+			"taskTitle": "Implementar Player Profile Dashboard (/profile)",
+			"complexityScore": 9,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "Structure visual regression testing into subtasks: (1) Create /dev/components route (dev-only) for component gallery, (2) Implement component state showcase (default, loading, disabled, hover, error, empty), (3) Screenshot tests for critical pages (profile, team, tournaments, landing), (4) Before/after comparison setup for design system protection, (5) CI/CD integration for automated visual regression testing.",
-			"reasoning": "Visual regression testing is moderately complex due to: (1) Requires setup of screenshot testing infrastructure, (2) Component gallery requires comprehensive state coverage, (3) Critical pages require careful screenshot selection, (4) Before/after comparison requires baseline management, (5) CI/CD integration requires DevOps knowledge. However, the task is well-defined and provides long-term value for design system protection[1][2][3]."
+			"expansionPrompt": "Dividir em: 1) ProfileHero; 2) KPI row; 3) FormStrip integration; 4) UpcomingMatch; 5) Layout grid responsivo",
+			"reasoning": "Dashboard com 6 seções, múltiplas APIs, skeletons, empty states, grid responsivo. Muitas dependências e alto risco visual."
+		},
+		{
+			"taskId": 64,
+			"taskTitle": "Implementar Player Stats Page (/profile/stats)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) RadarChart integration; 2) Comparison dropdown; 3) Stats table; 4) Evolution chart",
+			"reasoning": "Página analítica complexa: radar, comparison, DataTable, LineChart, múltiplas queries. Alto risco de bugs gráficos/performance."
+		},
+		{
+			"taskId": 65,
+			"taskTitle": "Implementar Player Match History (/profile/matches)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Filter bar; 2) Infinite scroll/paginação; 3) Match detail expansion",
+			"reasoning": "Filtros complexos, paginação infinita, accordion/modal details, múltiplos estados. Performance crítica."
+		},
+		{
+			"taskId": 66,
+			"taskTitle": "Implementar Player Public Profile (/players/[id])",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) PlayerCard large + stats; 2) Trophy showcase + invite logic",
+			"reasoning": "Página pública com SEO, múltiplas seções, lógica condicional invite por role. Server component complexo."
+		},
+		{
+			"taskId": 67,
+			"taskTitle": "Implementar Player Settings (/profile/settings)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) Tabs identidade/status; 2) Tabs notificações/conta + upload",
+			"reasoning": "4 tabs com forms complexos, upload avatar, validação senha, danger zone. Múltiplas integrações."
+		},
+		{
+			"taskId": 68,
+			"taskTitle": "Implementar Team Dashboard (/team)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Dividir em: 1) ClubHeader + KPIs; 2) FormStrip + BestPlayer; 3) Alerts panel; 4) Quick actions; 5) Layout",
+			"reasoning": "Dashboard team complexo com 7 seções, upload logo, alerts dinâmicos, múltiplas APIs. Alto risco."
+		},
+		{
+			"taskId": 69,
+			"taskTitle": "Implementar Roster Management (/team/roster)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Position coverage grid; 2) DataTable com filtros; 3) Actions dropdown",
+			"reasoning": "Visual formação 11v11, DataTable complexa, row actions, pending invites. Lógica de roles."
+		},
+		{
+			"taskId": 70,
+			"taskTitle": "Implementar Lineup Editor (/team/lineup)",
+			"complexityScore": 10,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Dividir em: 1) Football pitch SVG; 2) DnD implementation; 3) Formation selector; 4) Player bench; 5) Save/compare",
+			"reasoning": "Máxima complexidade: DnD customizado, SVG campo, múltiplas formações, persistência. Alto risco UX/bugs."
+		},
+		{
+			"taskId": 71,
+			"taskTitle": "Implementar Team Match History (/team/matches)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Filter bar + list; 2) Head-to-head modal; 3) Season stats",
+			"reasoning": "Filtros, paginação, modal H2H complexo, stats agregadas. Dependência endpoint futuro."
+		},
+		{
+			"taskId": 72,
+			"taskTitle": "Criar Endpoint GET /api/club/[id]/head-to-head/[otherId]",
+			"complexityScore": 6,
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Dividir em: 1) Query OR complexa; 2) Stats calculation",
+			"reasoning": "Query Supabase com OR duplo, cálculo record W/D/L. Performance para H2H."
+		},
+		{
+			"taskId": 73,
+			"taskTitle": "Implementar Matchmaking Interface (/matchmaking)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) Calendar availability; 2) Queue status realtime; 3) Chat realtime; 4) History list",
+			"reasoning": "Realtime Supabase (queue + chat), calendar interativo, animações, múltiplos estados. Muito complexo."
+		},
+		{
+			"taskId": 74,
+			"taskTitle": "Implementar Tournament Listing (/tournaments)",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) Featured banner + filters; 2) Tournament grid responsivo",
+			"reasoning": "Filtros complexos (slider), grid responsivo, featured logic, empty state. Público/SEO."
+		},
+		{
+			"taskId": 75,
+			"taskTitle": "Implementar Tournament Detail Page (/tournaments/[id])",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) Header + info cards; 2) Teams grid; 3) Bracket visual; 4) Scorers + register",
+			"reasoning": "Página detalhada com bracket custom, múltiplas APIs, register logic por role. Server component pesado."
+		},
+		{
+			"taskId": 76,
+			"taskTitle": "Implementar Hall of Fame (/hall-of-fame)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Filter bar complexo; 2) Trophy grid; 3) Individual awards + timeline",
+			"reasoning": "Filtros múltiplos, duas visualizações (grid/timeline), awards calculation. Público."
+		},
+		{
+			"taskId": 77,
+			"taskTitle": "Implementar Rankings Page (/rankings)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Dividir em: 1) Podium displays; 2) DataTables por tab; 3) Filters período/posição; 4) Trend arrows",
+			"reasoning": "3 tabs complexos, podium custom, DataTables, filtros, trends. Performance crítica pública."
+		},
+		{
+			"taskId": 78,
+			"taskTitle": "Implementar Pricing Page (/pricing)",
+			"complexityScore": 5,
+			"recommendedSubtasks": 1,
+			"expansionPrompt": "Dividir em: 1) Comparison table; 2) PIX integration + FAQ",
+			"reasoning": "Tabela comparação, MercadoPago integration existente, FAQ accordion. Relativamente simples."
+		},
+		{
+			"taskId": 79,
+			"taskTitle": "Implementar Moderation Dashboard (/moderation)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Dividir em: 1) Dashboard KPIs; 2) Claims tab; 3) Disputes tab; 4) Tournaments tab; 5) Users tab",
+			"reasoning": "5 tabs complexos, role guard, ações críticas (ban/suspend), workflows aprovar/rejeitar."
+		},
+		{
+			"taskId": 80,
+			"taskTitle": "Implementar Admin Panel (/admin)",
+			"complexityScore": 9,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Dividir em: 1) Dashboard metrics/charts; 2) Coleta tab; 3) Discovery tab; 4) Financeiro; 5) Configurações",
+			"reasoning": "Admin only, métricas/gráficos, triggers manuais, financeiro sensível. Muito complexo."
+		},
+		{
+			"taskId": 81,
+			"taskTitle": "Redesenhar Auth Pages (Login, Register, Forgot Password)",
+			"complexityScore": 6,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) AuthLayout split-screen; 2) Forms + validação",
+			"reasoning": "3 páginas com layout custom split-screen, react-hook-form + zod, loading states."
+		},
+		{
+			"taskId": 82,
+			"taskTitle": "Implementar Public Landing Page (/)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) Hero + features; 2) Live tournaments + rankings; 3) Pricing preview + footer",
+			"reasoning": "Landing pública crítica com múltiplas seções, APIs, SEO, responsivo completo."
+		},
+		{
+			"taskId": 83,
+			"taskTitle": "Atualizar Utility Pages (404, Error, Loading, Unauthorized)",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - 4 páginas simples com ícones",
+			"reasoning": "Páginas utilitárias com padrões Next.js + estilização tema. Baixo risco."
+		},
+		{
+			"taskId": 84,
+			"taskTitle": "Criar Componentes EmptyState e ErrorState",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "Não requer expansão - componentes simples reutilizáveis",
+			"reasoning": "Dois componentes padrão com props flexíveis. Baixa complexidade."
+		},
+		{
+			"taskId": 85,
+			"taskTitle": "Criar Endpoint GET /api/player/[id]/records",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) Query match_players; 2) Cálculos de recordes (streak logic)",
+			"reasoning": "Query com JOINs, cálculos complexos (win streak), edge cases (sem partidas)."
+		},
+		{
+			"taskId": 86,
+			"taskTitle": "Implementar Context de Perfil e Time",
+			"complexityScore": 7,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Dividir em: 1) ProfileContext + TeamContext; 2) RoleContext + layout integration",
+			"reasoning": "3 contexts React com React Query/SWR, integração layout, role hierarchy logic."
+		},
+		{
+			"taskId": 87,
+			"taskTitle": "Implementar Proteção de Rotas por Role",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Dividir em: 1) RoleGuard component; 2) Middleware updates; 3) Server-side checkRole",
+			"reasoning": "RBAC completo: client/middleware/server guards, role hierarchy, redirects. Crítico segurança."
 		}
 	]
 }
