@@ -59,133 +59,119 @@
 }
 
 @layer base {
-  :root {
-    --background: 200 12% 97%;
-    --foreground: 210 36% 10%;
-    --foreground-secondary: 215 16% 40%;
-    --foreground-tertiary: 215 12% 55%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 210 36% 10%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 36% 10%;
-    --surface-raised: 210 20% 95%;
-    --surface-overlay: 210 20% 92%;
-
-    --primary: 210 90% 50%;
-    --primary-hover: 210 90% 45%;
-    --primary-active: 210 90% 40%;
-    --primary-foreground: 0 0% 100%;
-    --primary-subtle: 210 90% 50% / 0.12;
-
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 210 32% 18%;
-    --muted: 210 18% 94%;
-    --muted-foreground: 215 16% 40%;
-    --accent: 210 16% 92%;
-    --accent-foreground: 210 32% 18%;
-
-    --accent-brand: 25 95% 53%;
-    --accent-brand-hover: 25 95% 46%;
-    --accent-brand-subtle: 25 95% 53% / 0.12;
-    --accent-brand-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 47%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 210 18% 88%;
-    --border-subtle: 210 16% 62% / 0.2;
-    --input: 210 18% 92%;
-    --ring: 210 90% 42%;
-    --radius: 12px;
-
-    --success: 142 76% 36%;
-    --success-bg: 144 61% 95%;
-    --success-foreground: 0 0% 100%;
-    --warning: 45 93% 47%;
-    --warning-bg: 48 96% 95%;
-    --warning-foreground: 210 36% 10%;
-    --error: 0 84% 47%;
-    --error-bg: 0 63% 95%;
-    --error-foreground: 0 0% 100%;
-    --info: 210 90% 42%;
-    --info-foreground: 0 0% 100%;
-
-    --position-gk: 263 70% 50%;
-    --position-def: 210 90% 50%;
-    --position-mid: 142 71% 45%;
-    --position-fwd: 25 95% 53%;
-    --position-atk: 25 95% 53%;
-
-    --result-win: 142 71% 45%;
-    --result-draw: 48 96% 53%;
-    --result-loss: 0 84% 60%;
-
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-  }
-
+  :root,
   .dark {
-    --background: 210 36% 10%;
-    --foreground: 210 40% 98%;
-    --foreground-secondary: 215 20% 65%;
-    --foreground-tertiary: 215 20% 45%;
+    /* ── Background ─────────────────────────────── */
+    --background: 240 33% 4%;
+    --background-raised: 240 25% 10%;
+    --background-overlay: 240 24% 14%;
+    --background-muted: 240 25% 18%;
 
-    --card: 210 36% 13%;
-    --card-foreground: 210 40% 98%;
-    --popover: 210 36% 13%;
-    --popover-foreground: 210 40% 98%;
-    --surface-raised: 215 28% 17%;
-    --surface-overlay: 215 30% 21%;
+    /* ── Foreground ─────────────────────────────── */
+    --foreground: 225 60% 98%;
+    --foreground-muted: 215 20% 65%;
+    --foreground-subtle: 215 19% 47%;
 
-    --primary: 210 90% 50%;
-    --primary-hover: 210 90% 45%;
-    --primary-active: 210 90% 40%;
+    /* ── Border ──────────────────────────────────── */
+    --border: 240 6% 20%;
+    --border-hover: 240 6% 30%;
+    --input: 240 6% 20%;
+    --ring: 25 95% 53%;
+
+    /* ── Primary (Orange) ────────────────────────── */
+    --primary: 25 95% 53%;
+    --primary-hover: 21 90% 48%;
+    --primary-active: 21 90% 40%;
+    --primary-subtle: 18 100% 15%;
     --primary-foreground: 0 0% 100%;
-    --primary-subtle: 210 90% 50% / 0.12;
 
-    --secondary: 215 28% 17%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 215 25% 20%;
+    /* ── Secondary (Gold) ────────────────────────── */
+    --secondary: 45 93% 47%;
+    --secondary-subtle: 25 100% 14%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* ── shadcn compatibility ─────────────────────── */
+    --card: 240 25% 10%;
+    --card-foreground: 225 60% 98%;
+    --popover: 240 24% 14%;
+    --popover-foreground: 225 60% 98%;
+    --muted: 240 25% 18%;
     --muted-foreground: 215 20% 65%;
-    --accent: 215 25% 23%;
-    --accent-foreground: 210 40% 98%;
-
-    --accent-brand: 25 95% 53%;
-    --accent-brand-hover: 25 95% 46%;
-    --accent-brand-subtle: 25 95% 53% / 0.12;
-    --accent-brand-foreground: 0 0% 100%;
-
+    --accent: 240 25% 18%;
+    --accent-foreground: 225 60% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 215 28% 17%;
-    --border-subtle: 215 28% 17% / 0.15;
-    --input: 215 28% 17%;
-    --ring: 210 90% 50%;
 
+    /* ── Semantic ─────────────────────────────────── */
     --success: 142 71% 45%;
-    --success-bg: 144 61% 10%;
+    --success-subtle: 144 72% 10%;
     --success-foreground: 0 0% 100%;
     --warning: 48 96% 53%;
-    --warning-bg: 48 96% 10%;
-    --warning-foreground: 210 36% 10%;
+    --warning-subtle: 30 100% 14%;
+    --warning-foreground: 225 60% 98%;
     --error: 0 84% 60%;
-    --error-bg: 0 63% 15%;
+    --error-subtle: 0 63% 15%;
     --error-foreground: 0 0% 100%;
-    --info: 210 90% 50%;
+    --info: 217 91% 60%;
+    --info-subtle: 224 76% 21%;
     --info-foreground: 0 0% 100%;
 
-    --position-gk: 263 70% 50%;
-    --position-def: 210 90% 50%;
+    /* ── Position Colors (7 posições P.I.T) ──────── */
+    --pos-gk: 48 96% 53%;
+    --pos-zag: 217 91% 60%;
+    --pos-vol: 142 71% 45%;
+    --pos-mc: 160 84% 39%;
+    --pos-ae: 25 95% 53%;
+    --pos-ad: 27 96% 61%;
+    --pos-ata: 0 84% 60%;
+
+    /* ── Result Colors ────────────────────────────── */
+    --result-win: 142 71% 45%;
+    --result-draw: 215 19% 47%;
+    --result-loss: 0 84% 60%;
+
+    /* ── Chart Colors ─────────────────────────────── */
+    --chart-1: 25 95% 53%;
+    --chart-2: 217 91% 60%;
+    --chart-3: 142 71% 45%;
+    --chart-4: 45 93% 47%;
+    --chart-5: 271 81% 56%;
+    --chart-avg: 215 19% 47%;
+
+    /* ── Radius ───────────────────────────────────── */
+    --radius: 10px;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --radius-lg: 14px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* ── Shadows ──────────────────────────────────── */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+    --shadow-glow: 0 0 20px rgba(249, 115, 22, 0.3);
+    --shadow-glow-sm: 0 0 8px rgba(249, 115, 22, 0.2);
+
+    /* ── DEPRECATED aliases (backward compat) ─────── */
+    --foreground-secondary: 215 20% 65%;
+    --foreground-tertiary: 215 19% 47%;
+    --surface-raised: 240 25% 10%;
+    --surface-overlay: 240 24% 14%;
+    --accent-brand: 25 95% 53%;
+    --accent-brand-hover: 21 90% 48%;
+    --accent-brand-subtle: 18 100% 15%;
+    --accent-brand-foreground: 0 0% 100%;
+    --border-subtle: 240 6% 20%;
+    --success-bg: 144 72% 10%;
+    --warning-bg: 30 100% 14%;
+    --error-bg: 0 63% 15%;
+    --info-bg: 224 76% 21%;
+    --position-gk: 48 96% 53%;
+    --position-def: 217 91% 60%;
     --position-mid: 142 71% 45%;
     --position-fwd: 25 95% 53%;
-    --position-atk: 25 95% 53%;
-
-    --result-win: 142 71% 45%;
-    --result-draw: 48 96% 53%;
-    --result-loss: 0 84% 60%;
+    --position-atk: 0 84% 60%;
   }
 
   * {
